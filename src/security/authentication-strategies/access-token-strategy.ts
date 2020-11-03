@@ -25,23 +25,19 @@ export class AccessTokenStrategy implements AuthenticationStrategy {
     @repository(SphereAccessRepository) protected sphereAccessRepo: SphereAccessRepository,
   ) {
     this.accessTokenCheck = new StrategyAdapter(
-      generateTokenStrategy(csTokenRepo),
+      generateTokenStrategy(userRepo, hubRepo, csTokenRepo),
       'AccessToken',
-      generateUserProfileFactory(userRepo, hubRepo, sphereAccessRepo));
+      generateUserProfileFactory());
   }
 
   async authenticate(request: Request): Promise<UserProfile | undefined> {
-    let user = await this.accessTokenCheck.authenticate(request);
-    console.log("SUCCeSS", user)
+    let userProfile = await this.accessTokenCheck.authenticate(request);
     // if (!api_key) {
     //   throw new HttpErrors.Unauthorized(`Api key not found.`);
     // }
     // api_key = api_key.replace("Bearer ",'');
     // let user = await this.userService.checkApiKey(api_key as string)
     //
-    let userProfile : UserProfileDescription = {
-      [securityId]: '1232',
-    }
     return userProfile;
   }
 

@@ -17,7 +17,6 @@ export class StoneAbility extends StoneEntity {
   @property({type: 'boolean', required: true})
   syncedToCrownstone: string;
 
-
   @hasMany(() => StoneAbilityProperty, {keyTo: 'abilityId'})
   abilities: StoneAbilityProperty[];
 }

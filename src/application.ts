@@ -25,7 +25,7 @@ export interface PackageInfo {
 }
 const pkg: PackageInfo = require('../package.json');
 
-export class CrownstoneHooksApplication extends BootMixin(ServiceMixin(RepositoryMixin(RestApplication))) {
+export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(RestApplication))) {
   constructor(options: ApplicationConfig = {}) {
     let executionPath = __dirname;
     if (options.customPath !== undefined) { executionPath = options.customPath; }
@@ -105,14 +105,4 @@ export class CrownstoneHooksApplication extends BootMixin(ServiceMixin(Repositor
   setUpBindings(): void {
     this.bind("UserService").toClass(UserService);
   }
-}
-
-function registerPassportAuthenticationStrategy(app : CrownstoneHooksApplication, strategy : any) {
-  app
-    .bind('authentication.strategies.AccessToken')
-    .to(strategy)
-    .tag({
-      [CoreTags.EXTENSION_FOR]:
-      AuthenticationBindings.AUTHENTICATION_STRATEGY_EXTENSION_POINT_NAME,
-    });
 }

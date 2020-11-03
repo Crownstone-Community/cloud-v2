@@ -1,8 +1,8 @@
-import {Entity, model, property, belongsTo,} from '@loopback/repository';
-import {Sphere} from "./sphere.model";
+import {model, property} from '@loopback/repository';
+import {SphereEntity} from "./bases/sphere-entity";
 
 @model()
-export class SphereTrackingNumber extends Entity {
+export class SphereTrackingNumber extends SphereEntity {
 
   @property({type: 'string', id: true})
   id: string;
@@ -15,8 +15,5 @@ export class SphereTrackingNumber extends Entity {
 
   @property({type:'string'})
   trackingNumberType: string
-
-  @belongsTo(() => Sphere)
-  sphereId: number;
 
 }

@@ -1,9 +1,9 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
-import {SphereEntity} from "../bases/sphere-entity";
 import {StoneAbility} from "./stone-ability.model";
+import {StoneEntity} from "../bases/stone-entity";
 
 @model()
-export class StoneAbilityProperty extends SphereEntity {
+export class StoneAbilityProperty extends StoneEntity {
 
   @property({type: 'string', id: true})
   id: string;

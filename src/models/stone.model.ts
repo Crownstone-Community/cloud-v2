@@ -48,9 +48,6 @@ export class Stone extends SphereEntity {
   @property({type: 'boolean'})
   locked: boolean;
 
-  @belongsTo(() => Sphere)
-  sphereId: number;
-
   @belongsTo(() => Location)
   locationId: number;
 
@@ -63,6 +60,6 @@ export class Stone extends SphereEntity {
   @hasMany(() => StoneBehaviour, {keyTo: 'stoneId'})
   behaviours: StoneBehaviour[];
 
-  @hasMany(() => StoneSwitchState, {keyTo: 'stoneId'})
+  @hasMany(() => StoneSwitchState, {name: 'switchStateHistory', keyTo: 'stoneId'})
   switchStateHistory: StoneSwitchState[];
 }

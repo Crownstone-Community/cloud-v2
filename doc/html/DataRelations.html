@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <title>App Outlines</title>
+
+  <script type="text/javascript" src="./js/vis.js"></script>
+  <link href="./js/vis-network.min.css" rel="stylesheet" type="text/css" />
+
+  <style type="text/css">
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #mynetwork {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="mynetwork"></div>
+  <script type="text/javascript">
+    // create an array with nodes
+    let ni = {
+      'app-installation': 'app-installation',
+      'crownstone-token': 'crownstone-token',
+      'device-preferences': 'device-preferences',
+      'device': 'device',
+      'fingerprint-linker': 'fingerprint-linker',
+      'fingerprint': 'fingerprint',
+      'hub': 'hub',
+      'location': 'location',
+      'message': 'message',
+      'message': 'message',
+      'position': 'position',
+      'scene': 'scene',
+      'sorted-list': 'sorted-list',
+      'sphere-access': 'sphere-access',
+      'sphere-feature': 'sphere-feature',
+      'sphere-tracking-number': 'sphere-tracking-number',
+      'sphere': 'sphere',
+      'stone': 'stone',
+      'toon': 'toon',
+      'user': 'user',
+      'stone-ability-property': 'stone-ability-property',
+      'stone-ability': 'stone-ability',
+      'stone-behaviour': 'stone-behaviour',
+      'stone-switch-state': 'stone-switch-state',
+      'message-state': 'message-state',
+      'message-user': 'message-user',
+      'sphere-key': 'sphere-key',
+      'stone-key': 'stone-key',
+    }
+
+    var nodes = new vis.DataSet([
+      {id: 'app-installation',       label:'app-installation',       group: 'timestampedEntity'},
+      {id: 'crownstone-token',       label:'crownstone-token',       group: 'entity'},
+      {id: 'device-preferences',     label:'device-preferences',     group: 'timestampedEntity'},
+      {id: 'device',                 label:'device',                 group: 'timestampedEntity'},
+      {id: 'fingerprint-linker',     label:'fingerprint-linker',     group: 'sphereEntity'},
+      {id: 'fingerprint',            label:'fingerprint',            group: 'sphereEntity'},
+      {id: 'hub',                    label:'hub',                    group: 'sphereEntity'},
+      {id: 'location',               label:'location',               group: 'sphereEntity'},
+      {id: 'message',                label:'message',                group: 'sphereEntity'},
+      {id: 'position',               label:'position',               group: 'sphereEntity'},
+      {id: 'scene',                  label:'scene',                  group: 'sphereEntity'},
+      {id: 'sorted-list',            label:'sorted-list',            group: 'sphereEntity'},
+      {id: 'sphere-access',          label:'sphere-access',          group: 'sphereEntity'},
+      {id: 'sphere-feature',         label:'sphere-feature',         group: 'sphereEntity'},
+      {id: 'sphere-tracking-number', label:'sphere-tracking-number', group: 'sphereEntity'},
+      {id: 'sphere',                 label:'sphere',                 group: 'timestampedEntity'},
+      {id: 'sphere-key',             label:'sphere-key',             group: 'sphereEntity'},
+      {id: 'stone',                  label:'stone',                  group: 'sphereEntity'},
+      {id: 'toon',                   label:'toon',                   group: 'sphereEntity'},
+      {id: 'user',                   label:'user',                   group: 'timestampedEntity'},
+
+
+      {id: 'stone-key',              label:'stone-key',              group:'stoneEntity'},
+      {id: 'stone-ability-property', label:'stone-ability-property', group:'stoneEntity'},
+      {id: 'stone-ability',          label:'stone-ability',          group:'stoneEntity'},
+      {id: 'stone-behaviour',        label:'stone-behaviour',        group:'stoneEntity'},
+      {id: 'stone-switch-state',     label:'stone-switch-state',     group:'stoneEntity'},
+
+      {id: 'message-state',          label:'message-state',          group:'sphereEntity'},
+      {id: 'message-user',           label:'message-user ',          group:'sphereEntity'},
+    ]);
+
+
+
+
+
+
+
+
+
+
+
+            // create an array with edges
+    var edges = new vis.DataSet([
+      {from: ni["crownstone-token"],  to: ni.user                          },
+      {from: ni["crownstone-token"],  to: ni.hub                           },
+      {from: ni.user,                 to: ni.device                        },
+      {from: ni.device,               to: ni["device-preferences"]         },
+      {from: ni.device,               to: ni["fingerprint-linker"]         },
+      {from: ni.fingerprint,          to: ni["fingerprint-linker"]         },
+      {from: ni.device,               to: ni["app-installation"]           },
+      {from: ni.user,                 to: ni["sphere-access"]              },
+      {from: ni.hub,                  to: ni["sphere-access"]              },
+      {from: ni.sphere,               to: ni.stone                         },
+      {from: ni.stone,                to: ni.location                      },
+      {from: ni.sphere,               to: ni["sphere-key"]                 },
+      {from: ni.sphere,               to: ni.location                      },
+      {from: ni.sphere,               to: ni.hub                           },
+      {from: ni.sphere,               to: ni.message                       },
+      {from: ni.message,              to: ni["message-state"]              },
+      {from: ni.message,              to: ni["message-user"]               },
+      {from: ni["message-user"],      to: ni.user                          },
+      {from: ni["sphere-access"],     to: ni.sphere                        },
+      {from: ni.sphere,               to: ni.scene                         },
+      {from: ni.sphere,               to: ni.toon                          },
+      {from: ni.sphere,               to: ni["sphere-feature"]             },
+      {from: ni.sphere,               to: ni["sphere-tracking-number"]     },
+      {from: ni.sphere,               to: ni["sorted-list"]                },
+      {from: ni.location,             to: ni.fingerprint                   },
+      {from: ni.location,             to: ni.position                      },
+      {from: ni.stone,                to: ni["stone-ability"]              },
+      {from: ni.stone,                to: ni["stone-key"]                  },
+      {from: ni.stone,                to: ni["stone-behaviour"]            },
+      {from: ni.stone,                to: ni["stone-switch-state"]         },
+      {from: ni["stone-ability"],     to: ni["stone-ability-property"]     },
+      {from: ni["sphere-tracking-number"],     to: ni.device     },
+    ]);
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      layout: {randomSeed: 112541},
+      nodes: {shape: 'circle'},
+      edges: {arrows: 'to', font: {align:'middle'}},
+      physics: { barnesHut: { gravitationalConstant: -15000}}};
+    var network = new vis.Network(container, data, options);
+  </script>
+</body>
+</html>

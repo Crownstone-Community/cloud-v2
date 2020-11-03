@@ -2,20 +2,20 @@ import {once} from 'events';
 import express, {Request, Response} from 'express';
 import http from 'http';
 import path from 'path';
-import {CrownstoneHooksApplication} from "./application";
 import { ApplicationConfig } from '@loopback/core';
+import {CrownstoneCloud} from "./application";
 
 export {ApplicationConfig};
 
 export class ExpressServer {
   public readonly app: express.Application;
-  public readonly lbApp: CrownstoneHooksApplication;
+  public readonly lbApp: CrownstoneCloud;
   private server?: http.Server;
 
   constructor(options: ApplicationConfig = {}) {
     this.app = express();
     // this.app.use(passport.initialize());
-    this.lbApp = new CrownstoneHooksApplication(options);
+    this.lbApp = new CrownstoneCloud(options);
 
     // Expose the front-end assets via Express, not as LB4 route
     this.app.use('/api', this.lbApp.requestHandler);
