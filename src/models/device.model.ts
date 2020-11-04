@@ -1,7 +1,6 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {DevicePreferences} from "./device-preferences.model";
 import {AppInstallation} from "./app-installation.model";
-import {SphereTrackingNumber} from "./sphere-tracking-number.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {FingerprintLinker} from "./fingerprint-linker.model";
@@ -49,6 +48,4 @@ export class Device extends AddTimestamps(BaseEntity) {
   @hasMany(() => DevicePreferences, {keyTo: 'deviceId'})
   preferences: DevicePreferences[];
 
-  @hasMany(() => SphereTrackingNumber, {keyTo: 'foreignId'})
-  trackingNumber: SphereTrackingNumber[]
 }

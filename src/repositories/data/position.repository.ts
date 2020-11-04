@@ -11,8 +11,8 @@ export class PositionRepository extends TimestampedCrudRepository<Position,typeo
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
     super(Position, datasource);
-    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepositoryGetter);
+    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
   }
 }

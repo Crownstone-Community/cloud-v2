@@ -11,8 +11,8 @@ export class SphereKeyRepository extends TimestampedCrudRepository<SphereKey,typ
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
     super(SphereKey, datasource);
-    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepositoryGetter);
+    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
   }
 }

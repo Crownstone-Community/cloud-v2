@@ -11,9 +11,9 @@ export class HubRepository extends TimestampedCrudRepository<Hub,typeof Hub.prot
 
   constructor(
     @inject('datasources.users') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
     super(Hub, datasource);
-    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepositoryGetter);
+    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
   }
 }
 

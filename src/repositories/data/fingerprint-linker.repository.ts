@@ -20,16 +20,16 @@ export class FingerprintLinkerRepository extends TimestampedCrudRepository<Finge
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository')      sphereRepositoryGetter:      Getter<SphereRepository>,
-    @repository.getter('LocationRepository')    locationRepositoryGetter:    Getter<LocationRepository>,
-    @repository.getter('DeviceRepository')      deviceRepositoryGetter:      Getter<DeviceRepository>,
-    @repository.getter('FingerprintRepository') fingerprintRepositoryGetter: Getter<FingerprintRepository>,
+    @repository.getter('SphereRepository')      sphereRepoGetter:      Getter<SphereRepository>,
+    @repository.getter('LocationRepository')    locationRepoGetter:    Getter<LocationRepository>,
+    @repository.getter('DeviceRepository')      deviceRepoGetter:      Getter<DeviceRepository>,
+    @repository.getter('FingerprintRepository') fingerprintRepoGetter: Getter<FingerprintRepository>,
   ) {
     super(FingerprintLinker, datasource);
-    this.sphere      = this.createBelongsToAccessorFor('sphere',      sphereRepositoryGetter);
-    this.location    = this.createBelongsToAccessorFor('location',    locationRepositoryGetter);
-    this.device      = this.createBelongsToAccessorFor('device',      deviceRepositoryGetter);
-    this.fingerprint = this.createBelongsToAccessorFor('fingerprint', fingerprintRepositoryGetter);
+    this.sphere      = this.createBelongsToAccessorFor('sphere',      sphereRepoGetter);
+    this.location    = this.createBelongsToAccessorFor('location',    locationRepoGetter);
+    this.device      = this.createBelongsToAccessorFor('device',      deviceRepoGetter);
+    this.fingerprint = this.createBelongsToAccessorFor('fingerprint', fingerprintRepoGetter);
   }
 
 }

@@ -27,22 +27,22 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>,
-    @repository.getter('LocationRepository') locationRepositoryGetter: Getter<LocationRepository>,
-    @repository.getter('StoneSwitchStateRepository') stoneSwitchStateRepositoryGetter: Getter<StoneSwitchStateRepository>,
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
+    @repository.getter('LocationRepository') locationRepoGetter: Getter<LocationRepository>,
+    @repository.getter('StoneSwitchStateRepository') stoneSwitchStateRepoGetter: Getter<StoneSwitchStateRepository>,
 
-    @repository(StoneBehaviourRepository)   protected stoneBehaviourRepository: StoneBehaviourRepository,
-    @repository(StoneAbilityRepository)     protected stoneAbilityRepository: StoneAbilityRepository,
-    @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepository: StoneSwitchStateRepository,
+    @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo: StoneBehaviourRepository,
+    @repository(StoneAbilityRepository)     protected stoneAbilityRepo: StoneAbilityRepository,
+    @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepo: StoneSwitchStateRepository,
     ) {
     super(Stone, datasource);
-    this.sphere = this.createBelongsToAccessorFor(  'sphere',   sphereRepositoryGetter);
-    this.location = this.createBelongsToAccessorFor('location', locationRepositoryGetter);
-    this.currentSwitchState = this.createBelongsToAccessorFor('currentSwitchState', stoneSwitchStateRepositoryGetter);
+    this.sphere = this.createBelongsToAccessorFor(  'sphere',   sphereRepoGetter);
+    this.location = this.createBelongsToAccessorFor('location', locationRepoGetter);
+    this.currentSwitchState = this.createBelongsToAccessorFor('currentSwitchState', stoneSwitchStateRepoGetter);
 
-    this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepository);
-    this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepository);
-    this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepository);
+    this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
+    this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
+    this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepo);
   }
 
   async create(entity: DataObject<Stone>, options?: Options): Promise<Stone> {

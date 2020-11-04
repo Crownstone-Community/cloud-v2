@@ -11,10 +11,10 @@ export class AppInstallationRepository extends TimestampedCrudRepository<AppInst
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('DeviceRepository') deviceRepositoryGetter: Getter<DeviceRepository>
+    @repository.getter('DeviceRepository') deviceRepoGetter: Getter<DeviceRepository>
   ) {
     super(AppInstallation, datasource);
-    this.device = this.createBelongsToAccessorFor('device', deviceRepositoryGetter);
+    this.device = this.createBelongsToAccessorFor('device', deviceRepoGetter);
   }
 
 }

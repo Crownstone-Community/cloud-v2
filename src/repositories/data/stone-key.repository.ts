@@ -13,9 +13,9 @@ export class StoneKeyRepository extends TimestampedCrudRepository<StoneKey,typeo
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
     super(StoneKey, datasource);
-    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepositoryGetter);
+    this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
   }
 
 }
