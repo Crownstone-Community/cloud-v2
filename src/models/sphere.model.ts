@@ -1,12 +1,20 @@
 import {Entity, model, property, hasMany, belongsTo,} from '@loopback/repository';
-import {TimestampedEntity} from "./bases/timestamped-entity";
-import {GeoPoint, Hub, Location, Message, Scene, SphereAccess, Stone, User} from "./index";
 import {SortedList} from "./sorted-list.model";
 import {SphereFeature} from "./sphere-feature.model";
 import {Toon} from "./toon.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {GeoPoint} from "./subModels/geo-point.model";
+import {User} from "./user.model";
+import {Location} from "./location.model";
+import {Stone} from "./stone.model";
+import {Scene} from "./scene.model";
+import {Message} from "./message.model";
+import {Hub} from "./hub.model";
+import {SphereAccess} from "./sphere-access.model";
 
 @model()
-export class Sphere extends TimestampedEntity {
+export class Sphere extends AddTimestamps(BaseEntity) {
   constructor(data?: Partial<EventListener>) {
     super(data);
   }

@@ -1,9 +1,10 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Device} from "./device.model";
-import {TimestampedEntity} from "./bases/timestamped-entity";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
 
 @model()
-export class DevicePreferences extends TimestampedEntity {
+export class DevicePreferences extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

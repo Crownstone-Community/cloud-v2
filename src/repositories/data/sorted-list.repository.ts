@@ -1,8 +1,9 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {SortedList, Sphere} from "../../models";
 import {SphereRepository} from "./sphere.repository";
+import {SortedList} from "../../models/sorted-list.model";
+import {Sphere} from "../../models/sphere.model";
 
 
 export class SortedListRepository extends TimestampedCrudRepository<SortedList,typeof SortedList.prototype.id > {

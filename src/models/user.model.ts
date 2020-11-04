@@ -1,10 +1,11 @@
 import {hasMany, model, property} from '@loopback/repository';
-import {TimestampedEntity} from "./bases/timestamped-entity";
 import {Sphere} from "./sphere.model";
 import {Device} from "./device.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
 
 @model({hiddenProperties:["earlyAccessLevel"]})
-export class User extends TimestampedEntity {
+export class User extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

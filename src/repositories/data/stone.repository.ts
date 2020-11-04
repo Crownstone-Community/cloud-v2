@@ -1,21 +1,18 @@
 import {BelongsToAccessor, Getter, HasManyRepositoryFactory, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {
-  Location,
-  Sphere,
-  SphereTrackingNumber,
-  Stone,
-  StoneAbility,
-  StoneBehaviour,
-  StoneSwitchState
-} from "../../models";
 import {DataObject, Options} from "@loopback/repository/src/common-types";
 import {SphereRepository} from "./sphere.repository";
 import {LocationRepository} from "./location.repository";
 import {StoneSwitchStateRepository} from "./stone-switch-state.repository";
 import {StoneBehaviourRepository} from "./stone-behaviour.repository";
 import {StoneAbilityRepository} from "./stone-ability.repository";
+import {Stone} from "../../models/stone.model";
+import {Sphere} from "../../models/sphere.model";
+import {Location} from "../../models/location.model";
+import {StoneSwitchState} from "../../models/stoneSubModels/stone-switch-state.model";
+import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
+import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {

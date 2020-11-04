@@ -1,11 +1,13 @@
-import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {SphereEntity} from "./bases/sphere-entity";
+import {belongsTo, model, property} from '@loopback/repository';
 import {Location} from "./location.model";
 import {Fingerprint} from "./fingerprint.model";
 import {Device} from "./device.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {Sphere} from "./sphere.model";
 
 @model()
-export class FingerprintLinker extends SphereEntity {
+export class FingerprintLinker extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -18,4 +20,8 @@ export class FingerprintLinker extends SphereEntity {
 
   @belongsTo(() => Fingerprint)
   fingerprintId: number;
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
+
 }

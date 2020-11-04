@@ -1,9 +1,12 @@
-import {model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
 import {ActiveDays} from "../subModels/active-days.model";
-import {StoneEntity} from "../bases/stone-entity";
+import {AddTimestamps} from "../bases/timestamp-mixin";
+import {BaseEntity} from "../bases/base-entity";
+import {Sphere} from "../sphere.model";
+import {Stone} from "../stone.model";
 
 @model()
-export class StoneBehaviour extends StoneEntity {
+export class StoneBehaviour extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -29,6 +32,10 @@ export class StoneBehaviour extends StoneEntity {
   @property()
   activeDays: ActiveDays
 
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
 
+  @belongsTo(() => Stone)
+  stoneId: number;
 
 }

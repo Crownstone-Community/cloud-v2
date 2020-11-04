@@ -1,14 +1,17 @@
 import {BelongsToAccessor, Getter, HasManyRepositoryFactory, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {AppInstallation, Device, DevicePreferences, FingerprintLinker, SphereTrackingNumber, User} from "../../models";
-import {
-  AppInstallationRepository,
-  DevicePreferencesRepository,
-  FingerprintLinkerRepository,
-  SphereTrackingNumberRepository,
-  UserRepository
-} from "..";
+import {AppInstallation} from "../../models/app-installation.model";
+import { FingerprintLinker } from '../../models/fingerprint-linker.model';
+import {Device} from "../../models/device.model";
+import {User} from "../../models/user.model";
+import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
+import {DevicePreferences} from "../../models/device-preferences.model";
+import {UserRepository} from "../users/user.repository";
+import {AppInstallationRepository} from "./app-installation.repository";
+import {FingerprintLinkerRepository} from "./fingerprint-linker.repository";
+import {DevicePreferencesRepository} from "./device-preferences.repository";
+import {SphereTrackingNumberRepository} from "./sphere-tracking-number.repository";
 
 
 export class DeviceRepository extends TimestampedCrudRepository<Device,typeof Device.prototype.id > {
@@ -29,7 +32,7 @@ export class DeviceRepository extends TimestampedCrudRepository<Device,typeof De
   ) {
     super(Device, datasource);
     this.user = this.createBelongsToAccessorFor('owner', userRepositoryGetter);
-    this.installations    = this.createHasManyRepositoryFactoryFor('installations',   async () => appInstallationRepository);
+    // this.installations    = this.createHasManyRepositoryFactoryFor('installations',   async () => appInstallationRepository);
     this.fingerprintLinks = this.createHasManyRepositoryFactoryFor('fingerprintLinks',async () => fingerprintLinkerRepository);
     this.preferences      = this.createHasManyRepositoryFactoryFor('preferences',     async () => devicePreferencesRepository);
     this.trackingNumber   = this.createHasManyRepositoryFactoryFor('trackingNumber',  async () => sphereTrackingNumberRepository);

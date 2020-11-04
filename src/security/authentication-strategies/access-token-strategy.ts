@@ -4,7 +4,10 @@ import {Request} from "express-serve-static-core";
 import {StrategyAdapter} from "@loopback/authentication-passport";
 import {repository} from "@loopback/repository";
 import {generateTokenStrategy, generateUserProfileFactory} from "./passport/token-strategy";
-import {CrownstoneTokenRepository, HubRepository, SphereAccessRepository, UserRepository} from "../../repositories";
+import {CrownstoneTokenRepository} from "../../repositories/users/crownstone-token.repository";
+import {UserRepository} from "../../repositories/users/user.repository";
+import {HubRepository} from "../../repositories/users/hub.repository";
+import {SphereAccessRepository} from "../../repositories/data/sphere-access.repository";
 
 
 export interface UserProfileDescription {

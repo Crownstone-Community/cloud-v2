@@ -1,13 +1,14 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {SphereEntity} from "./bases/sphere-entity";
-import {Sphere} from "./sphere.model";
-import {Location} from "./index";
 import {StoneAbility} from "./stoneSubModels/stone-ability.model";
 import {StoneSwitchState} from "./stoneSubModels/stone-switch-state.model";
 import {StoneBehaviour} from "./stoneSubModels/stone-behaviour.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {Location} from "./location.model";
+import {Sphere} from "./sphere.model";
 
 @model()
-export class Stone extends SphereEntity {
+export class Stone extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -62,4 +63,8 @@ export class Stone extends SphereEntity {
 
   @hasMany(() => StoneSwitchState, {name: 'switchStateHistory', keyTo: 'stoneId'})
   switchStateHistory: StoneSwitchState[];
+
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
 }

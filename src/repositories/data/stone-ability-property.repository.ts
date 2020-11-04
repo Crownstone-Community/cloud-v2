@@ -1,8 +1,11 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {Sphere, Stone, StoneAbility, StoneAbilityProperty} from "../../models";
 import {SphereRepository} from "./sphere.repository";
+import {StoneAbilityProperty} from "../../models/stoneSubModels/stone-ability-property.model";
+import {Sphere} from "../../models/sphere.model";
+import {Stone} from "../../models/stone.model";
+import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
 
 
 export class StoneAbilityPropertyRepository extends TimestampedCrudRepository<StoneAbilityProperty,typeof StoneAbilityProperty.prototype.id > {

@@ -2,8 +2,12 @@ import {securityId, UserProfile} from "@loopback/security";
 const TokenStrategy = require('passport-accesstoken').Strategy;
 import {Strategy} from 'passport';
 import {UserProfileFactory} from "@loopback/authentication";
-import {CrownstoneTokenRepository, HubRepository, UserRepository} from "../../../repositories";
-import {CrownstoneTokenModel, Hub, User} from "../../../models";
+import {Hub} from "../../../models/hub.model";
+import {User} from "../../../models/user.model";
+import {UserRepository} from "../../../repositories/users/user.repository";
+import {HubRepository} from "../../../repositories/users/hub.repository";
+import {CrownstoneTokenRepository} from "../../../repositories/users/crownstone-token.repository";
+import {CrownstoneTokenModel} from "../../../models/crownstone-token.model";
 
 
 

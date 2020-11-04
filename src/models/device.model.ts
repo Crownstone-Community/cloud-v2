@@ -1,12 +1,14 @@
-import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {FingerprintLinker, Location, User} from "./index";
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {DevicePreferences} from "./device-preferences.model";
-import {TimestampedEntity} from "./bases/timestamped-entity";
 import {AppInstallation} from "./app-installation.model";
 import {SphereTrackingNumber} from "./sphere-tracking-number.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {FingerprintLinker} from "./fingerprint-linker.model";
+import {User} from "./user.model";
 
 @model()
-export class Device extends TimestampedEntity {
+export class Device extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

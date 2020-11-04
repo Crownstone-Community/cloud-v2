@@ -1,9 +1,12 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {StoneAbility} from "./stone-ability.model";
-import {StoneEntity} from "../bases/stone-entity";
+import {AddTimestamps} from "../bases/timestamp-mixin";
+import {BaseEntity} from "../bases/base-entity";
+import {Sphere} from "../sphere.model";
+import {Stone} from "../stone.model";
 
 @model()
-export class StoneAbilityProperty extends StoneEntity {
+export class StoneAbilityProperty extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -16,5 +19,11 @@ export class StoneAbilityProperty extends StoneEntity {
 
   @belongsTo(() => StoneAbility)
   abilityId: number;
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
+
+  @belongsTo(() => Stone)
+  stoneId: number;
 
 }

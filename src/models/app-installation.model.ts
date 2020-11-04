@@ -1,9 +1,9 @@
-import {belongsTo, model, property} from '@loopback/repository';
-import {TimestampedEntity} from "./bases/timestamped-entity";
-import {Device} from "./device.model";
+import {model, property} from '@loopback/repository';
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
 
 @model()
-export class AppInstallation extends TimestampedEntity {
+export class AppInstallation extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -23,6 +23,4 @@ export class AppInstallation extends TimestampedEntity {
   @property({type: 'boolean', required: true, default: false})
   developmentApp: boolean
 
-  @belongsTo(() => Device, {name:'device'})
-  deviceId: number;
 }

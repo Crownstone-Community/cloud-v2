@@ -1,8 +1,9 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import {TimestampedCrudRepository} from "../bases/timestamped-crud-repository";
-import {Hub, Sphere} from "../../models";
-import {SphereRepository} from "..";
+import {Hub} from "../../models/hub.model";
+import {Sphere} from "../../models/sphere.model";
+import {SphereRepository} from "../data/sphere.repository";
 
 
 export class HubRepository extends TimestampedCrudRepository<Hub,typeof Hub.prototype.id > {
@@ -10,7 +11,7 @@ export class HubRepository extends TimestampedCrudRepository<Hub,typeof Hub.prot
 
   constructor(
     @inject('datasources.users') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>,) {
+    @repository.getter('SphereRepository') sphereRepositoryGetter: Getter<SphereRepository>) {
     super(Hub, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepositoryGetter);
   }

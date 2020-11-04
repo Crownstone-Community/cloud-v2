@@ -1,12 +1,14 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {SphereEntity} from "./bases/sphere-entity";
 import {User} from "./user.model";
 import {Location} from "./location.model";
 import {MessageState} from "./messageSubModels/message-state.model";
 import {MessageUser} from "./messageSubModels/message-user.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {Sphere} from "./sphere.model";
 
 @model()
-export class Message extends SphereEntity {
+export class Message extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -40,5 +42,8 @@ export class Message extends SphereEntity {
 
   @hasMany(() => MessageState, {keyTo: 'messageReadId'})
   read: MessageState[];
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
 
 }

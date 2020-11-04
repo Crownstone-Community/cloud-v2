@@ -1,8 +1,10 @@
 import {Entity, model, property, belongsTo,} from '@loopback/repository';
-import {SphereEntity} from "./bases/sphere-entity";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {Sphere} from "./sphere.model";
 
 @model()
-export class Toon extends SphereEntity {
+export class Toon extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -36,4 +38,7 @@ export class Toon extends SphereEntity {
 
   @property({type:'number', default: 0})
   changedProgramTime: number
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
 }

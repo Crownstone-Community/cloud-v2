@@ -1,8 +1,9 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {Sphere, Toon} from "../../models";
 import {SphereRepository} from "./sphere.repository";
+import {Toon} from "../../models/toon.model";
+import {Sphere} from "../../models/sphere.model";
 
 
 export class ToonRepository extends TimestampedCrudRepository<Toon,typeof Toon.prototype.id > {

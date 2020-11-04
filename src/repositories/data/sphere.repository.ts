@@ -1,8 +1,8 @@
 import { juggler} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import { Sphere } from "../../models";
 import {DataObject, Options} from "@loopback/repository/src/common-types";
+import {Sphere} from "../../models/sphere.model";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {

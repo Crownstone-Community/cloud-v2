@@ -1,8 +1,9 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {AppInstallation, Device} from "../../models";
 import {DeviceRepository} from "./device.repository";
+import {AppInstallation} from "../../models/app-installation.model";
+import {Device} from "../../models/device.model";
 
 
 export class AppInstallationRepository extends TimestampedCrudRepository<AppInstallation,typeof AppInstallation.prototype.id > {

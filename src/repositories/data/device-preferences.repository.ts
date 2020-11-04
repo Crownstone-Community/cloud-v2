@@ -1,7 +1,8 @@
 import {BelongsToAccessor, juggler} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import { Device, DevicePreferences } from "../../models";
+import {DevicePreferences} from "../../models/device-preferences.model";
+import {Device} from "../../models/device.model";
 
 
 export class DevicePreferencesRepository extends TimestampedCrudRepository<DevicePreferences,typeof DevicePreferences.prototype.id > {

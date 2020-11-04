@@ -1,11 +1,13 @@
-import {hasMany, hasOne, model, property} from '@loopback/repository';
-import {SphereEntity} from "./bases/sphere-entity";
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {Position} from "./position.model";
 import {Stone} from "./stone.model";
 import {Fingerprint} from "./fingerprint.model";
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
+import {Sphere} from "./sphere.model";
 
 @model()
-export class Location extends SphereEntity {
+export class Location extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;
@@ -33,4 +35,8 @@ export class Location extends SphereEntity {
 
   @hasOne(() => Position,  {keyTo: 'locationId'})
   sphereOverviewPosition: Position
+
+
+  @belongsTo(() => Sphere, {name:'sphere'})
+  sphereId: number;
 }

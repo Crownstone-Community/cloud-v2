@@ -1,10 +1,13 @@
 import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
-import {Message, MessageState, Sphere, Stone, User} from "../../models";
 import {SphereRepository} from "./sphere.repository";
 import {MessageRepository} from "./message.repository";
-import {UserRepository} from "..";
+import {MessageState} from "../../models/messageSubModels/message-state.model";
+import {Sphere} from "../../models/sphere.model";
+import {Message} from "../../models/message.model";
+import {User} from "../../models/user.model";
+import {UserRepository} from "../users/user.repository";
 
 
 export class MessageStateRepository extends TimestampedCrudRepository<MessageState,typeof MessageState.prototype.id > {
