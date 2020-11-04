@@ -20,8 +20,8 @@ export class StoneAbility extends AddTimestamps(BaseEntity) {
   @property({type: 'boolean', required: true})
   syncedToCrownstone: string;
 
-  @hasMany(() => StoneAbilityProperty, {keyTo: 'abilityId'})
-  abilities: StoneAbilityProperty[];
+  @hasMany(() => StoneAbilityProperty, {name: 'properties', keyTo: 'abilityId'})
+  properties: StoneAbilityProperty[];
 
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: number;

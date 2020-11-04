@@ -36,7 +36,6 @@ export class Location extends AddTimestamps(BaseEntity) {
   @hasOne(() => Position,  {keyTo: 'locationId'})
   sphereOverviewPosition: Position
 
-
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: number;
 }

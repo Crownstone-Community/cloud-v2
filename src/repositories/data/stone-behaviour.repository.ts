@@ -5,6 +5,7 @@ import {SphereRepository} from "./sphere.repository";
 import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
 import {Sphere} from "../../models/sphere.model";
 import {Stone} from "../../models/stone.model";
+import {StoneRepository} from "./stone.repository";
 
 
 export class StoneBehaviourRepository extends TimestampedCrudRepository<StoneBehaviour,typeof StoneBehaviour.prototype.id > {
@@ -13,8 +14,10 @@ export class StoneBehaviourRepository extends TimestampedCrudRepository<StoneBeh
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
+    @repository.getter('StoneRepository') stoneRepoGetter: Getter<StoneRepository>) {
     super(StoneBehaviour, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
+    this.stone  = this.createBelongsToAccessorFor('stone', stoneRepoGetter);
   }
 }

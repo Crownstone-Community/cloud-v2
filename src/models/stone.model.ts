@@ -55,10 +55,10 @@ export class Stone extends AddTimestamps(BaseEntity) {
   @belongsTo(() => StoneSwitchState)
   currentSwitchStateId: number;
 
-  @hasMany(() => StoneAbility, {keyTo: 'stoneId'})
+  @hasMany(() => StoneAbility, {name: 'abilities', keyTo: 'stoneId'})
   abilities: StoneAbility[];
 
-  @hasMany(() => StoneBehaviour, {keyTo: 'stoneId'})
+  @hasMany(() => StoneBehaviour, {name: 'behaviours', keyTo: 'stoneId'})
   behaviours: StoneBehaviour[];
 
   @hasMany(() => StoneSwitchState, {name: 'switchStateHistory', keyTo: 'stoneId'})

@@ -28,6 +28,8 @@ import {SortedListRepository} from "./sorted-list.repository";
 import {SphereFeatureRepository} from "./sphere-feature.repository";
 import {ToonRepository} from "./toon.repository";
 import {SphereAccessRepository} from "./sphere-access.repository";
+import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
+import {SphereTrackingNumberRepository} from "./sphere-tracking-number.repository";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {
@@ -40,6 +42,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   public hubs:           HasManyRepositoryFactory<Hub,           typeof Hub.prototype.id>;
   public sortedLists:    HasManyRepositoryFactory<SortedList,    typeof SortedList.prototype.id>;
   public sphereFeatures: HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
+  public trackingNumbers: HasManyRepositoryFactory<SphereTrackingNumber, typeof SphereTrackingNumber.prototype.id>;
   public toons:          HasManyRepositoryFactory<Toon, typeof Toon.prototype.id>;
   public users:          HasManyThroughRepositoryFactory<User, typeof User.prototype.id, SphereAccess, typeof Sphere.prototype.id>;
 
@@ -58,20 +61,22 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(HubRepository)           protected hubRepo:           HubRepository,
     @repository(SortedListRepository)    protected sortedListRepo:    SortedListRepository,
     @repository(SphereFeatureRepository) protected sphereFeatureRepo: SphereFeatureRepository,
+    @repository(SphereTrackingNumberRepository) protected sphereTrackingNumberRepo: SphereTrackingNumberRepository,
     @repository(ToonRepository)          protected toonRepo:          ToonRepository,
   ) {
     super(Sphere, datasource);
-    this.owner         = this.createBelongsToAccessorFor('owner', ownerRepoGetter);
-    this.users          = this.createHasManyThroughRepositoryFactoryFor('users', userRepoGetter, sphereAccessRepoGetter);
+    this.owner           = this.createBelongsToAccessorFor('owner', ownerRepoGetter);
+    this.users           = this.createHasManyThroughRepositoryFactoryFor('users', userRepoGetter, sphereAccessRepoGetter);
 
-    this.stones         = this.createHasManyRepositoryFactoryFor('stones',     async () => stoneRepo);
-    this.locations      = this.createHasManyRepositoryFactoryFor('locations',  async () => locationRepo);
-    this.scenes         = this.createHasManyRepositoryFactoryFor('scenes',     async () => sceneRepo);
-    this.messages       = this.createHasManyRepositoryFactoryFor('messages',   async () => messageRepo);
-    this.hubs           = this.createHasManyRepositoryFactoryFor('hubs',       async () => hubRepo);
-    this.sortedLists    = this.createHasManyRepositoryFactoryFor('sortedLists',async () => sortedListRepo);
-    this.sphereFeatures = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
-    this.toons          = this.createHasManyRepositoryFactoryFor('toons',      async () => toonRepo);
+    this.stones          = this.createHasManyRepositoryFactoryFor('stones',     async () => stoneRepo);
+    this.locations       = this.createHasManyRepositoryFactoryFor('locations',  async () => locationRepo);
+    this.scenes          = this.createHasManyRepositoryFactoryFor('scenes',     async () => sceneRepo);
+    this.messages        = this.createHasManyRepositoryFactoryFor('messages',   async () => messageRepo);
+    this.hubs            = this.createHasManyRepositoryFactoryFor('hubs',       async () => hubRepo);
+    this.sortedLists     = this.createHasManyRepositoryFactoryFor('sortedLists',async () => sortedListRepo);
+    this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
+    this.trackingNumbers = this.createHasManyRepositoryFactoryFor('trackingNumbers',async () => sphereTrackingNumberRepo);
+    this.toons           = this.createHasManyRepositoryFactoryFor('toons',      async () => toonRepo);
   }
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {

@@ -5,6 +5,7 @@ import {SphereRepository} from "./sphere.repository";
 import {StoneSwitchState} from "../../models/stoneSubModels/stone-switch-state.model";
 import {Sphere} from "../../models/sphere.model";
 import {Stone} from "../../models/stone.model";
+import {StoneRepository} from "./stone.repository";
 
 
 export class StoneSwitchStateRepository extends TimestampedCrudRepository<StoneSwitchState,typeof StoneSwitchState.prototype.id > {
@@ -13,9 +14,11 @@ export class StoneSwitchStateRepository extends TimestampedCrudRepository<StoneS
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>) {
+    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
+    @repository.getter('StoneRepository') stoneRepoGetter: Getter<StoneRepository>) {
     super(StoneSwitchState, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
+    this.stone  = this.createBelongsToAccessorFor('stone', stoneRepoGetter);
   }
 
 }

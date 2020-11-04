@@ -12,6 +12,7 @@ import {Scene} from "./scene.model";
 import {Message} from "./message.model";
 import {Hub} from "./hub.model";
 import {SphereAccess} from "./sphere-access.model";
+import {SphereTrackingNumber} from "./sphere-tracking-number.model";
 
 @model()
 export class Sphere extends AddTimestamps(BaseEntity) {
@@ -58,6 +59,9 @@ export class Sphere extends AddTimestamps(BaseEntity) {
   @hasMany(() => SortedList, {keyTo: 'sphereId'})
   sortedLists: SortedList[];
 
+  @hasMany(() => SphereTrackingNumber, {keyTo: 'sphereId'})
+  trackingNumbers: SphereTrackingNumber[];
+
   @hasMany(() => SphereFeature, {keyTo: 'sphereId'})
   features: SphereFeature[];
 
@@ -66,4 +70,5 @@ export class Sphere extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => Toon, {keyTo: 'sphereId'})
   toons: Toon[];
+
 }
