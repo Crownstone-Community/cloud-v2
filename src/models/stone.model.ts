@@ -6,6 +6,7 @@ import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Location} from "./location.model";
 import {Sphere} from "./sphere.model";
+import {StoneKey} from "./stoneSubModels/stone-key.model";
 
 @model()
 export class Stone extends AddTimestamps(BaseEntity) {
@@ -50,10 +51,10 @@ export class Stone extends AddTimestamps(BaseEntity) {
   locked: boolean;
 
   @belongsTo(() => Location)
-  locationId: number;
+  locationId: string;
 
   @belongsTo(() => StoneSwitchState)
-  currentSwitchStateId: number;
+  currentSwitchStateId: string;
 
   @hasMany(() => StoneAbility, {name: 'abilities', keyTo: 'stoneId'})
   abilities: StoneAbility[];
@@ -64,7 +65,10 @@ export class Stone extends AddTimestamps(BaseEntity) {
   @hasMany(() => StoneSwitchState, {name: 'switchStateHistory', keyTo: 'stoneId'})
   switchStateHistory: StoneSwitchState[];
 
+  @hasMany(() => StoneKey, {keyTo: 'stoneId'})
+  keys: StoneKey[];
+
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

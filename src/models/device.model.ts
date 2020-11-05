@@ -37,7 +37,7 @@ export class Device extends AddTimestamps(BaseEntity) {
   tapToToggleCalibration: number;
 
   @belongsTo(() => User, {name:'owner'})
-  ownerId: number;
+  ownerId: string;
 
   @hasMany(() => AppInstallation, {keyTo: 'deviceId'})
   installations: AppInstallation[];

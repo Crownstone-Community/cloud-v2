@@ -53,14 +53,15 @@
     "passport-http-bearer": "^1.0.1",
     "socket.io-client": "^2.3.0",
     "ts-jest": "^26.4.3",
-    "tslib": "^2.0.3"
+    "tslib": "^2.0.3",
+    "node-uuid": "^1.4.8"
   },
   "devDependencies": {
     "@loopback/build": "^5.4.2",
     "@loopback/eslint-config": "^8.0.0",
     "@loopback/testlab": "^3.2.2",
-    "@types/node": "^14.0.13",
     "@types/jest": "^26.0.9",
+    "@types/node": "^14.0.13",
     "@types/node-fetch": "^2.5.7",
     "@types/passport": "^1.0.4",
     "@types/socket.io-client": "^1.4.33",
@@ -69,10 +70,10 @@
     "crownstone-cloud": "^0.17.13",
     "debug-level": "^0.3.1",
     "eslint": "^7.2.0",
-    "mongodb": "^3.6.2",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-eslint-plugin": "^2.2.2",
     "eslint-plugin-mocha": "^7.0.1",
+    "mongodb": "^3.6.2",
     "nodemon": "^2.0.4",
     "source-map-support": "^0.5.19",
     "typescript": "^4.0.5"

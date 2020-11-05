@@ -16,12 +16,12 @@ export class FingerprintLinker extends AddTimestamps(BaseEntity) {
   locationId: string;
 
   @belongsTo(() => Device)
-  deviceId: number;
+  deviceId: string;
 
   @belongsTo(() => Fingerprint)
-  fingerprintId: number;
+  fingerprintId: string;
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
 }

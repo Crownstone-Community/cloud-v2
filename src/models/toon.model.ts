@@ -40,5 +40,5 @@ export class Toon extends AddTimestamps(BaseEntity) {
   changedProgramTime: number
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

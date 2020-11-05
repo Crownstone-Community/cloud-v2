@@ -4,7 +4,7 @@ import {Device} from "./device.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 
-@model({hiddenProperties:["earlyAccessLevel"]})
+@model({hiddenProperties:["earlyAccessLevel","password",'verificationToken']})
 export class User extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
@@ -18,6 +18,15 @@ export class User extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string'})
   lastName: string;
+
+  @property({type: 'string', required: true})
+  email: string;
+
+  @property({type: 'string', required: true})
+  password: string;
+
+  @property({type: 'string'})
+  verificationToken: string;
 
   @property({type: 'string', default: 'en_us'})
   language: string;

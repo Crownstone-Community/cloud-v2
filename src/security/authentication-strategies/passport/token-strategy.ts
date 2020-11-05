@@ -7,7 +7,7 @@ import {User} from "../../../models/user.model";
 import {UserRepository} from "../../../repositories/users/user.repository";
 import {HubRepository} from "../../../repositories/users/hub.repository";
 import {CrownstoneTokenRepository} from "../../../repositories/users/crownstone-token.repository";
-import {CrownstoneTokenModel} from "../../../models/crownstone-token.model";
+import {CrownstoneToken} from "../../../models/crownstone-token.model";
 
 
 
@@ -26,7 +26,7 @@ export function generateTokenStrategy(userRepo : UserRepository, hubRepo: HubRep
   return new TokenStrategy(
     strategyOptions,
     async function (token : string, done: (err: any, user?: any) => void) : Promise<void> {
-      let crownstoneToken : CrownstoneTokenModel;
+      let crownstoneToken : CrownstoneToken;
       try {
         crownstoneToken = await crownstoneTokenRepo.findById(token);
       }

@@ -24,9 +24,9 @@ export class StoneAbility extends AddTimestamps(BaseEntity) {
   properties: StoneAbilityProperty[];
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => Stone)
-  stoneId: number;
+  stoneId: string;
 
 }

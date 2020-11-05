@@ -12,12 +12,12 @@ export class MessageUser extends AddTimestamps(BaseEntity) {
   id: string;
 
   @belongsTo(() => Message, {name:"message"})
-  messageId: number;
+  messageId: string;
 
   @belongsTo(() => User, {name:"user"})
-  userId: number;
+  userId: string;
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
 }

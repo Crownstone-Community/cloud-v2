@@ -18,9 +18,9 @@ export class SphereAccess extends Entity {
   role: string
 
   @belongsTo(() => Sphere)
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => User)
-  userId: number;
+  userId: string;
 
 }

@@ -11,7 +11,7 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
 
     async create(entity: DataObject<E>, options?: Options): Promise<E> {
       entity.createdAt = new Date();
-      entity.updatedAt = new Date();
+      entity.updatedAt = entity.updatedAt || new Date();
       return super.create(entity, options);
     }
 

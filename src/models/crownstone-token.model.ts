@@ -1,7 +1,7 @@
 import {Entity, model, property, hasMany, belongsTo,} from '@loopback/repository';
 
 @model()
-export class CrownstoneTokenModel extends Entity {
+export class CrownstoneToken extends Entity {
 
   @property({type: 'string', id: true})
   id: string;

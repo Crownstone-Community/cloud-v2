@@ -20,8 +20,8 @@ export class StoneKey extends AddTimestamps(BaseEntity) {
   ttl: number;
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => Stone)
-  stoneId: number;
+  stoneId: string;
 }

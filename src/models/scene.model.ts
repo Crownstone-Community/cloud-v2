@@ -21,5 +21,5 @@ export class Scene extends AddTimestamps(BaseEntity) {
   data: string;
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

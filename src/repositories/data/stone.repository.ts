@@ -13,6 +13,11 @@ import {Location} from "../../models/location.model";
 import {StoneSwitchState} from "../../models/stoneSubModels/stone-switch-state.model";
 import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
 import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
+import * as crypto from "crypto";
+import {HttpErrors} from "@loopback/rest";
+import {StoneKeyRepository} from "./stone-key.repository";
+import {StoneKey} from "../../models/stoneSubModels/stone-key.model";
+import {keyTypes} from "../../enums";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
@@ -23,6 +28,7 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
   public behaviours:         HasManyRepositoryFactory<StoneBehaviour,     typeof StoneBehaviour.prototype.id>;
   public abilities:          HasManyRepositoryFactory<StoneAbility,       typeof StoneAbility.prototype.id>;
   public switchStateHistory: HasManyRepositoryFactory<StoneSwitchState,   typeof StoneSwitchState.prototype.id>;
+  public keys:               HasManyRepositoryFactory<StoneKey,           typeof StoneKey.prototype.id>;
 
 
   constructor(
@@ -34,6 +40,7 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo: StoneBehaviourRepository,
     @repository(StoneAbilityRepository)     protected stoneAbilityRepo: StoneAbilityRepository,
     @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepo: StoneSwitchStateRepository,
+    @repository(StoneKeyRepository)         protected stoneKeyRepo: StoneKeyRepository,
     ) {
     super(Stone, datasource);
     this.sphere = this.createBelongsToAccessorFor(  'sphere',   sphereRepoGetter);
@@ -43,19 +50,89 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
     this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
     this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepo);
+    this.keys               = this.createHasManyRepositoryFactoryFor('keys',              async () => stoneKeyRepo);
   }
 
   async create(entity: DataObject<Stone>, options?: Options): Promise<Stone> {
-    // generate keys
     // generate uid
     // generate major/minor
+    injectMajorMinor(entity);
+    await injectUID(this, entity);
+    let stone = await super.create(entity, options);
 
-    return super.create(entity, options);
+    // generate keys
+    await this.keys(entity.id).create({sphereId: entity.sphereId, keyType: keyTypes.DEVICE_UART_KEY, ttl:0})
+    await this.keys(entity.id).create({sphereId: entity.sphereId, keyType: keyTypes.MESH_DEVICE_KEY, ttl:0})
+
+    // todo: EVENT HOOK
+    return stone;
   }
 
   async delete(entity: Stone, options?: Options): Promise<void> {
-    // cascade
+    await this.behaviours(entity.id).delete()
+    await this.abilities(entity.id).delete()
+    await this.switchStateHistory(entity.id).delete()
+    await this.keys(entity.id).delete()
+
     return super.delete(entity, options);
   }
 
+}
+
+
+function injectMajorMinor(stone: DataObject<Stone>) {
+  let buf = crypto.randomBytes(4);
+  if (!stone.major) {
+    stone.major = buf.readUInt16BE(0);
+  }
+  if (!stone.minor) {
+    stone.minor = buf.readUInt16BE(2);
+  }
+
+  // this catches the case where the random number is 0 for either
+  if (!stone.minor || !stone.major) {
+    injectMajorMinor(stone);
+  }
+}
+
+async function injectUID( stoneRepo: StoneRepository, stone: DataObject<Stone> ) {
+  if (!stone.uid) { return }
+
+  // To inject a UID, we look for the highest available one. The new one is one higher
+  // If this is more than the allowed amount of Crownstones, we loop over all Crownstones in the Sphere to check for gaps
+  // Gaps can form when Crownstones are deleted.
+  // If all gaps are filled, we throw an error to tell the user that he reached the maximum amount.
+  let stones = await stoneRepo.find({where: {sphereId: stone.sphereId}, order: ["uid DESC"], limit: 1})
+
+  if (stones.length > 0) {
+    let stone = stones[0];
+    if ((stone.uid + 1) > 255) {
+      await injectUIDinGap(stoneRepo, stone);
+    }
+    else {
+      stone.uid = stone.uid + 1;
+    }
+  }
+  else {
+    stone.uid = 1;
+  }
+}
+
+async function injectUIDinGap(stoneRepo: StoneRepository, stone: DataObject<Stone>) {
+  let allStones = await stoneRepo.find({where: {sphereId: stone.sphereId}, order: ["uid ASC"]})
+  let availableUID = 0;
+  for (let i = 0; i < allStones.length; i++) {
+    let expectedUID = i+1;
+    if (allStones[i].uid !== expectedUID) {
+      availableUID = expectedUID;
+      break;
+    }
+  }
+
+  if (availableUID > 0 && availableUID < 256) {
+    stone.uid = availableUID;
+  }
+  else {
+    throw new HttpErrors.UnprocessableEntity("The maximum number of Crownstones per Sphere, 255, has been reached. You cannot add another Crownstone without deleting one first.")
+  }
 }

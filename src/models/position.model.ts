@@ -15,9 +15,9 @@ export class Position extends Entity {
   y: number;
 
   @belongsTo(() => Sphere)
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => Location)
-  locationId: number;
+  locationId: string;
 
 }

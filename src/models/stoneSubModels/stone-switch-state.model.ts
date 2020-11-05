@@ -18,8 +18,8 @@ export class StoneSwitchState extends AddTimestamps(BaseEntity) {
 
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => Stone)
-  stoneId: number;
+  stoneId: string;
 }

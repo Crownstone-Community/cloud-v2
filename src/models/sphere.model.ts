@@ -13,6 +13,7 @@ import {Message} from "./message.model";
 import {Hub} from "./hub.model";
 import {SphereAccess} from "./sphere-access.model";
 import {SphereTrackingNumber} from "./sphere-tracking-number.model";
+import {SphereKey} from "./sphere-key.model";
 
 @model()
 export class Sphere extends AddTimestamps(BaseEntity) {
@@ -39,7 +40,7 @@ export class Sphere extends AddTimestamps(BaseEntity) {
   gpsLocation: GeoPoint;
 
   @belongsTo(() => User, {name:'owner'})
-  ownerId: number;
+  ownerId: string;
 
   @hasMany(() => Location, {keyTo: 'sphereId'})
   locations: Location[];
@@ -52,6 +53,9 @@ export class Sphere extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => Message, {keyTo: 'sphereId'})
   messages: Message[];
+
+  @hasMany(() => SphereKey, {keyTo: 'sphereId'})
+  keys: SphereKey[];
 
   @hasMany(() => Hub, {keyTo: 'sphereId'})
   hubs: Hub[];

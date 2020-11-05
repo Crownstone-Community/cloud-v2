@@ -25,6 +25,6 @@ export class AppInstallation extends AddTimestamps(BaseEntity) {
   developmentApp: boolean
 
   @belongsTo(() => Device)
-  deviceId: number;
+  deviceId: string;
 
 }

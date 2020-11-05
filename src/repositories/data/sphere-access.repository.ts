@@ -1,12 +1,11 @@
-import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, Getter, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
-import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
 import {SphereRepository} from "./sphere.repository";
 import {SphereAccess} from "../../models/sphere-access.model";
 import {Sphere} from "../../models/sphere.model";
 
 
-export class SphereAccessRepository extends TimestampedCrudRepository<SphereAccess,typeof SphereAccess.prototype.id > {
+export class SphereAccessRepository extends DefaultCrudRepository<SphereAccess,typeof SphereAccess.prototype.id > {
   public readonly sphere: BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
 
   constructor(

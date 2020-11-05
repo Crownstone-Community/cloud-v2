@@ -16,6 +16,6 @@ export class DevicePreferences extends AddTimestamps(BaseEntity) {
   value: string;
 
   @belongsTo(() => Device)
-  deviceId: number;
+  deviceId: string;
 
 }

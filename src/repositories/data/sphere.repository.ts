@@ -30,6 +30,12 @@ import {ToonRepository} from "./toon.repository";
 import {SphereAccessRepository} from "./sphere-access.repository";
 import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
 import {SphereTrackingNumberRepository} from "./sphere-tracking-number.repository";
+import {SphereKeyRepository} from "./sphere-key.repository";
+import {SphereKey} from "../../models/sphere-key.model";
+import {CloudUtil} from "../../util/CloudUtil";
+import * as crypto from "crypto";
+import {keyTypes} from "../../enums";
+import {HttpErrors} from "@loopback/rest";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {
@@ -43,9 +49,9 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   public sortedLists:    HasManyRepositoryFactory<SortedList,    typeof SortedList.prototype.id>;
   public sphereFeatures: HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
   public trackingNumbers: HasManyRepositoryFactory<SphereTrackingNumber, typeof SphereTrackingNumber.prototype.id>;
+  public keys:           HasManyRepositoryFactory<SphereKey, typeof SphereKey.prototype.id>;
   public toons:          HasManyRepositoryFactory<Toon, typeof Toon.prototype.id>;
   public users:          HasManyThroughRepositoryFactory<User, typeof User.prototype.id, SphereAccess, typeof Sphere.prototype.id>;
-
 
 
   constructor(
@@ -62,6 +68,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(SortedListRepository)    protected sortedListRepo:    SortedListRepository,
     @repository(SphereFeatureRepository) protected sphereFeatureRepo: SphereFeatureRepository,
     @repository(SphereTrackingNumberRepository) protected sphereTrackingNumberRepo: SphereTrackingNumberRepository,
+    @repository(SphereKeyRepository)     protected sphereKeyRepo:     SphereKeyRepository,
     @repository(ToonRepository)          protected toonRepo:          ToonRepository,
   ) {
     super(Sphere, datasource);
@@ -72,6 +79,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     this.locations       = this.createHasManyRepositoryFactoryFor('locations',  async () => locationRepo);
     this.scenes          = this.createHasManyRepositoryFactoryFor('scenes',     async () => sceneRepo);
     this.messages        = this.createHasManyRepositoryFactoryFor('messages',   async () => messageRepo);
+    this.keys            = this.createHasManyRepositoryFactoryFor('keys',       async () => sphereKeyRepo);
     this.hubs            = this.createHasManyRepositoryFactoryFor('hubs',       async () => hubRepo);
     this.sortedLists     = this.createHasManyRepositoryFactoryFor('sortedLists',async () => sortedListRepo);
     this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
@@ -80,17 +88,46 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   }
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {
-    // generate keys
-    // generate uuids
-    // generate uid
-    // inject owner
+    if (!entity.uuid) {
+      entity.uuid = CloudUtil.createIBeaconUUID();
+    }
+    if (!entity.uid) {
+      entity.uid = crypto.randomBytes(1)[0]
+    }
+    if (!entity.ownerId) {
+      throw new HttpErrors.BadRequest("OwnerId must be supplied.");
+    }
 
-    return super.create(entity, options);
+    let sphere = await super.create(entity, options);
+
+    await this.keys(sphere.id).create({keyType: keyTypes.ADMIN_KEY,            key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.MEMBER_KEY,           key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.BASIC_KEY,            key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.LOCALIZATION_KEY,     key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.SERVICE_DATA_KEY,     key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.MESH_APPLICATION_KEY, key: CloudUtil.createKey()});
+    await this.keys(sphere.id).create({keyType: keyTypes.MESH_NETWORK_KEY,     key: CloudUtil.createKey()});
+
+    return sphere;
   }
 
   async delete(entity: Sphere, options?: Options): Promise<void> {
     // cascade
+    let stones = await this.stones(entity.id).find({fields: {id:true}});
+    if (stones.length > 0) {
+      throw new HttpErrors.PreconditionFailed("Can't delete spheres while there are still Crownstones assigned to it.");
+    }
 
+    await this.stones(entity.id).delete()
+    await this.locations(entity.id).delete()
+    await this.scenes(entity.id).delete()
+    await this.messages(entity.id).delete()
+    await this.keys(entity.id).delete()
+    await this.hubs(entity.id).delete()
+    await this.sortedLists(entity.id).delete()
+    await this.sphereFeatures(entity.id).delete()
+    await this.trackingNumbers(entity.id).delete()
+    await this.toons(entity.id).delete()
     return super.delete(entity, options);
   }
 

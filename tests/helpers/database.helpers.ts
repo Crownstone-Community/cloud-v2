@@ -24,35 +24,68 @@ import {PositionRepository} from "../../src/repositories/data/position.repositor
 import {UserRepository} from "../../src/repositories/users/user.repository";
 import {HubRepository} from "../../src/repositories/users/hub.repository";
 import {CrownstoneTokenRepository} from "../../src/repositories/users/crownstone-token.repository";
+import {StoneKeyRepository} from "../../src/repositories/data/stone-key.repository";
+import {SphereKeyRepository} from "../../src/repositories/data/sphere-key.repository";
+
+interface allRepos {
+  sphere : SphereRepository,
+  appInstallation : AppInstallationRepository,
+  devicePreferences : DevicePreferencesRepository,
+  device : DeviceRepository,
+  fingerprintLinker: FingerprintLinkerRepository,
+  fingerprint: FingerprintRepository,
+  location: LocationRepository,
+  message: MessageRepository,
+  messageState: MessageStateRepository,
+  messageUser: MessageUserRepository,
+  scene: SceneRepository,
+  sortedList: SortedListRepository,
+  sphereAccess:SphereAccessRepository,
+  sphereFeature:SphereFeatureRepository,
+  sphereTrackingNumber: SphereTrackingNumberRepository,
+  sphereKeys: SphereKeyRepository,
+  stone: StoneRepository,
+  stoneAbilityProperty: StoneAbilityPropertyRepository,
+  stoneAbility: StoneAbilityRepository,
+  stoneBehaviour: StoneBehaviourRepository,
+  stoneSwitchState: StoneSwitchStateRepository,
+  stoneKeys: StoneKeyRepository,
+  position: PositionRepository,
+  toon: ToonRepository,
+  user: UserRepository,
+  hub: HubRepository,
+  crownstoneToken: CrownstoneTokenRepository,
+}
 
 
-
-function init() {
+function initRepositories() : allRepos {
   let sphere : SphereRepository;
   let appInstallation : AppInstallationRepository;
   let devicePreferences : DevicePreferencesRepository
   let device : DeviceRepository;
-  let fingerprintLinker: FingerprintLinkerRepository
-  let fingerprint: FingerprintRepository
-  let location: LocationRepository
-  let message: MessageRepository
-  let messageState: MessageStateRepository
-  let messageUser: MessageUserRepository
-  let scene: SceneRepository
-  let sortedList: SortedListRepository
-  let sphereAccess:SphereAccessRepository
-  let sphereFeature:SphereFeatureRepository
-  let sphereTrackingNumber: SphereTrackingNumberRepository
-  let stone: StoneRepository
-  let stoneAbilityProperty: StoneAbilityPropertyRepository
-  let stoneAbility: StoneAbilityRepository
-  let stoneBehaviour: StoneBehaviourRepository
-  let stoneSwitchState: StoneSwitchStateRepository
-  let position: PositionRepository
+  let fingerprintLinker: FingerprintLinkerRepository;
+  let fingerprint: FingerprintRepository;
+  let location: LocationRepository;
+  let message: MessageRepository;
+  let messageState: MessageStateRepository;
+  let messageUser: MessageUserRepository;
+  let scene: SceneRepository;
+  let sortedList: SortedListRepository;
+  let sphereAccess:SphereAccessRepository;
+  let sphereFeature:SphereFeatureRepository;
+  let sphereTrackingNumber: SphereTrackingNumberRepository;
+  let sphereKeys: SphereKeyRepository;
+  let stone: StoneRepository;
+  let stoneAbilityProperty: StoneAbilityPropertyRepository;
+  let stoneAbility: StoneAbilityRepository;
+  let stoneBehaviour: StoneBehaviourRepository;
+  let stoneSwitchState: StoneSwitchStateRepository;
+  let stoneKeys: StoneKeyRepository;;
+  let position: PositionRepository;
   let toon: ToonRepository;
-  let user: UserRepository
-  let hub: HubRepository
-  let crownstoneToken: CrownstoneTokenRepository
+  let user: UserRepository;
+  let hub: HubRepository;
+  let crownstoneToken: CrownstoneTokenRepository;
 
 
   let sphereGetter       = () : Promise<SphereRepository>     => { return new Promise((resolve, _) => { resolve(sphere) })}
@@ -86,15 +119,17 @@ function init() {
   sphereAccess         = new SphereAccessRepository(testdb, sphereGetter);
   sphereFeature        = new SphereFeatureRepository(testdb, sphereGetter);
   sphereTrackingNumber = new SphereTrackingNumberRepository(testdb, sphereGetter);
+  sphereKeys           = new SphereKeyRepository(testdb, sphereGetter);
   stoneAbilityProperty = new StoneAbilityPropertyRepository(testdb, sphereGetter, stoneGetter, abilityGetter );
   stoneAbility         = new StoneAbilityRepository(testdb,  sphereGetter, stoneGetter, stoneAbilityProperty);
   stoneBehaviour       = new StoneBehaviourRepository(testdb, sphereGetter, stoneGetter);
   stoneSwitchState     = new StoneSwitchStateRepository(testdb, sphereGetter, stoneGetter);
-  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
+  stoneKeys            = new StoneKeyRepository(testdb, sphereGetter, stoneGetter);
+  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState, stoneKeys);
   position             = new PositionRepository(testdb, sphereGetter);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
-  sphere               = new SphereRepository(testdb, userGetter, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, toon);
+  sphere               = new SphereRepository(testdb, userGetter, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, sphereKeys, toon);
   user                 = new UserRepository(testdb, sphere, device);
 
 
@@ -114,6 +149,8 @@ function init() {
     sphereAccess,
     sphereFeature,
     sphereTrackingNumber,
+    sphereKeys,
+    stoneKeys,
     stone,
     stoneAbilityProperty,
     stoneAbility,
@@ -134,14 +171,13 @@ function init() {
  * This clears the testDb for all users
  */
 export async function clearTestDatabase() {
-  let dbObject = init();
-
+  let dbObject = initRepositories();
   let dbs = Object.keys(dbObject);
   for (let i = 0; i < dbs.length; i++) {
-    await dbs[dbs[i]].deleteAll();
+    await dbObject[dbs[i]].deleteAll();
   }
 }
 
 export function getRepositories() {
-  return init();
+  return initRepositories();
 }

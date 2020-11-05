@@ -26,5 +26,5 @@ export class SphereFeature extends AddTimestamps(BaseEntity) {
 
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

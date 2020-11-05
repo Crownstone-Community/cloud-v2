@@ -29,10 +29,10 @@ export class Message extends AddTimestamps(BaseEntity) {
   deliveredAll: boolean;
 
   @belongsTo(() => Location, {name:'triggerLocation'})
-  triggerLocationId: number;
+  triggerLocationId: string;
 
   @belongsTo(() => User, {name:'owner'})
-  ownerId: number;
+  ownerId: string;
 
   @hasMany(() => User, {through: {model: () => MessageUser}})
   recipients: User[];
@@ -44,6 +44,6 @@ export class Message extends AddTimestamps(BaseEntity) {
   read: MessageState[];
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
 }

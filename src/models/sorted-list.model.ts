@@ -18,5 +18,5 @@ export class SortedList extends AddTimestamps(BaseEntity) {
   sortedList: string; // stringified list
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

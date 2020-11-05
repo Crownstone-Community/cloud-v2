@@ -37,5 +37,5 @@ export class Location extends AddTimestamps(BaseEntity) {
   sphereOverviewPosition: Position
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

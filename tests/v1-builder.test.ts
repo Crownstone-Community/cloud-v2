@@ -1,12 +1,22 @@
-// import {createUserData} from "./builders/createUserData";
+
+
+/*
+This file is used to create a mock database on the old, locally running rest api, which MUST be connected to a local
+mongo instance. This is not checked. Be careful!
+ */
+
+
+
+
+// import {createUserData} from "./builders-legacy/createUserData";
 // const MongoClient = require('mongodb').MongoClient;
 // //
-// // test("populateDatabase", async () => {
-// //   for (let i = 0; i < 50; i++) {
-// //     console.log("create User", i)
-// //     await createUserData()
-// //   }
-// // }, 50000)
+// test("populateDatabase", async () => {
+//   for (let i = 0; i < 50; i++) {
+//     console.log("create User", i)
+//     await createUserData()
+//   }
+// }, 50000)
 //
 // test("DumpDatabase", async () => {
 //   // Connection URL

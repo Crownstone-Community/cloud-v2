@@ -4,3 +4,8 @@ interface stringMap { [key: string]: string }
 
 
 type PromiseCallback = (any) => Promise<any>
+
+type Credentials = {
+  email: string;
+  password: string;
+};

@@ -6,6 +6,8 @@ import {Sphere} from "../../models/sphere.model";
 import {Device} from "../../models/device.model";
 import {SphereRepository} from "../data/sphere.repository";
 import {DeviceRepository} from "../data/device.repository";
+import {DataObject, Options} from "@loopback/repository/src/common-types";
+import {CloudUtil} from "../../util/CloudUtil";
 
 
 export class UserRepository extends TimestampedCrudRepository<User,typeof User.prototype.id > {
@@ -21,6 +23,11 @@ export class UserRepository extends TimestampedCrudRepository<User,typeof User.p
     super(User, datasource);
     this.spheres = this.createHasManyRepositoryFactoryFor('spheres',async () => sphereRepository);
     this.devices = this.createHasManyRepositoryFactoryFor('devices',async () => deviceRepository);
+  }
+
+  async create(entity: DataObject<User>, options?: Options): Promise<User> {
+    entity.verificationToken = CloudUtil.createToken();
+    return super.create(entity, options);
   }
 }
 

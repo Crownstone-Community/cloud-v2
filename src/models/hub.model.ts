@@ -28,6 +28,6 @@ export class Hub extends AddTimestamps(BaseEntity) {
   lastSeen: Date
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
 }

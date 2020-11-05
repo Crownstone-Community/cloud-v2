@@ -33,9 +33,9 @@ export class StoneBehaviour extends AddTimestamps(BaseEntity) {
   activeDays: ActiveDays
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
   @belongsTo(() => Stone)
-  stoneId: number;
+  stoneId: string;
 
 }

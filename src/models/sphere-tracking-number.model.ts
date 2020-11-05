@@ -19,6 +19,6 @@ export class SphereTrackingNumber extends AddTimestamps(BaseEntity) {
   trackingNumberType: string
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 
 }

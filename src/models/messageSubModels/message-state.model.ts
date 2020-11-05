@@ -20,14 +20,14 @@ export class MessageState extends AddTimestamps(BaseEntity) {
   syncedToCrownstone: string;
 
   @belongsTo(() => Message, {name:"messageDelivered"})
-  messageDeliveredId: number;
+  messageDeliveredId: string;
 
   @belongsTo(() => Message, {name:"messageRead"})
-  messageReadId: number;
+  messageReadId: string;
 
   @belongsTo(() => User, {name:"user"})
-  userId: number;
+  userId: string;
 
   @belongsTo(() => Sphere, {name:'sphere'})
-  sphereId: number;
+  sphereId: string;
 }

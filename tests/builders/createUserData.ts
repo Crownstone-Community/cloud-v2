@@ -1,75 +1,48 @@
+'use strict'
 // mock the endpoind REST uses
-import {Crownstone} from "crownstone-cloud/dist/dataContainers/crownstone";
 
-jest.mock('../../node_modules/crownstone-cloud/dist/config', () => {
-  return {
-    CLOUD_ADDRESS: 'http://localhost:3000/api/',
-  }
-});
-
-import {CrownstoneCloud, REST} from "crownstone-cloud";
+import {getRepositories} from "../helpers";
+import {CloudUtil} from "../../src/util/CloudUtil";
+import {Hub} from "../../src/models/hub.model";
+import {Sphere} from "../../src/models/sphere.model";
+import {User} from "../../src/models/user.model";
 
 function generateName() {
   return Math.floor(Math.random()*1e12).toString(36)
 }
 
-type REST_api = typeof REST;
+export async function createUser(email?, password?, updatedAt?) : Promise<User> {
+  updatedAt ??= Date.now();
+  email     ??= generateName() + "@test.com";
+  password  ??= 'test';
 
-export async function createUserData(name?) {
-  if (!name) { name = generateName() }
-  let cloud = new CrownstoneCloud('http://localhost:3000/api');
-  cloud.log.config.setLevel('warn')
-  try {
-    let email = `testAccount+${name}@crownstone.rocks`;
-    let password = 'hello';
-    let user = await REST.registerUser({email: email, password: cloud.hashPassword(password)})
-    let userId = user.id;
-    REST.setUserId(userId);
-    let login = await cloud.login(email, password);
-    REST.setAccessToken(login.accessToken);
+  let hashedPassword = CloudUtil.hashPassword(password);
 
-    let sphere = await createSphereData(REST, cloud)
-    let device = await REST.createDevice({})
+  let dbs = getRepositories();
 
-  }
-  catch (e) {
-    console.log("ERROR", e)
-  }
+  let user = await dbs.user.create({email: email, password: hashedPassword, updatedAt: updatedAt })
+  return user;
 }
 
-export async function createSphereData(REST : REST_api, cloud: CrownstoneCloud) {
-  let sphere = await REST.createSphere({name: generateName() })
+export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> {
+  updatedAt ??= Date.now();
+  name      ??= generateName();
 
-  let sphereId = sphere.id;
+  let dbs = getRepositories();
 
-  for (let i = 0; i < 5; i++) {
-    let location = await REST.forSphere(sphereId).createLocation({name: generateName() })
-    let stone = await REST.forSphere(sphereId).createStone({name: generateName(), address: generateName(), locationId: location.id})
-    await REST.forStone(stone.id).createBehaviour({
-      "type": "BEHAVIOUR",
-      "data": {
-        time: {
-          type: 'RANGE',
-          from: { type: 'SUNSET', offsetMinutes: 0 },
-          to: { type: 'CLOCK', data:{hours:1,minutes:0}}
-        },
-        presence: { type: 'IGNORE' },
-        action: { type: 'BE_ON', data: 100 }
-      },
-      "idOnCrownstone": 0,
-      "profileIndex": 0,
-      sphereId:sphereId,
-      "syncedToCrownstone": true,
-      "deleted": false,
-      "activeDays": {
-        "Mon": true,
-        "Tue": false,
-        "Wed": true,
-        "Thu": false,
-        "Fri": true,
-        "Sat": true,
-        "Sun": true
-      }
-    })
-  }
+  let sphere = await dbs.sphere.create({ownerId: userId, name, updatedAt})
+  await dbs.sphereAccess.create({sphereId: sphere.id, userId: userId, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()})
+  return sphere;
+}
+
+export async function createHub(sphereId, name?, updatedAt?, token?) : Promise<Hub> {
+  updatedAt ??= Date.now();
+  name      ??= generateName();
+  token     ??= "helloI'mAHub";
+
+  let dbs = getRepositories();
+
+  let hub = await dbs.hub.create({sphereId: sphereId, name: name, token: token, updatedAt})
+  await dbs.sphereAccess.create({sphereId: sphereId, userId: hub.id, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()})
+  return hub;
 }
