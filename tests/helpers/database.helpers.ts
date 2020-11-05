@@ -26,39 +26,9 @@ import {HubRepository} from "../../src/repositories/users/hub.repository";
 import {CrownstoneTokenRepository} from "../../src/repositories/users/crownstone-token.repository";
 import {StoneKeyRepository} from "../../src/repositories/data/stone-key.repository";
 import {SphereKeyRepository} from "../../src/repositories/data/sphere-key.repository";
+import {RepositoryContainer} from "../../src/modules/containers/RepoContainer";
 
-interface allRepos {
-  sphere : SphereRepository,
-  appInstallation : AppInstallationRepository,
-  devicePreferences : DevicePreferencesRepository,
-  device : DeviceRepository,
-  fingerprintLinker: FingerprintLinkerRepository,
-  fingerprint: FingerprintRepository,
-  location: LocationRepository,
-  message: MessageRepository,
-  messageState: MessageStateRepository,
-  messageUser: MessageUserRepository,
-  scene: SceneRepository,
-  sortedList: SortedListRepository,
-  sphereAccess:SphereAccessRepository,
-  sphereFeature:SphereFeatureRepository,
-  sphereTrackingNumber: SphereTrackingNumberRepository,
-  sphereKeys: SphereKeyRepository,
-  stone: StoneRepository,
-  stoneAbilityProperty: StoneAbilityPropertyRepository,
-  stoneAbility: StoneAbilityRepository,
-  stoneBehaviour: StoneBehaviourRepository,
-  stoneSwitchState: StoneSwitchStateRepository,
-  stoneKeys: StoneKeyRepository,
-  position: PositionRepository,
-  toon: ToonRepository,
-  user: UserRepository,
-  hub: HubRepository,
-  crownstoneToken: CrownstoneTokenRepository,
-}
-
-
-function initRepositories() : allRepos {
+function initRepositories() : RepositoryContainer {
   let sphere : SphereRepository;
   let appInstallation : AppInstallationRepository;
   let devicePreferences : DevicePreferencesRepository
@@ -125,11 +95,11 @@ function initRepositories() : allRepos {
   stoneBehaviour       = new StoneBehaviourRepository(testdb, sphereGetter, stoneGetter);
   stoneSwitchState     = new StoneSwitchStateRepository(testdb, sphereGetter, stoneGetter);
   stoneKeys            = new StoneKeyRepository(testdb, sphereGetter, stoneGetter);
-  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState, stoneKeys);
+  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
   position             = new PositionRepository(testdb, sphereGetter);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
-  sphere               = new SphereRepository(testdb, userGetter, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, sphereKeys, toon);
+  sphere               = new SphereRepository(testdb, userGetter, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, toon);
   user                 = new UserRepository(testdb, sphere, device);
 
 

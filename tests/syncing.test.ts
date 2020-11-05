@@ -21,5 +21,5 @@ test("AttemptSync", async () => {
   let repos = getRepositories();
 
 
-  // await client.get("/users/sync").expect(401)
+  // await client.get("/user/sync").expect(401)
 });

@@ -1,4 +1,5 @@
 import {ApplicationConfig, ExpressServer} from './server';
+import {PopulateRepositoryContainer} from "./modules/containers/RepoContainer";
 
 export * from './server';
 
@@ -14,6 +15,8 @@ export async function main(options: ApplicationConfig = {}) {
   const server = new ExpressServer(config);
   await server.boot();
   await server.start();
+
+  await PopulateRepositoryContainer(server.lbApp);
 
   const port = server.lbApp.restServer.config.port ?? 3000;
   const host = server.lbApp.restServer.config.host ?? 'NO-HOST';

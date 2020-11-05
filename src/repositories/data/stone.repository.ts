@@ -15,9 +15,8 @@ import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model"
 import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
 import * as crypto from "crypto";
 import {HttpErrors} from "@loopback/rest";
-import {StoneKeyRepository} from "./stone-key.repository";
-import {StoneKey} from "../../models/stoneSubModels/stone-key.model";
 import {keyTypes} from "../../enums";
+import {Dbs} from "../../modules/containers/RepoContainer";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
@@ -28,7 +27,6 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
   public behaviours:         HasManyRepositoryFactory<StoneBehaviour,     typeof StoneBehaviour.prototype.id>;
   public abilities:          HasManyRepositoryFactory<StoneAbility,       typeof StoneAbility.prototype.id>;
   public switchStateHistory: HasManyRepositoryFactory<StoneSwitchState,   typeof StoneSwitchState.prototype.id>;
-  public keys:               HasManyRepositoryFactory<StoneKey,           typeof StoneKey.prototype.id>;
 
 
   constructor(
@@ -40,7 +38,6 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo: StoneBehaviourRepository,
     @repository(StoneAbilityRepository)     protected stoneAbilityRepo: StoneAbilityRepository,
     @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepo: StoneSwitchStateRepository,
-    @repository(StoneKeyRepository)         protected stoneKeyRepo: StoneKeyRepository,
     ) {
     super(Stone, datasource);
     this.sphere = this.createBelongsToAccessorFor(  'sphere',   sphereRepoGetter);
@@ -50,7 +47,6 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
     this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
     this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepo);
-    this.keys               = this.createHasManyRepositoryFactoryFor('keys',              async () => stoneKeyRepo);
   }
 
   async create(entity: DataObject<Stone>, options?: Options): Promise<Stone> {
@@ -61,18 +57,22 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     let stone = await super.create(entity, options);
 
     // generate keys
-    await this.keys(entity.id).create({sphereId: entity.sphereId, keyType: keyTypes.DEVICE_UART_KEY, ttl:0})
-    await this.keys(entity.id).create({sphereId: entity.sphereId, keyType: keyTypes.MESH_DEVICE_KEY, ttl:0})
+    await Dbs.stoneKeys.createAll([
+      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.DEVICE_UART_KEY, ttl:0},
+      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.MESH_DEVICE_KEY, ttl:0}
+    ]);
 
     // todo: EVENT HOOK
     return stone;
   }
 
   async delete(entity: Stone, options?: Options): Promise<void> {
+    if (!entity.id) { throw "StoneIdRequired" }
+
     await this.behaviours(entity.id).delete()
     await this.abilities(entity.id).delete()
     await this.switchStateHistory(entity.id).delete()
-    await this.keys(entity.id).delete()
+    await Dbs.stoneKeys.deleteAll({stoneId: entity.id});
 
     return super.delete(entity, options);
   }

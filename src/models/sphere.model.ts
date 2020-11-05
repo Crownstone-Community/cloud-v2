@@ -54,9 +54,6 @@ export class Sphere extends AddTimestamps(BaseEntity) {
   @hasMany(() => Message, {keyTo: 'sphereId'})
   messages: Message[];
 
-  @hasMany(() => SphereKey, {keyTo: 'sphereId'})
-  keys: SphereKey[];
-
   @hasMany(() => Hub, {keyTo: 'sphereId'})
   hubs: Hub[];
 

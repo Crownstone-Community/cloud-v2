@@ -8,12 +8,12 @@ import {CrownstoneTokenRepository} from "../../repositories/users/crownstone-tok
 import {UserRepository} from "../../repositories/users/user.repository";
 import {HubRepository} from "../../repositories/users/hub.repository";
 import {SphereAccessRepository} from "../../repositories/data/sphere-access.repository";
+import {HttpErrors} from "@loopback/rest";
 
 
 export interface UserProfileDescription {
   [securityId] : string,
 }
-
 
 
 export class AccessTokenStrategy implements AuthenticationStrategy {
@@ -34,14 +34,13 @@ export class AccessTokenStrategy implements AuthenticationStrategy {
   }
 
   async authenticate(request: Request): Promise<UserProfile | undefined> {
-    let userProfile = await this.accessTokenCheck.authenticate(request);
-    // if (!api_key) {
-    //   throw new HttpErrors.Unauthorized(`Api key not found.`);
-    // }
-    // api_key = api_key.replace("Bearer ",'');
-    // let user = await this.userService.checkApiKey(api_key as string)
-    //
-    return userProfile;
+    try {
+      let userProfile = await this.accessTokenCheck.authenticate(request);
+      return userProfile;
+    }
+    catch (e) {
+      throw new HttpErrors.Unauthorized("Unauthorized")
+    }
   }
 
 

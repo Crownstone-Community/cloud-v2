@@ -13,7 +13,8 @@ import {CrownstoneToken} from "../../../models/crownstone-token.model";
 
 var strategyOptions = {
   tokenHeader:    'Authorization',
-  tokenField:     'access_token'
+  tokenField:     'access_token',
+  tokenQuery:     'access_token',
 };
 
 type TokenPrincipalType = 'user' | 'hub'
@@ -23,8 +24,7 @@ interface TokenData {
 }
 
 export function generateTokenStrategy(userRepo : UserRepository, hubRepo: HubRepository, crownstoneTokenRepo : CrownstoneTokenRepository) : Strategy {
-  return new TokenStrategy(
-    strategyOptions,
+  return new TokenStrategy( strategyOptions,
     async function (token : string, done: (err: any, user?: any) => void) : Promise<void> {
       let crownstoneToken : CrownstoneToken;
       try {
