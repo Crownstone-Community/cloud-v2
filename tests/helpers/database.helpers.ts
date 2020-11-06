@@ -99,8 +99,8 @@ function initRepositories() : RepositoryContainer {
   position             = new PositionRepository(testdb, sphereGetter);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
-  sphere               = new SphereRepository(testdb, userGetter, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, toon);
-  user                 = new UserRepository(testdb, sphere, device);
+  sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sortedList, sphereFeature, sphereTrackingNumber, toon);
+  user                 = new UserRepository(testdb, sphereAccessGetter, sphereGetter, device);
 
 
   return {

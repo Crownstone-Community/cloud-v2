@@ -1,4 +1,4 @@
-import {Entity, model, property, hasMany, belongsTo,} from '@loopback/repository';
+import {Entity, model, property} from '@loopback/repository';
 
 @model()
 export class CrownstoneToken extends Entity {

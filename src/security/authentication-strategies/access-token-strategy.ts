@@ -39,6 +39,9 @@ export class AccessTokenStrategy implements AuthenticationStrategy {
       return userProfile;
     }
     catch (e) {
+      if (e instanceof HttpErrors) {
+        throw e;
+      }
       throw new HttpErrors.Unauthorized("Unauthorized")
     }
   }

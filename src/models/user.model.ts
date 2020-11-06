@@ -3,6 +3,7 @@ import {Sphere} from "./sphere.model";
 import {Device} from "./device.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
+import {SphereAccess} from "./sphere-access.model";
 
 @model({settings:{hiddenProperties:["earlyAccessLevel","password",'verificationToken']}})
 export class User extends AddTimestamps(BaseEntity) {
@@ -52,7 +53,7 @@ export class User extends AddTimestamps(BaseEntity) {
   @property({type: 'number', default: 0, required: true})
   earlyAccessLevel: number;
 
-  @hasMany(() => Sphere, {keyTo: 'ownerId'})
+  @hasMany(() => Sphere, {through: {model: () => SphereAccess}})
   spheres: Sphere[];
 
   @hasMany(() => Device, {keyTo: 'ownerId'})

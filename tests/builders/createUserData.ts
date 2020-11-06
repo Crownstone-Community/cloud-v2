@@ -30,7 +30,7 @@ export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> 
 
   let dbs = getRepositories();
 
-  let sphere = await dbs.sphere.create({ownerId: userId, name, updatedAt})
+  let sphere = await dbs.sphere.create({name, updatedAt})
   await dbs.sphereAccess.create({sphereId: sphere.id, userId: userId, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()})
   return sphere;
 }

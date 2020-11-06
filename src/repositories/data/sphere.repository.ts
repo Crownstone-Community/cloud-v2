@@ -38,8 +38,6 @@ import {Dbs} from "../../modules/containers/RepoContainer";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {
-  public readonly owner: BelongsToAccessor<User, typeof User.prototype.id>;
-
   public stones:         HasManyRepositoryFactory<Stone,         typeof Stone.prototype.id>;
   public locations:      HasManyRepositoryFactory<Location,      typeof Location.prototype.id>;
   public scenes:         HasManyRepositoryFactory<Scene,         typeof Scene.prototype.id>;
@@ -54,7 +52,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('UserRepository') ownerRepoGetter: Getter<UserRepository>,
     @repository.getter('SphereAccessRepository') sphereAccessRepoGetter: Getter<SphereAccessRepository>,
     @repository.getter('UserRepository') userRepoGetter: Getter<UserRepository>,
 
@@ -69,7 +66,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(ToonRepository)          protected toonRepo:          ToonRepository,
   ) {
     super(Sphere, datasource);
-    this.owner           = this.createBelongsToAccessorFor('owner', ownerRepoGetter);
     this.users           = this.createHasManyThroughRepositoryFactoryFor('users', userRepoGetter, sphereAccessRepoGetter);
 
     this.stones          = this.createHasManyRepositoryFactoryFor('stones',     async () => stoneRepo);
@@ -84,15 +80,8 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   }
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {
-    if (!entity.uuid) {
-      entity.uuid = CloudUtil.createIBeaconUUID();
-    }
-    if (!entity.uid) {
-      entity.uid = crypto.randomBytes(1)[0]
-    }
-    if (!entity.ownerId) {
-      throw new HttpErrors.BadRequest("OwnerId must be supplied.");
-    }
+    if (!entity.uuid) { entity.uuid = CloudUtil.createIBeaconUUID(); }
+    if (!entity.uid)  { entity.uid  = crypto.randomBytes(1)[0]; }
 
     let sphere = await super.create(entity, options);
 

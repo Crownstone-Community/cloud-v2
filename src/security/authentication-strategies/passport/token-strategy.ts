@@ -8,6 +8,8 @@ import {UserRepository} from "../../../repositories/users/user.repository";
 import {HubRepository} from "../../../repositories/users/hub.repository";
 import {CrownstoneTokenRepository} from "../../../repositories/users/crownstone-token.repository";
 import {CrownstoneToken} from "../../../models/crownstone-token.model";
+import {CONFIG} from "../../../config";
+import {HttpErrors} from "@loopback/rest";
 
 
 
@@ -41,7 +43,11 @@ export function generateTokenStrategy(userRepo : UserRepository, hubRepo: HubRep
           if (item.type === 'hub') {
             item.data = await hubRepo.findById(crownstoneToken.userId);
           } else {
-            item.data = await userRepo.findById(crownstoneToken.userId);
+            let user = await userRepo.findById(crownstoneToken.userId);
+            if (user.emailVerified !== true && CONFIG.emailValidationRequired) {
+              throw new HttpErrors.Unauthorized('Email has not been verified yet.');
+            }
+            item.data = user;
           }
           return done(null, item);
         }

@@ -3,7 +3,8 @@ import {UserRepository} from "../repositories/users/user.repository";
 import {CrownstoneTokenRepository} from "../repositories/users/crownstone-token.repository";
 import {CrownstoneToken} from "../models/crownstone-token.model";
 import {HttpErrors} from "@loopback/rest";
-import {CloudUtil} from "../util/CloudUtil";
+
+let bcrypt = require("bcrypt")
 
 export class UserService {
   constructor(
@@ -16,13 +17,17 @@ export class UserService {
     if (!credentials.email)    { throw new HttpErrors.Unauthorized(); }
     if (!credentials.password) { throw new HttpErrors.Unauthorized(); }
 
-    let hashedPassword = CloudUtil.hashPassword(credentials.password);
-    const foundUser = await this.userRepository.findOne({where: {email: credentials.email, password: hashedPassword}}, {fields:{id: true}});
+    const foundUser = await this.userRepository.findOne({where: {email: credentials.email}}, {fields:{id: true, password:true}});
     if (!foundUser) {
       throw new HttpErrors.Unauthorized("Invalid username/password");
     }
 
-    return await this.tokenRepository.create({userId: foundUser.id, principalType: 'user'})
+    let success = await bcrypt.compare(credentials.password, foundUser.password)
+    if (foundUser.password && success) {
+      return await this.tokenRepository.create({userId: foundUser.id, principalType: 'user'})
+    }
+
+    throw new HttpErrors.Unauthorized("Invalid username/password");
   }
 
 }
