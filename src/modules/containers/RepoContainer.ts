@@ -114,6 +114,7 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.stoneKeys            = await app.getRepository(StoneKeyRepository);
   Dbs.position             = await app.getRepository(PositionRepository);
   Dbs.toon                 = await app.getRepository(ToonRepository);
+  Dbs.user                 = await app.getRepository(UserRepository);
 }
 
 

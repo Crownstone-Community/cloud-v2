@@ -1,5 +1,6 @@
 import {CrownstoneCloud} from "../../src/application";
 import {testdb} from "../fixtures/datasources/testdb.datasource";
+import {PopulateRepositoryContainer} from "../../src/modules/containers/RepoContainer";
 
 export async function createApp() : Promise<CrownstoneCloud> {
   Error.stackTraceLimit = 100;
@@ -13,6 +14,7 @@ export async function createApp() : Promise<CrownstoneCloud> {
   app.bind('datasources.users').to(testdb);
   app.bind('datasources.data').to(testdb);
   await app.start();
+  PopulateRepositoryContainer(app);
   return app;
 }
 

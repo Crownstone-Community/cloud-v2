@@ -20,8 +20,8 @@ import {Dbs} from "../../modules/containers/RepoContainer";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
-  public readonly sphere: BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
-  public readonly location: BelongsToAccessor<Location, typeof Location.prototype.id>;
+  public readonly sphere:             BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
+  public readonly location:           BelongsToAccessor<Location, typeof Location.prototype.id>;
   public readonly currentSwitchState: BelongsToAccessor<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
 
   public behaviours:         HasManyRepositoryFactory<StoneBehaviour,     typeof StoneBehaviour.prototype.id>;
@@ -47,6 +47,13 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
     this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
     this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepo);
+
+    this.registerInclusionResolver('location',           this.location.inclusionResolver);
+    this.registerInclusionResolver('behaviours',         this.behaviours.inclusionResolver);
+    this.registerInclusionResolver('abilities',          this.abilities.inclusionResolver);
+    this.registerInclusionResolver('switchStateHistory', this.switchStateHistory.inclusionResolver);
+    this.registerInclusionResolver('currentSwitchState', this.currentSwitchState.inclusionResolver);
+
   }
 
   async create(entity: DataObject<Stone>, options?: Options): Promise<Stone> {

@@ -6,6 +6,7 @@ import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createUser} from "./builders/createUserData";
 import {CloudUtil} from "../src/util/CloudUtil";
+import {login} from "./rest-helpers/rest.helpers";
 
 let app    : CrownstoneCloud;
 let client : Client;
@@ -26,14 +27,13 @@ test("test logging in with credentials.", async () => {
   await createUser(email, pass);
 
   let tokenData;
-  await client.post("/user/login")
-    .send({email, password})
+  await login(client)
     .expect(({body}) => { tokenData = body; })
     .expect(200);
 
   expect(await repos.crownstoneToken.find()).toHaveLength(1);
   let token = await repos.crownstoneToken.findOne();
-  expect(token.id).toHaveLength(64)
+  expect(token.id).toHaveLength(64);
 });
 
 test("test login injection robustness.", async () => {
@@ -61,7 +61,7 @@ test("test incorrect login", async () => {
 
 test("test usage of token.", async () => {
   await createUser(email, pass);
-  await client.post("/user/login").send({email, password}).expect(200);
+  await login(client).expect(200);
 
   await client.get("/user/").expect(401);
 

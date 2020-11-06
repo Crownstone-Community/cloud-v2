@@ -77,6 +77,17 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
     this.trackingNumbers = this.createHasManyRepositoryFactoryFor('trackingNumbers',async () => sphereTrackingNumberRepo);
     this.toons           = this.createHasManyRepositoryFactoryFor('toons',      async () => toonRepo);
+
+    // add this line to register inclusion resolver
+    this.registerInclusionResolver('stones',          this.stones.inclusionResolver);
+    this.registerInclusionResolver('locations',       this.locations.inclusionResolver);
+    this.registerInclusionResolver('scenes',          this.scenes.inclusionResolver);
+    this.registerInclusionResolver('messages',        this.messages.inclusionResolver);
+    this.registerInclusionResolver('hubs',            this.hubs.inclusionResolver);
+    this.registerInclusionResolver('sortedLists',     this.sortedLists.inclusionResolver);
+    this.registerInclusionResolver('features',        this.sphereFeatures.inclusionResolver);
+    this.registerInclusionResolver('trackingNumbers', this.trackingNumbers.inclusionResolver);
+    this.registerInclusionResolver('toons',           this.toons.inclusionResolver);
   }
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {

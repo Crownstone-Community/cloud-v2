@@ -25,5 +25,7 @@ export class StoneAbilityRepository extends TimestampedCrudRepository<StoneAbili
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
     this.stone  = this.createBelongsToAccessorFor('stone', stoneRepoGetter);
     this.properties = this.createHasManyRepositoryFactoryFor('properties',         async () => stoneAbilityPropertyRepo);
+
+    this.registerInclusionResolver('properties', this.properties.inclusionResolver);
   }
 }

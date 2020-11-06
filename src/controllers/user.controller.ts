@@ -12,6 +12,7 @@ import {UserService} from "../services";
 import {User} from "../models/user.model";
 import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
+import {SyncHandler} from "../modules/sync/SyncHandler";
 
 
 const CredentialsSchema: SchemaObject = {
@@ -35,6 +36,7 @@ export const CredentialsRequestBody = {
     'application/json': {schema: CredentialsSchema},
   },
 };
+
 
 
 
@@ -69,8 +71,11 @@ export class UserController {
   @authenticate(SecurityTypes.accessToken)
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-  ): Promise<boolean> {
-    console.log("Sync request")
+    @requestBody({required: true}) syncData: any
+  ): Promise<any> {
+    console.log("Sync request", userProfile, userProfile[securityId])
+
+    await SyncHandler.requestPhase(userProfile[securityId], syncData)
     return true
   }
 

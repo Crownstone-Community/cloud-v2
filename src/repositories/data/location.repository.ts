@@ -22,6 +22,8 @@ export class LocationRepository extends TimestampedCrudRepository<Location,typeo
     super(Location, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
     this.position = this.createHasOneRepositoryFactoryFor('sphereOverviewPosition', positionRepoGetter);
+
+    this.registerInclusionResolver('sphereOverviewPosition', this.position.inclusionResolver);
   }
 
   async create(entity: DataObject<Location>, options?: Options): Promise<Location> {
