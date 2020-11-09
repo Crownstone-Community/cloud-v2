@@ -1,16 +1,19 @@
 import {CONFIG} from "../src/config";
 CONFIG.emailValidationRequired = false;
 
+import {makeUtilDeterministic, restMockRandom} from "./mocks/CloudUtil.mock";
+makeUtilDeterministic();
+
 import {CrownstoneCloud} from "../src/application";
 import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, getRepositories} from "./helpers";
-import {createHub, createSphere, createUser} from "./builders/createUserData";
+import {createHub, createLocation, createSphere, createStone, createUser} from "./builders/createUserData";
 import {auth, getToken} from "./rest-helpers/rest.helpers";
 
 let app    : CrownstoneCloud;
 let client : Client;
 
-beforeEach(async () => { await clearTestDatabase(); })
+beforeEach(async () => { await clearTestDatabase(); restMockRandom(); })
 beforeAll(async () => {
   app    = await createApp()
   client = createRestAppClient(app);
@@ -18,25 +21,25 @@ beforeAll(async () => {
 })
 afterAll(async () => { await app.stop(); })
 
-test("AttemptSync", async () => {
-  let user   = await createUser('test@test.com', 'test', 0);
-  let sphere = await createSphere(user.id, 'mySphere', 0);
-  let hub    = await createHub(sphere.id, 'myHub', 0);
-  let repos  = getRepositories();
+test("Sync Full", async () => {
+  let user     = await createUser('test@test.com', 'test', 0);
+  let sphere   = await createSphere(user.id, 'mySphere', 0);
+  let hub      = await createHub(sphere.id, 'myHub', 0);
+  let stone    = await createStone(sphere.id, 'stone1', 0);
+  let stone2   = await createStone(sphere.id, 'stone2', 0);
+  let stone3   = await createStone(sphere.id, 'stone3', 0);
+  let location = await createLocation(sphere.id, 'location', 0);
+
+  let repos   = getRepositories();
+
   let token  = await getToken(client);
-  await client.get(auth("/user/sync")).expect(200).send({
+  await client.post(auth("/user/sync")).expect(200).send({
     sync: {
-      lastTime: new Date(0),
-      full: false
+      type:"FULL",
     },
-    user: {updatedAt: new Date(0)},
-    spheres: {
-      [sphere.id] :{
-        sphere:    {updatedAt: new Date(0)},
-        hubs: {
-          [hub.id]: { hub: { updatedAt: new Date(0)}}}
-        },
-      }
+  }).expect(
+    ({body}) => {
+    console.log(JSON.stringify(body))
   })
 
 

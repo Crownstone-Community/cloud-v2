@@ -17,6 +17,7 @@ import * as crypto from "crypto";
 import {HttpErrors} from "@loopback/rest";
 import {keyTypes} from "../../enums";
 import {Dbs} from "../../modules/containers/RepoContainer";
+import {CloudUtil} from "../../util/CloudUtil";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
@@ -65,8 +66,8 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
 
     // generate keys
     await Dbs.stoneKeys.createAll([
-      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.DEVICE_UART_KEY, ttl:0},
-      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.MESH_DEVICE_KEY, ttl:0}
+      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.DEVICE_UART_KEY, key: CloudUtil.createKey(), ttl:0},
+      {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.MESH_DEVICE_KEY, key: CloudUtil.createKey(), ttl:0}
     ]);
 
     // todo: EVENT HOOK

@@ -15,10 +15,10 @@ export class StoneAbility extends AddTimestamps(BaseEntity) {
   type: string;
 
   @property({type: 'boolean', required: true})
-  enabled: string;
+  enabled: boolean;
 
   @property({type: 'boolean', required: true})
-  syncedToCrownstone: string;
+  syncedToCrownstone: boolean;
 
   @hasMany(() => StoneAbilityProperty, {name: 'properties', keyTo: 'abilityId'})
   properties: StoneAbilityProperty[];

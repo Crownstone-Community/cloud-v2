@@ -18,7 +18,7 @@ export class StoneBehaviour extends AddTimestamps(BaseEntity) {
   data: string;
 
   @property({type: 'boolean', required: true})
-  syncedToCrownstone: string;
+  syncedToCrownstone: boolean;
 
   @property({type: 'number'})
   idOnCrownstone: number;

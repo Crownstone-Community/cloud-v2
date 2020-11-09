@@ -67,16 +67,14 @@ export class UserController {
 
 
   // returns a list of our objects
-  @get('/user/sync')
+  @post('/user/sync')
   @authenticate(SecurityTypes.accessToken)
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @requestBody({required: true}) syncData: any
   ): Promise<any> {
-    console.log("Sync request", userProfile, userProfile[securityId])
-
-    await SyncHandler.requestPhase(userProfile[securityId], syncData)
-    return true
+    let result = await SyncHandler.handleSync(userProfile[securityId], syncData)
+    return result
   }
 
 }

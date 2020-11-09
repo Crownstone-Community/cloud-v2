@@ -14,7 +14,7 @@ export class StoneAbilityProperty extends AddTimestamps(BaseEntity) {
   @property({type: 'string', required: true})
   type: string;
 
-  @property({type: 'boolean', required: true})
+  @property({type: 'string', required: true})
   value: string;
 
   @belongsTo(() => StoneAbility)

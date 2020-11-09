@@ -105,7 +105,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
       {sphereId: sphere.id, keyType: keyTypes.MESH_APPLICATION_KEY, key: CloudUtil.createKey()},
       {sphereId: sphere.id, keyType: keyTypes.MESH_NETWORK_KEY,     key: CloudUtil.createKey()},
     ]);
-
     return sphere;
   }
 

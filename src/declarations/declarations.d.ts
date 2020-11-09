@@ -12,8 +12,8 @@ type Credentials = {
 
 interface SyncRequest {
   sync: {
+    type: SyncPhase,
     lastTime: Date,
-    full?: boolean
   },
   user: {updatedAt: Date},
   spheres: {
@@ -22,6 +22,9 @@ interface SyncRequest {
       hubs?: {
         [hubId: string]: { hub: {updatedAt: Date}}
       },
+      features?: {
+        [featureId: string]: { feature: { updatedAt: Date }}
+      }
       locations?: {
         [locationId: string]: {
           location: {updatedAt: Date},
@@ -47,17 +50,15 @@ interface SyncRequest {
               }
             }
           },
-          behaviours?: {updatedAt: Date},
+          behaviours?: {
+            [behaviourId: string]: {
+              behaviour: { updatedAt: Date }
+            }
+          }
         }
       },
-      toons?: {
-        [toonId: string]: { toon: { updatedAt: Date }}
-      }
       sortedLists?: {
         [sortedListId: string]: { sortedList: { updatedAt: Date }}
-      }
-      sphereFeatures?: {
-        [sphereFeatureId: string]: { sphereFeature: { updatedAt: Date }}
       }
       trackingNumbers?: {
         [trackingNumberId: string]: { trackingNumber: { updatedAt: Date }}
@@ -69,4 +70,15 @@ interface SyncRequest {
   }
 }
 
-type SyncState = "REQUEST_DATA" | "IN_SYNC" | "NEWER_DATA_AVAILABLE" | "DELETED";
+type SyncType  = "FULL"    | "REQUEST" | "REPLY";
+type SyncState = "DELETED" | "IN_SYNC" | "NEWER_DATA_AVAILABLE" | "REQUEST_DATA" | "VIEW" | "CREATED_IN_CLOUD";
+
+interface SyncSimpleItem {
+  branchInSync: boolean,
+  [id: string] : {
+    [item: string]: {
+      status: SyncState,
+      data?: any
+    }
+  } | boolean
+}

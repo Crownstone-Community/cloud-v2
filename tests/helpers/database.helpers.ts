@@ -58,14 +58,14 @@ function initRepositories() : RepositoryContainer {
   let crownstoneToken: CrownstoneTokenRepository;
 
 
-  let sphereGetter       = () : Promise<SphereRepository>     => { return new Promise((resolve, _) => { resolve(sphere) })}
-  let deviceGetter       = () : Promise<DeviceRepository>     => { return new Promise((resolve, _) => { resolve(device) })}
-  let locationGetter     = () : Promise<LocationRepository>   => { return new Promise((resolve, _) => { resolve(location) })}
-  let stoneGetter        = () : Promise<StoneRepository>      => { return new Promise((resolve, _) => { resolve(stone) })}
-  let abilityGetter      = () : Promise<StoneAbilityRepository>  => { return new Promise((resolve, _) => { resolve(stoneAbility) })}
-  let sphereAccessGetter = () : Promise<SphereAccessRepository>  => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
-  let messageGetter      = () : Promise<MessageRepository>    => { return new Promise((resolve, _) => { resolve(message) })}
-  let positionGetter     = () : Promise<PositionRepository>  => { return new Promise((resolve, _) => { resolve(position) })}
+  let sphereGetter       = () : Promise<SphereRepository>       => { return new Promise((resolve, _) => { resolve(sphere) })}
+  let deviceGetter       = () : Promise<DeviceRepository>       => { return new Promise((resolve, _) => { resolve(device) })}
+  let locationGetter     = () : Promise<LocationRepository>     => { return new Promise((resolve, _) => { resolve(location) })}
+  let stoneGetter        = () : Promise<StoneRepository>        => { return new Promise((resolve, _) => { resolve(stone) })}
+  let abilityGetter      = () : Promise<StoneAbilityRepository> => { return new Promise((resolve, _) => { resolve(stoneAbility) })}
+  let sphereAccessGetter = () : Promise<SphereAccessRepository> => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
+  let messageGetter      = () : Promise<MessageRepository>      => { return new Promise((resolve, _) => { resolve(message) })}
+  let positionGetter     = () : Promise<PositionRepository>     => { return new Promise((resolve, _) => { resolve(position) })}
   let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository>  => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
   let fingerprintGetter  = () : Promise<FingerprintRepository> => { return new Promise((resolve, _) => { resolve(fingerprint) })}
   let messageUserGetter  = () : Promise<MessageUserRepository> => { return new Promise((resolve, _) => { resolve(messageUser) })}
