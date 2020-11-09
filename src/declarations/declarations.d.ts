@@ -18,30 +18,41 @@ interface SyncRequest {
   user: {updatedAt: Date},
   spheres: {
     [sphereId: string]: {
-      sphere?:    {updatedAt: Date},
+      sphere?: {updatedAt: Date},
       hubs?: {
-        [hubId: string]: { hub: {updatedAt: Date}}
+        [hubId: string]: {
+          new?: boolean,
+          hub: {updatedAt: Date}}
       },
       features?: {
-        [featureId: string]: { feature: { updatedAt: Date }}
+        [featureId: string]: {
+          new?: boolean,
+          feature: { updatedAt: Date }}
       }
       locations?: {
         [locationId: string]: {
+          new?: boolean,
           location: {updatedAt: Date},
           position?: {updatedAt: Date},
         }
       },
       messages?:  {
-        [messageId: string]: { message: {updatedAt: Date}}
+        [messageId: string]: {
+          new?: boolean,
+          message: {updatedAt: Date}}
       },
       scenes?: {
-        [sceneId: string]: { scene: {updatedAt: Date}}
+        [sceneId: string]: {
+          new?: boolean,
+          scene: {updatedAt: Date}}
       },
       stones?: {
         [stoneId: string]: {
+          new?: boolean,
           stone: {updatedAt: Date},
           abilities?:  {
             [abilityId:string]: {
+              new?: boolean,
               ability:    {updatedAt: Date},
               properties?: {
                 [propertyId:string]: {
@@ -52,33 +63,39 @@ interface SyncRequest {
           },
           behaviours?: {
             [behaviourId: string]: {
+              new?: boolean,
               behaviour: { updatedAt: Date }
             }
           }
         }
       },
       sortedLists?: {
-        [sortedListId: string]: { sortedList: { updatedAt: Date }}
+        [sortedListId: string]: {
+          new?: boolean,
+          sortedList: { updatedAt: Date }}
       }
       trackingNumbers?: {
-        [trackingNumberId: string]: { trackingNumber: { updatedAt: Date }}
+        [trackingNumberId: string]: {
+          new?: boolean,
+          trackingNumber: { updatedAt: Date }}
       }
       toons?: {
-        [toonId: string]: { toon: { updatedAt: Date }}
+        [toonId: string]: {
+          new?: boolean,
+          toon: { updatedAt: Date }}
       }
     }
   }
 }
 
-type SyncType  = "FULL"    | "REQUEST" | "REPLY";
-type SyncState = "DELETED" | "IN_SYNC" | "NEWER_DATA_AVAILABLE" | "REQUEST_DATA" | "VIEW" | "CREATED_IN_CLOUD";
+type SyncType  = "FULL"    |  // will just get your spheres and user.
+                 "REQUEST" |  // initial phase of sync
+                   "REPLY";   // wrap up phase of sync where the user will give the cloud ...
+                              //  ... any data that the cloud has requested with REQUEST_DATA (optional)
 
-interface SyncSimpleItem {
-  branchInSync: boolean,
-  [id: string] : {
-    [item: string]: {
-      status: SyncState,
-      data?: any
-    }
-  } | boolean
-}
+type SyncState = "DELETED" |  // this entity has been deleted
+                 "IN_SYNC" |  // same updatedAt time
+    "NEWER_DATA_AVAILABLE" |  // cloud has newer data (HAS DATA)
+            "REQUEST_DATA" |  // you have newer data, please give to cloud.
+                    "VIEW" |  // you have requested data, here it is. No syncing information
+          "CREATED_IN_CLOUD"; // the cloud has an additional id other than what you requested

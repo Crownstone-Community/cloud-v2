@@ -69,10 +69,11 @@ class Syncer {
       ]
     });
 
+
     function injectSphereSimpleItem(sphere: Sphere, key: string, singular: string, sphereItem: any) {
       // @ts-ignore
       if (sphere[key] !== undefined) {
-        sphereItem[key] = {branchInSync: false};
+        sphereItem[key] = {};
         // @ts-ignore
         for (let i = 0; i < sphere[key].length; i++) {
           // @ts-ignore
@@ -83,6 +84,7 @@ class Syncer {
     }
 
     function parseSphere(sphere: Sphere) : SyncRequestReply_Sphere {
+
       let sphereItem : SyncRequestReply_Sphere = { sphere: { status: "VIEW", data: {}}};
       let sphereKeys = Object.keys(sphere);
       for (let i = 0; i < sphereKeys.length; i++) {
@@ -101,13 +103,12 @@ class Syncer {
       injectSphereSimpleItem(sphere, 'toons',           'toon',           sphereItem);
 
       if (sphere['locations'] !== undefined) {
-        sphereItem['locations'] = {branchInSync: false};
+        sphereItem['locations'] = {};
         for (let i = 0; i < sphere['locations'].length; i++) {
           let location = sphere['locations'][i];
           let locationData = {...location};
           delete locationData['sphereOverviewPosition'];
           sphereItem['locations'][location.id] = {
-            branchInSync: false,
             location: {status: "VIEW", data: locationData},
           };
           if (location['sphereOverviewPosition']) {
@@ -118,7 +119,7 @@ class Syncer {
       }
 
       if (sphere['stones'] !== undefined) {
-        sphereItem['stones'] = {branchInSync: false};
+        sphereItem['stones'] = {};
         for (let i = 0; i < sphere['stones'].length; i++) {
           let stone = {...sphere['stones'][i]};
           let stoneData = {...stone};
@@ -126,13 +127,12 @@ class Syncer {
           delete stoneData['behaviours'];
 
           sphereItem['stones'][stone.id] = {
-            branchInSync: false,
             stone: {status: "VIEW", data: stoneData},
           };
 
           if (stone['behaviours']) {
             // @ts-ignore
-            sphereItem['stones'][stone.id]["behaviours"] = { branchInSync: false };
+            sphereItem['stones'][stone.id]["behaviours"] = {};
             for (let j = 0; j < stone.behaviours.length; j++) {
               let behaviour = stone.behaviours[j];
               // @ts-ignore
@@ -142,7 +142,7 @@ class Syncer {
 
           if (stone['abilities']) {
             // @ts-ignore
-            sphereItem['stones'][stone.id]["abilities"] = { branchInSync: false };
+            sphereItem['stones'][stone.id]["abilities"] = {};
             for (let j = 0; j < stone.abilities.length; j++) {
               let ability = stone.abilities[j];
               let abilityData = {...ability};
@@ -152,7 +152,7 @@ class Syncer {
 
               if (ability['properties']) {
                 // @ts-ignore
-                sphereItem['stones'][stone.id]["abilities"][ability.id]["properties"] = { branchInSync: false };
+                sphereItem['stones'][stone.id]["abilities"][ability.id]["properties"] = {};
                 for (let k = 0; k < ability.properties.length; k++) {
                   let property = ability.properties[k];
                   // @ts-ignore
@@ -190,13 +190,27 @@ class Syncer {
       return this.downloadAll(userId)
     }
 
+    // Full is used on login and is essentially a partial dump for your user
     if (dataStructure.sync.type === "FULL") {
       return this.downloadAll(userId);
-    } else if (dataStructure.sync.type === "REQUEST") {
-      // return getRequestDataMap();
-    } else if (dataStructure.sync.type === "REPLY") {
-      // return getFullDataMap();
-    } else {
+    }
+    // Request is the first part of a real sync operation.
+    else if (dataStructure.sync.type === "REQUEST") {
+      // the user has sent a list of ids and updated at times. This should be the full set of what the user has
+      // the cloud will query all ids that the user has access to including their updated at times.
+      // there are 2 edge cases:
+      //    1 - The user has an extra id: an entity has been created and not synced to the cloud yet.
+      //            SOLUTION: It will be marked with new: true. The user knows that this is new since the user does not have a cloudId
+      //    2 - The cloud has an id less: another user has deleted an entity from the cloud and this user doesnt know it yet.
+      //            SOLUTION: the cloud marks this id as DELETED
+      // If we want to only query items that are newer, we would not be able to differentiate between deleted and updated.
+      // To allow for this optimization, we should keep a deleted event. We could also attempt to
+    }
+    else if (dataStructure.sync.type === "REPLY") {
+      // this phase will provide the cloud with ids and data. The cloud has requested this, we update the models with the new data.
+      // this returns a simple 200 {status: "OK"} or something
+    }
+    else {
       throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST REPLY or FULL")
     }
 
