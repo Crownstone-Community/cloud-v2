@@ -52,7 +52,7 @@ export async function createHub(sphereId, name?, updatedAt?, token?) : Promise<H
   let dbs = getRepositories();
 
   let hub = await dbs.hub.create({sphereId: sphereId, name: name, token: token, updatedAt})
-  await dbs.sphereAccess.create({sphereId: sphereId, userId: hub.id, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()})
+  await dbs.sphereAccess.create({sphereId: sphereId, userId: hub.id, role:'hub', sphereAuthorizationToken: CloudUtil.createToken()})
   return hub;
 }
 

@@ -10,92 +10,89 @@ type Credentials = {
   password: string;
 };
 
+type SyncCategories = 'hubs' |
+                  'features' |
+                    'scenes' |
+               'sortedLists' |
+           'trackingNumbers' |
+                     'toons'
+
 interface SyncRequest {
   sync: {
-    type: SyncPhase,
+    type: SyncType,
     lastTime: Date,
   },
-  user: {updatedAt: Date},
+  user: UpdatedAt,
   spheres: {
     [sphereId: string]: {
-      sphere?: {updatedAt: Date},
+      data?: UpdatedAt,
       hubs?: {
-        [hubId: string]: {
-          new?: boolean,
-          hub: {updatedAt: Date}}
+        [hubId: string]: RequestItemCoreType
       },
       features?: {
-        [featureId: string]: {
-          new?: boolean,
-          feature: { updatedAt: Date }}
+        [featureId: string]: RequestItemCoreType
       }
       locations?: {
         [locationId: string]: {
           new?: boolean,
-          location: {updatedAt: Date},
-          position?: {updatedAt: Date},
+          data:  UpdatedAt,
+          position?: UpdatedAt,
         }
       },
       messages?:  {
-        [messageId: string]: {
-          new?: boolean,
-          message: {updatedAt: Date}}
+        [messageId: string]: RequestItemCoreType
       },
       scenes?: {
-        [sceneId: string]: {
-          new?: boolean,
-          scene: {updatedAt: Date}}
+        [sceneId: string]: RequestItemCoreType
       },
       stones?: {
         [stoneId: string]: {
           new?: boolean,
-          stone: {updatedAt: Date},
+          data: UpdatedAt,
           abilities?:  {
             [abilityId:string]: {
               new?: boolean,
-              ability:    {updatedAt: Date},
+              data: UpdatedAt
               properties?: {
-                [propertyId:string]: {
-                  property: {updatedAt: Date}
-                }
+                [propertyId:string]: RequestItemCoreType
               }
             }
           },
           behaviours?: {
-            [behaviourId: string]: {
-              new?: boolean,
-              behaviour: { updatedAt: Date }
-            }
+            [behaviourId: string]: RequestItemCoreType
           }
         }
       },
       sortedLists?: {
-        [sortedListId: string]: {
-          new?: boolean,
-          sortedList: { updatedAt: Date }}
+        [sortedListId: string]: RequestItemCoreType
       }
       trackingNumbers?: {
-        [trackingNumberId: string]: {
-          new?: boolean,
-          trackingNumber: { updatedAt: Date }}
+        [trackingNumberId: string]: RequestItemCoreType
       }
       toons?: {
-        [toonId: string]: {
-          new?: boolean,
-          toon: { updatedAt: Date }}
+        [toonId: string]: RequestItemCoreType
       }
     }
   }
 }
 
+interface RequestItemCoreType {
+  new?: boolean,
+  data: UpdatedAt
+}
+interface UpdatedAt {
+  updatedAt: Date
+}
+
 type SyncType  = "FULL"    |  // will just get your spheres and user.
                  "REQUEST" |  // initial phase of sync
-                   "REPLY";   // wrap up phase of sync where the user will give the cloud ...
+                 "REPLY";     // wrap up phase of sync where the user will give the cloud ...
                               //  ... any data that the cloud has requested with REQUEST_DATA (optional)
 
 type SyncState = "DELETED" |  // this entity has been deleted
                  "IN_SYNC" |  // same updatedAt time
-    "NEWER_DATA_AVAILABLE" |  // cloud has newer data (HAS DATA)
+                   "ERROR" |  // something went wrong (HAS ERROR)
+      "NEW_DATA_AVAILABLE" |  // cloud has newer data (HAS DATA)
             "REQUEST_DATA" |  // you have newer data, please give to cloud.
-                    "VIEW" |  // you have requested data, here it is. No syncing information
-          "CREATED_IN_CLOUD"; // the cloud has an additional id other than what you requested
+        "CREATED_IN_CLOUD" |  // the cloud has an additional id other than what you requested
+                    "VIEW"    // you have requested data, here it is. No syncing information. (HAS DATA)

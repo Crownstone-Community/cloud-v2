@@ -14,12 +14,10 @@ import {Position} from "../models/position.model";
 import {Location} from "../models/location.model";
 import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
+import {Entity} from "@loopback/repository";
 
 export interface SyncRequestReply {
-  user: {
-    status: SyncState,
-    data?:  DataObject<User>
-  },
+  user?: SyncReplyItemCore<User>,
   spheres: {
     [sphereId: string]: SyncRequestReply_Sphere
   },
@@ -29,107 +27,75 @@ export interface SyncRequestReply {
 }
 
 export interface SyncRequestReply_Sphere {
-  sphere:    {
-    status: SyncState,
-    data?: DataObject<Sphere>
-  },
+  sphere?: SyncReplyItemCore<Sphere>,
   hubs?: {
     [hubId: string]: {
-      hub: {
-        status: SyncState,
-        data?: DataObject<Hub>
-      }
+      data: SyncReplyItemCore<Hub>,
     }
   },
   features?: {
     [featureId: string] : {
-      feature: {
-        status: SyncState,
-        data?: DataObject<SphereFeature>
-      }
+      data: SyncReplyItemCore<SphereFeature>
     }
   },
   locations?: {
     [locationId: string]: {
-      location: {
-        status: SyncState,
-        data?: DataObject<Location>
-      },
-      position?: {
-        status: SyncState,
-        data?: DataObject<Position>
-      },
+      data: SyncReplyItemCore<Location>,
+      position?: SyncReplyItemCore<Position>,
     }
   },
   messages?:  {
     [messageId: string] : {
-      message: {
-        status: SyncState,
-        data?: DataObject<Message>
-      }
+      data: SyncReplyItemCore<Message>
     }
   },
   scenes?:  {
     [sceneId: string] : {
-      scene: {
-        status: SyncState,
-        data?: DataObject<Scene>
-      }
+      data: SyncReplyItemCore<Scene>
     }
   },
   stones?: {
     [stoneId: string]: {
-      stone: {
-        status: SyncState,
-        data?: DataObject<Stone>
-      },
+      data: SyncReplyItemCore<Stone>,
       abilities?: {
         [abilityId:string]: {
-          ability: {
-            status: SyncState,
-            data?: DataObject<StoneAbility>
-          }
+          data: SyncReplyItemCore<StoneAbility>
           properties?: {
-            [propertyId:string]:  {
-              status: SyncState,
-              data?: DataObject<StoneAbilityProperty>
-            }
+            [propertyId:string]: SyncReplyItemCore<StoneAbilityProperty>
           }
         }
       },
       behaviours?: {
         [behaviourId:string]: {
-          behaviour: {
-            status: SyncState,
-            data?: DataObject<StoneBehaviour>
-          }
+          data: SyncReplyItemCore<StoneBehaviour>
         }
       },
     }
   },
   sortedLists?: {
     [sortedListId: string] : {
-      sortedList: {
-        status: SyncState,
-        data?: DataObject<SortedList>
-      }
+      data: SyncReplyItemCore<SortedList>
     }
   }
   trackingNumbers?: {
     [trackingNumberId: string] : {
-      trackingNumber: {
-        status: SyncState,
-        data?: DataObject<SphereTrackingNumber>
-      }
+      data: SyncReplyItemCore<SphereTrackingNumber>
     }
   }
   toons?:  {
     [toonId: string] : {
-      toon: {
-        status: SyncState,
-        data?: DataObject<Toon>
-      }
+      data: SyncReplyItemCore<Toon>
     }
   },
 }
 
+interface SyncReplyItemCore<T extends Entity> {
+  status: SyncState,
+  data?: DataObject<T>,
+  error?: SyncError
+}
+
+interface SyncError {
+  code: number,
+  msg: string
+}
