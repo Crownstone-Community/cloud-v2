@@ -6,11 +6,9 @@ import {StoneAbilityProperty} from "../models/stoneSubModels/stone-ability-prope
 import {StoneBehaviour} from "../models/stoneSubModels/stone-behaviour.model";
 import {Scene} from "../models/scene.model";
 import {Toon} from "../models/toon.model";
-import {SortedList} from "../models/sorted-list.model";
 import {SphereFeature} from "../models/sphere-feature.model";
 import {SphereTrackingNumber} from "../models/sphere-tracking-number.model";
 import {DataObject} from "@loopback/repository/src/common-types";
-import {Position} from "../models/position.model";
 import {Location} from "../models/location.model";
 import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
@@ -41,7 +39,6 @@ export interface SyncRequestReply_Sphere {
   locations?: {
     [locationId: string]: {
       data: SyncReplyItemCore<Location>,
-      position?: SyncReplyItemCore<Position>,
     }
   },
   messages?:  {
@@ -55,28 +52,8 @@ export interface SyncRequestReply_Sphere {
     }
   },
   stones?: {
-    [stoneId: string]: {
-      data: SyncReplyItemCore<Stone>,
-      abilities?: {
-        [abilityId:string]: {
-          data: SyncReplyItemCore<StoneAbility>
-          properties?: {
-            [propertyId:string]: SyncReplyItemCore<StoneAbilityProperty>
-          }
-        }
-      },
-      behaviours?: {
-        [behaviourId:string]: {
-          data: SyncReplyItemCore<StoneBehaviour>
-        }
-      },
-    }
+    [stoneId: string]: SyncReplyStone,
   },
-  sortedLists?: {
-    [sortedListId: string] : {
-      data: SyncReplyItemCore<SortedList>
-    }
-  }
   trackingNumbers?: {
     [trackingNumberId: string] : {
       data: SyncReplyItemCore<SphereTrackingNumber>
@@ -95,7 +72,21 @@ interface SyncReplyItemCore<T extends Entity> {
   error?: SyncError
 }
 
-interface SyncError {
-  code: number,
-  msg: string
+export interface SyncReplyStone {
+  data?: SyncReplyItemCore<Stone>,
+  abilities?: {
+    [abilityId:string]: {
+      data: SyncReplyItemCore<StoneAbility>
+      properties?: {
+        [propertyId:string]: {
+          data: SyncReplyItemCore<StoneAbilityProperty>
+        }
+      }
+    }
+  },
+  behaviours?: {
+    [behaviourId:string]: {
+      data: SyncReplyItemCore<StoneBehaviour>
+    }
+  },
 }

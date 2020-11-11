@@ -10,17 +10,65 @@ type Credentials = {
   password: string;
 };
 
-type SyncCategories = 'hubs' |
+type dbCategory = 'appInstallation' |
+                  'crownstoneToken' |
+                'devicePreferences' |
+                           'device' |
+                'fingerprintLinker' |
+                      'fingerprint' |
+                              'hub' |
+                         'location' |
+                          'message' |
+                     'messageState' |
+                      'messageUser' |
+                            'scene' |
+                       'sortedList' |
+                     'sphereAccess' |
+                    'sphereFeature' |
+             'sphereTrackingNumber' |
+                       'sphereKeys' |
+                           'sphere' |
+                            'stone' |
+             'stoneAbilityProperty' |
+                     'stoneAbility' |
+                   'stoneBehaviour' |
+                 'stoneSwitchState' |
+                        'stoneKeys' |
+                         'position' |
+                             'toon' |
+                             'user'
+
+type SyncCategory = 'hubs'   |
                   'features' |
+                 'abilities' |
+                'behaviours' |
+                  'messages' |
+                'properties' |
+                 'locations' |
                     'scenes' |
-               'sortedLists' |
+                    'stones' |
            'trackingNumbers' |
                      'toons'
+
+interface SyncIgnoreList {
+  hubs:            boolean,
+  features:        boolean,
+  abilities:       boolean,
+  behaviours:      boolean,
+  messages:        boolean,
+  properties:      boolean,
+  locations:       boolean,
+  scenes:          boolean,
+  stones:          boolean,
+  trackingNumbers: boolean,
+  toons:           boolean,
+}
 
 interface SyncRequest {
   sync: {
     type: SyncType,
     lastTime: Date,
+    scope?: SyncCategory[]
   },
   user: UpdatedAt,
   spheres: {
@@ -33,11 +81,7 @@ interface SyncRequest {
         [featureId: string]: RequestItemCoreType
       }
       locations?: {
-        [locationId: string]: {
-          new?: boolean,
-          data:  UpdatedAt,
-          position?: UpdatedAt,
-        }
+        [locationId: string]: RequestItemCoreType
       },
       messages?:  {
         [messageId: string]: RequestItemCoreType
@@ -46,26 +90,8 @@ interface SyncRequest {
         [sceneId: string]: RequestItemCoreType
       },
       stones?: {
-        [stoneId: string]: {
-          new?: boolean,
-          data: UpdatedAt,
-          abilities?:  {
-            [abilityId:string]: {
-              new?: boolean,
-              data: UpdatedAt
-              properties?: {
-                [propertyId:string]: RequestItemCoreType
-              }
-            }
-          },
-          behaviours?: {
-            [behaviourId: string]: RequestItemCoreType
-          }
-        }
+        [stoneId: string]: SyncRequestStoneData
       },
-      sortedLists?: {
-        [sortedListId: string]: RequestItemCoreType
-      }
       trackingNumbers?: {
         [trackingNumberId: string]: RequestItemCoreType
       }
@@ -73,6 +99,23 @@ interface SyncRequest {
         [toonId: string]: RequestItemCoreType
       }
     }
+  }
+}
+
+interface SyncRequestStoneData {
+  new?: boolean,
+  data: UpdatedAt,
+  abilities?:  {
+    [abilityId:string]: {
+      new?: boolean,
+      data: UpdatedAt
+      properties?: {
+        [propertyId:string]: RequestItemCoreType
+      }
+    }
+  },
+  behaviours?: {
+    [behaviourId: string]: RequestItemCoreType
   }
 }
 
@@ -96,3 +139,19 @@ type SyncState = "DELETED" |  // this entity has been deleted
             "REQUEST_DATA" |  // you have newer data, please give to cloud.
         "CREATED_IN_CLOUD" |  // the cloud has an additional id other than what you requested
                     "VIEW"    // you have requested data, here it is. No syncing information. (HAS DATA)
+
+
+interface SyncError {
+  code: number,
+  msg: string
+}
+
+interface idMap<T> {
+  [id: string]: T
+}
+
+interface nestedIdMap<T> {
+  [id: string]: {
+    [id: string] : T
+  }
+}

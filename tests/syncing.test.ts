@@ -1,5 +1,6 @@
 import {CONFIG} from "../src/config";
 CONFIG.emailValidationRequired = false;
+CONFIG.generateCustomIds = true;
 
 import {makeUtilDeterministic, restMockRandom} from "./mocks/CloudUtil.mock";
 makeUtilDeterministic();
@@ -22,6 +23,7 @@ beforeAll(async () => {
 afterAll(async () => { await app.stop(); })
 
 test("Sync Full", async () => {
+  let dbs = getRepositories();
   let user     = await createUser('test@test.com', 'test', 0);
   let sphere   = await createSphere(user.id, 'mySphere', 5);
   let hub      = await createHub(sphere.id, 'myHub', 2);
@@ -30,11 +32,13 @@ test("Sync Full", async () => {
   let stone3   = await createStone(sphere.id, 'stone3', 0);
   let location = await createLocation(sphere.id, 'location', 0);
 
+  stone.locationId = location.id;
+  await dbs.stone.update(stone)
+
   let repos   = getRepositories();
 
   let token  = await getToken(client);
 
-  console.log("START")
   await client.post(auth("/user/sync")).expect(200).send({
     sync: {
       type:"FULL",
@@ -47,9 +51,11 @@ test("Sync Full", async () => {
   //   sync: {
   //     type:"REQUEST",
   //   },
+  //   user:{},
+  //   spheres:{'dbId:SphereRepository:1':{}}
   // }).expect(
   //   ({body}) => {
-  //   console.log(JSON.stringify(body))
+  //
   // })
 
 });

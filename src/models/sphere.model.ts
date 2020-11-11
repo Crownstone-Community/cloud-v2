@@ -1,5 +1,4 @@
-import {Entity, model, property, hasMany, belongsTo,} from '@loopback/repository';
-import {SortedList} from "./sorted-list.model";
+import {model, property, hasMany} from '@loopback/repository';
 import {SphereFeature} from "./sphere-feature.model";
 import {Toon} from "./toon.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
@@ -52,9 +51,6 @@ export class Sphere extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => Hub, {keyTo: 'sphereId'})
   hubs: Hub[];
-
-  @hasMany(() => SortedList, {keyTo: 'sphereId'})
-  sortedLists: SortedList[];
 
   @hasMany(() => SphereTrackingNumber, {keyTo: 'sphereId'})
   trackingNumbers: SphereTrackingNumber[];

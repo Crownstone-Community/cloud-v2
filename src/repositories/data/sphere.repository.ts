@@ -1,5 +1,5 @@
 import {
-  BelongsToAccessor, Getter,
+  Getter,
   HasManyRepositoryFactory,
   HasManyThroughRepositoryFactory,
   juggler, repository
@@ -14,7 +14,6 @@ import {Scene} from "../../models/scene.model";
 import {Stone} from "../../models/stone.model";
 import {User} from "../../models/user.model";
 import {Hub} from "../../models/hub.model";
-import {SortedList} from "../../models/sorted-list.model";
 import {SphereFeature} from "../../models/sphere-feature.model";
 import {Toon} from "../../models/toon.model";
 import {SphereAccess} from "../../models/sphere-access.model";
@@ -24,7 +23,6 @@ import {StoneRepository} from "./stone.repository";
 import {SceneRepository} from "./scene.repository";
 import {MessageRepository} from "./message.repository";
 import {HubRepository} from "../users/hub.repository";
-import {SortedListRepository} from "./sorted-list.repository";
 import {SphereFeatureRepository} from "./sphere-feature.repository";
 import {ToonRepository} from "./toon.repository";
 import {SphereAccessRepository} from "./sphere-access.repository";
@@ -43,7 +41,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   public scenes:         HasManyRepositoryFactory<Scene,         typeof Scene.prototype.id>;
   public messages:       HasManyRepositoryFactory<Message,       typeof Message.prototype.id>;
   public hubs:           HasManyRepositoryFactory<Hub,           typeof Hub.prototype.id>;
-  public sortedLists:    HasManyRepositoryFactory<SortedList,    typeof SortedList.prototype.id>;
   public sphereFeatures: HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
   public trackingNumbers: HasManyRepositoryFactory<SphereTrackingNumber, typeof SphereTrackingNumber.prototype.id>;
   public toons:          HasManyRepositoryFactory<Toon, typeof Toon.prototype.id>;
@@ -60,7 +57,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(SceneRepository)         protected sceneRepo:         SceneRepository,
     @repository(MessageRepository)       protected messageRepo:       MessageRepository,
     @repository(HubRepository)           protected hubRepo:           HubRepository,
-    @repository(SortedListRepository)    protected sortedListRepo:    SortedListRepository,
     @repository(SphereFeatureRepository) protected sphereFeatureRepo: SphereFeatureRepository,
     @repository(SphereTrackingNumberRepository) protected sphereTrackingNumberRepo: SphereTrackingNumberRepository,
     @repository(ToonRepository)          protected toonRepo:          ToonRepository,
@@ -73,7 +69,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     this.scenes          = this.createHasManyRepositoryFactoryFor('scenes',     async () => sceneRepo);
     this.messages        = this.createHasManyRepositoryFactoryFor('messages',   async () => messageRepo);
     this.hubs            = this.createHasManyRepositoryFactoryFor('hubs',       async () => hubRepo);
-    this.sortedLists     = this.createHasManyRepositoryFactoryFor('sortedLists',async () => sortedListRepo);
     this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
     this.trackingNumbers = this.createHasManyRepositoryFactoryFor('trackingNumbers',async () => sphereTrackingNumberRepo);
     this.toons           = this.createHasManyRepositoryFactoryFor('toons',      async () => toonRepo);
@@ -84,7 +79,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     this.registerInclusionResolver('scenes',          this.scenes.inclusionResolver);
     this.registerInclusionResolver('messages',        this.messages.inclusionResolver);
     this.registerInclusionResolver('hubs',            this.hubs.inclusionResolver);
-    this.registerInclusionResolver('sortedLists',     this.sortedLists.inclusionResolver);
     this.registerInclusionResolver('features',        this.sphereFeatures.inclusionResolver);
     this.registerInclusionResolver('trackingNumbers', this.trackingNumbers.inclusionResolver);
     this.registerInclusionResolver('toons',           this.toons.inclusionResolver);
@@ -124,7 +118,6 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     await this.scenes(entity.id).delete()
     await this.messages(entity.id).delete()
     await this.hubs(entity.id).delete()
-    await this.sortedLists(entity.id).delete()
     await this.sphereFeatures(entity.id).delete()
     await this.trackingNumbers(entity.id).delete()
     await this.toons(entity.id).delete()

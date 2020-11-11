@@ -9,7 +9,6 @@ import {MessageRepository} from "../../repositories/data/message.repository";
 import {MessageStateRepository} from "../../repositories/data/message-state.repository";
 import {MessageUserRepository} from "../../repositories/data/message-user.repository";
 import {SceneRepository} from "../../repositories/data/scene.repository";
-import {SortedListRepository} from "../../repositories/data/sorted-list.repository";
 import {SphereAccessRepository} from "../../repositories/data/sphere-access.repository";
 import {SphereFeatureRepository} from "../../repositories/data/sphere-feature.repository";
 import {SphereTrackingNumberRepository} from "../../repositories/data/sphere-tracking-number.repository";
@@ -20,7 +19,6 @@ import {StoneAbilityRepository} from "../../repositories/data/stone-ability.repo
 import {StoneBehaviourRepository} from "../../repositories/data/stone-behaviour.repository";
 import {StoneSwitchStateRepository} from "../../repositories/data/stone-switch-state.repository";
 import {StoneKeyRepository} from "../../repositories/data/stone-key.repository";
-import {PositionRepository} from "../../repositories/data/position.repository";
 import {ToonRepository} from "../../repositories/data/toon.repository";
 import {UserRepository} from "../../repositories/users/user.repository";
 import {HubRepository} from "../../repositories/users/hub.repository";
@@ -40,7 +38,6 @@ export interface RepositoryContainer {
   messageState:         MessageStateRepository,
   messageUser:          MessageUserRepository,
   scene:                SceneRepository,
-  sortedList:           SortedListRepository,
   sphereAccess:         SphereAccessRepository,
   sphereFeature:        SphereFeatureRepository,
   sphereTrackingNumber: SphereTrackingNumberRepository,
@@ -52,10 +49,10 @@ export interface RepositoryContainer {
   stoneBehaviour:       StoneBehaviourRepository,
   stoneSwitchState:     StoneSwitchStateRepository,
   stoneKeys:            StoneKeyRepository,
-  position:             PositionRepository,
   toon:                 ToonRepository,
   user:                 UserRepository,
 }
+
 
 export let Dbs : RepositoryContainer = {
   appInstallation:      null,
@@ -70,7 +67,6 @@ export let Dbs : RepositoryContainer = {
   messageState:         null,
   messageUser:          null,
   scene:                null,
-  sortedList:           null,
   sphereAccess:         null,
   sphereFeature:        null,
   sphereTrackingNumber: null,
@@ -82,7 +78,6 @@ export let Dbs : RepositoryContainer = {
   stoneBehaviour:       null,
   stoneSwitchState:     null,
   stoneKeys:            null,
-  position:             null,
   toon:                 null,
   user:                 null,
 };
@@ -100,7 +95,6 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.messageState         = await app.getRepository(MessageStateRepository);
   Dbs.messageUser          = await app.getRepository(MessageUserRepository);
   Dbs.scene                = await app.getRepository(SceneRepository);
-  Dbs.sortedList           = await app.getRepository(SortedListRepository);
   Dbs.sphereAccess         = await app.getRepository(SphereAccessRepository);
   Dbs.sphereFeature        = await app.getRepository(SphereFeatureRepository);
   Dbs.sphereTrackingNumber = await app.getRepository(SphereTrackingNumberRepository);
@@ -112,7 +106,6 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.stoneBehaviour       = await app.getRepository(StoneBehaviourRepository);
   Dbs.stoneSwitchState     = await app.getRepository(StoneSwitchStateRepository);
   Dbs.stoneKeys            = await app.getRepository(StoneKeyRepository);
-  Dbs.position             = await app.getRepository(PositionRepository);
   Dbs.toon                 = await app.getRepository(ToonRepository);
   Dbs.user                 = await app.getRepository(UserRepository);
 }

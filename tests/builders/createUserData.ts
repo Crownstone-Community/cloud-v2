@@ -79,7 +79,6 @@ export async function createLocation(sphereId, name?, updatedAt?) : Promise<Loca
   let dbs = getRepositories();
 
   let location = await dbs.location.create({sphereId: sphereId, name: name, updatedAt})
-  await dbs.position.create({ sphereId, locationId: location.id, x:3, y:6, updatedAt});
 
   return location;
 }

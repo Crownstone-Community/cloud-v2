@@ -6,6 +6,8 @@ export function restMockRandom() {
   RANDOM_COUNT = 2000;
 }
 
+
+let databaseList = {};
 export function makeUtilDeterministic() {
   jest.mock("../../src/util/CloudUtil", () => {
     return {
@@ -20,6 +22,13 @@ export function makeUtilDeterministic() {
 
         createToken: function() : string {
           return crypto.randomBytes(32).toString('hex');
+        },
+
+        createId: function(source) : string {
+          if (databaseList[source] === undefined) {
+            databaseList[source] = 1;
+          }
+          return 'dbId:' + source + ':' + databaseList[source]++;
         },
 
         hashPassword(plaintextPassword: string) : string {

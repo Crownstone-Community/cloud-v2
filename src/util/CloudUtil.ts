@@ -15,6 +15,10 @@ export const CloudUtil = {
     return crypto.randomBytes(32).toString('hex');
   },
 
+  createId: function(source? : any) : string {
+    return crypto.randomBytes(12).toString('hex');
+  },
+
   hashPassword(plaintextPassword: string) : string {
     let shasum = crypto.createHash('sha1');
     shasum.update(String(plaintextPassword));

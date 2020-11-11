@@ -9,6 +9,7 @@ export const CONFIG = {
   mongoUserDb:  process.env.USER_DB   ?? "users_v1",
 
   emailValidationRequired: process.env.EMAIL_VALIDATION_REQUIRED ?? true,
+  generateCustomIds: process.env.GENERATE_CUSTOM_IDS ?? false,
 }
 
 export const SecurityTypes = {

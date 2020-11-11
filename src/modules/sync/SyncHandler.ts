@@ -1,24 +1,17 @@
 import {Dbs} from "../containers/RepoContainer";
 import {HttpErrors} from "@loopback/rest";
 import {SyncRequestReply, SyncRequestReply_Sphere} from "../../declarations/syncTypes";
-import {User} from "../../models/user.model";
 import {Sphere} from "../../models/sphere.model";
-import {req} from "crownstone-cloud/dist/util/request";
-import {DataObject} from "@loopback/repository";
-import {Hub} from "../../models/hub.model";
-
-let FIELDS = [
-  'sphere',
-  {hubs:            ['hub']},
-  {locations:       ['location', 'position']},
-  {messages:        ['message']},
-  {scenes:          ['scene']},
-  {stones:          ['stone', {abilities: ['abilities','properties']},'behaviours']},
-  {sortedLists:     ['sortedLists']},
-  {sphereFeatures:  ['sphereFeatures']},
-  {trackingNumbers: ['trackingNumbers']},
-  {toons:           ['toons']},
-]
+import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
+import {fillSyncStoneData, markStoneChildrenAsNew} from "./helpers/StoneSyncHelpers";
+import {processSyncCollection} from "./helpers/SyncHelpers";
+import {getReply, getShallowReply} from "./helpers/ReplyHelpers";
+import {
+  getIds,
+  getNestedIdMap,
+  getSyncIgnoreList,
+  getUniqueIdMap
+} from "./helpers/SyncUtil";
 
 let sphereRelationsMap : {[id:string]:boolean} = {
   features:        true,
@@ -32,58 +25,53 @@ let sphereRelationsMap : {[id:string]:boolean} = {
   stones:          true,
 }
 
-interface idMap<T> {
-  [id: string]: T
-}
-
-interface nestedIdMap<T> {
-  [id: string]: {
-    [id: string] : T
-  }
-}
-
-
 class Syncer {
 
-  async downloadAll(userId: string) {
-    let user   = await Dbs.user.findById(userId);
-    let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
+  /**
+   * This downloads everything in the required sphere.
+   * @param sphereId
+   * @param status
+   */
+  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreList) : Promise<SyncRequestReply_Sphere> {
+    let includeArray = [];
 
-    let sphereIds = [];
-
-    for (let i = 0; i < access.length; i++) {
-      sphereIds.push(access[i].sphereId);
+    if (!ignore.features) {
+      includeArray.push({relation:'features'});
     }
-
-    // this is one way to query,
-    let sphereData = await Dbs.sphere.find({
-      where: {id: {inq: sphereIds }},
-      include: [
-        {relation:'features'},
-        {relation:'locations', scope: {
-          include: [
-            {relation: 'sphereOverviewPosition'}
-          ]}
-        },
-        {relation:'messages'},
-        {relation:'hubs'},
-        {relation:'scenes'},
-        {relation:'sortedLists'},
-        {relation:'stones', scope: {
+    if (!ignore.locations) {
+      includeArray.push({relation:'locations'});
+    }
+    if (!ignore.messages) {
+      includeArray.push({relation:'messages'});
+    }
+    if (!ignore.hubs) {
+      includeArray.push({relation:'hubs'});
+    }
+    if (!ignore.scenes) {
+      includeArray.push({relation:'scenes'});
+    }
+    if (!ignore.stones) {
+      includeArray.push({relation:'stones', scope: {
           include: [
             {relation: 'behaviours'},
             {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
             {relation: 'currentSwitchState'},
             {relation: 'location',  scope: {fields: {id:true, name: true} }}
           ]}
-        },
-        {relation:'trackingNumbers'},
-        {relation:'toons'},
-      ]
-    });
+      });
+    }
+    if (!ignore.trackingNumbers) {
+      includeArray.push({relation:'trackingNumbers'});
+    }
+    if (!ignore.toons) {
+      includeArray.push({relation:'toons'});
+    }
 
 
-    function injectSphereSimpleItem(sphere: Sphere, key: string, singular: string, sphereItem: any) {
+    let sphereData = await Dbs.sphere.findById(sphereId,{include: includeArray });
+
+
+    function injectSphereSimpleItem(sphere: Sphere, key: SyncCategory, singularLabel: string, sphereItem: any) {
       // @ts-ignore
       if (sphere[key] !== undefined) {
         sphereItem[key] = {};
@@ -91,14 +79,14 @@ class Syncer {
         for (let i = 0; i < sphere[key].length; i++) {
           // @ts-ignore
           let item = sphere[key][i];
-          sphereItem[key][item.id] = {[singular]: {status: "VIEW", data: item}};
+          sphereItem[key][item.id] = {[singularLabel]: {status: status, data: item}};
         }
       }
     }
 
     function parseSphere(sphere: Sphere) : SyncRequestReply_Sphere {
 
-      let sphereItem : SyncRequestReply_Sphere = { sphere: { status: "VIEW", data: {}}};
+      let sphereItem : SyncRequestReply_Sphere = { sphere: { status: status, data: {}}};
       let sphereKeys = Object.keys(sphere);
       for (let i = 0; i < sphereKeys.length; i++) {
         let key = sphereKeys[i];
@@ -109,65 +97,49 @@ class Syncer {
       }
       injectSphereSimpleItem(sphere, 'hubs',            'hub',            sphereItem);
       injectSphereSimpleItem(sphere, 'features',        'feature',        sphereItem);
-      injectSphereSimpleItem(sphere, 'messages',        'message',        sphereItem);
+      // injectSphereSimpleItem(sphere, 'messages',        'message',        sphereItem);
+      injectSphereSimpleItem(sphere, 'locations',       'location',       sphereItem);
       injectSphereSimpleItem(sphere, 'scenes',          'scene',          sphereItem);
-      injectSphereSimpleItem(sphere, 'sortedLists',     'sortedList',     sphereItem);
       injectSphereSimpleItem(sphere, 'trackingNumbers', 'trackingNumber', sphereItem);
       injectSphereSimpleItem(sphere, 'toons',           'toon',           sphereItem);
 
-      if (sphere['locations'] !== undefined) {
-        sphereItem['locations'] = {};
-        for (let i = 0; i < sphere['locations'].length; i++) {
-          let location = sphere['locations'][i];
-          let locationData = {...location};
-          delete locationData['sphereOverviewPosition'];
-          sphereItem['locations'][location.id] = { data: {status: "VIEW", data: locationData}, };
-          if (location['sphereOverviewPosition']) {
-            // @ts-ignore
-            sphereItem['locations'][location.id]["position"] = {status: "VIEW", data: location['sphereOverviewPosition']};
-          }
-        }
-      }
 
-      if (sphere['stones'] !== undefined) {
-        sphereItem['stones'] = {};
-        for (let i = 0; i < sphere['stones'].length; i++) {
-          let stone = {...sphere['stones'][i]};
+      if (sphere.stones !== undefined) {
+        sphereItem.stones = {};
+        for (let i = 0; i < sphere.stones.length; i++) {
+          let stone = {...sphere.stones[i]};
           let stoneData = {...stone};
           delete stoneData['abilities'];
           delete stoneData['behaviours'];
 
-          sphereItem['stones'][stone.id] = {
-            data: {status: "VIEW", data: stoneData},
+          sphereItem.stones[stone.id] = {
+            data: {status: status, data: stoneData},
           };
+          let stoneReply = sphereItem.stones[stone.id];
 
-          if (stone['behaviours']) {
-            // @ts-ignore
-            sphereItem['stones'][stone.id]["behaviours"] = {};
+          if (stone.behaviours) {
+            stoneReply.behaviours = {};
             for (let j = 0; j < stone.behaviours.length; j++) {
               let behaviour = stone.behaviours[j];
-              // @ts-ignore
-              sphereItem['stones'][stone.id]["behaviours"][behaviour.id] = { behaviour: {status: "VIEW", data: behaviour }}
+              stoneReply.behaviours[behaviour.id] = { data: {status: status, data: behaviour }}
             }
           }
 
-          if (stone['abilities']) {
-            // @ts-ignore
-            sphereItem['stones'][stone.id]["abilities"] = {};
+          if (stone.abilities) {
+            stoneReply.abilities = {};
             for (let j = 0; j < stone.abilities.length; j++) {
               let ability = stone.abilities[j];
               let abilityData = {...ability};
               delete abilityData.properties;
-              // @ts-ignore
-              sphereItem['stones'][stone.id]["abilities"][ability.id] = { ability: {status: "VIEW", data: abilityData }};
+              stoneReply.abilities[ability.id] = { data: { status: status, data: abilityData }};
 
-              if (ability['properties']) {
+              if (ability.properties) {
                 // @ts-ignore
-                sphereItem['stones'][stone.id]["abilities"][ability.id]["properties"] = {};
+                stoneReply.abilities[ability.id].properties = {};
                 for (let k = 0; k < ability.properties.length; k++) {
                   let property = ability.properties[k];
                   // @ts-ignore
-                  sphereItem['stones'][stone.id]["abilities"][ability.id]["properties"][property.id] = { status: "VIEW", data: property };
+                  stoneReply.abilities[ability.id].properties[property.id] = { status: status, data: property };
                 }
               }
             }
@@ -178,21 +150,47 @@ class Syncer {
       return sphereItem;
     }
 
+    return parseSphere(sphereData);
+  }
+
+
+  /**
+   * This does a full grab of all syncable data the user has access to.
+   * @param userId
+   */
+  async downloadAll(userId: string, dataStructure: SyncRequest) {
+    let ignore = getSyncIgnoreList(dataStructure.sync.scope);
+
+    let user   = await Dbs.user.findById(userId);
+    let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
 
     let result : SyncRequestReply = {
       user: { status: "VIEW", data: user },
       spheres: {},
     };
-    for (let i = 0; i < sphereData.length; i++) {
-      result.spheres[sphereData[i].id] = parseSphere(sphereData[i])
+
+    for (let i = 0; i < access.length; i++) {
+      let sphereId = access[i].sphereId;
+      result.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore);
     }
 
     return result;
   }
 
 
-  async requestSync(userId: string, dataStructure: SyncRequest) {
-    let filterFields = {id: true, updatedAt:true};
+  async requestSync(userId: string, dataStructure: SyncRequest) : Promise<SyncRequestReply> {
+    let ignore = getSyncIgnoreList(dataStructure.sync.scope);
+
+    // this has the list of all required connection ids as wel as it's own ID and the updatedAt field.
+    let filterFields = {
+      id: true,
+      updatedAt:true,
+      sphereId: true,
+      messageDeliveredId: true,
+      messageId: true,
+      stoneId: true,
+      abilityId: true
+    };
     let user   = await Dbs.user.findById(userId, {fields: filterFields});
     let access = await Dbs.sphereAccess.find({where: {userId: userId}});
 
@@ -205,44 +203,45 @@ class Syncer {
     let sphereData = await Dbs.sphere.find({where: {id: {inq: sphereIds }},fields: filterFields})
 
     // We do this in separate queries since Loopback also makes it separate queries and the fields filter for id an updated at true does
-    // not work in the scope {}. It only supports fields filter where we remove fields.
+    // not work in the scope {}. It only supports fields filter where we remove fields. Go figure...
+
+    // this list *should* be the same as the one we got from the access, but since this is a cheap check, we make sure we only query the
+    // rest of the database for the spheres that we actually got back.
     sphereIds = getIds(sphereData);
     let filter = {where: {sphereId: {inq: sphereIds }},fields: filterFields};
 
-    let featureData         = await Dbs.sphereFeature.find(filter);
-    let locationData        = await Dbs.location.find(filter);
-    let positionData        = await Dbs.position.find(filter);
+    let featureData         = ignore.features ? [] : await Dbs.sphereFeature.find(filter);
+    let locationData        = ignore.features ? [] : await Dbs.location.find(filter);
 
-    let messageData         = await Dbs.message.find(filter);
-    let messageIds          = getIds(messageData);
-    let messageStateData    = await Dbs.messageState.find({where: {messageDeliveredId: {inq: messageIds }},fields: filterFields});
-    let messageUserData     = await Dbs.messageUser.find( {where:  {messageId: {inq: messageIds }},fields: filterFields});
+    let messageData         = ignore.features ? [] : await Dbs.message.find(filter);
+    let messageStateData    = ignore.features ? [] : await Dbs.messageState.find(filter);
+    let messageUserData     = ignore.features ? [] : await Dbs.messageUser.find( filter);
 
-    let hubData             = await Dbs.hub.find(filter);
-    let sceneData           = await Dbs.scene.find(filter);
-    let sortedListData      = await Dbs.sortedList.find(filter);
+    let hubData             = ignore.hubs   ? [] : await Dbs.hub.find(filter);
+    let sceneData           = ignore.scenes ? [] : await Dbs.scene.find(filter);
 
-    let stoneData           = await Dbs.stone.find(filter);
-    let stoneIds            = getIds(stoneData);
-    let behaviourData       = await Dbs.stoneBehaviour.find({where:  {stoneId: {inq: stoneIds }},fields: filterFields})
-    let abilityData         = await Dbs.stoneAbility.find({where:  {stoneId: {inq: stoneIds }},fields: filterFields})
-    let abilityIds          = getIds(abilityData);
-    let abilityPropertyData = await Dbs.stoneAbilityProperty.find({where:  {abilityId: {inq: abilityIds }},fields: filterFields})
+    let stoneData           = ignore.stones ? [] : await Dbs.stone.find(filter);
+    let behaviourData       = ignore.stones ? [] : await Dbs.stoneBehaviour.find(filter)
+    let abilityData         = ignore.stones ? [] : await Dbs.stoneAbility.find(filter)
+    let abilityPropertyData = ignore.stones ? [] : await Dbs.stoneAbilityProperty.find(filter)
 
-    let trackingNumberData  = await Dbs.sphereTrackingNumber.find(filter);
-    let toonData            = await Dbs.toon.find(filter);
+    let trackingNumberData  = ignore.trackingNumbers ? [] : await Dbs.sphereTrackingNumber.find(filter);
+    let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
 
+
+    // this is cheap to do with empty arrays do we dont check for ignore here.
     let cloud_spheres         = getUniqueIdMap(sphereData);
     let cloud_features        = getNestedIdMap(featureData,           'sphereId');
     let cloud_locations       = getNestedIdMap(locationData,          'sphereId');
-    let cloud_position        = getNestedIdMap(positionData,          'locationId');
+
+    // TODO: do something with messages.
     let cloud_messages        = getNestedIdMap(messageData,           'sphereId');
     let cloud_messageStatesD  = getNestedIdMap(messageStateData,      'messageDeliveredId');
     let cloud_messageStatesR  = getNestedIdMap(messageStateData,      'messageReadId');
     let cloud_messageUsers    = getNestedIdMap(messageUserData,       'messageId');
+
     let cloud_hubs            = getNestedIdMap(hubData,               'sphereId');
     let cloud_scenes          = getNestedIdMap(sceneData,             'sphereId');
-    let cloud_sortedLists     = getNestedIdMap(sortedListData,        'sphereId');
     let cloud_stones          = getNestedIdMap(stoneData,             'sphereId');
     let cloud_behaviours      = getNestedIdMap(behaviourData,         'stoneId');
     let cloud_abilities       = getNestedIdMap(abilityData,           'stoneId');
@@ -252,85 +251,165 @@ class Syncer {
 
     let reply : SyncRequestReply = {spheres:{}};
 
-    async function processSphereCollection<T extends UpdatedAt>(sphereId: string, fieldname: SyncCategories, cloud_items_in_sphere : idMap<T> = {}) {
-      let reqSphere = dataStructure.spheres[sphereId];
-      
-      // if there is no item in the cloud, cloud_hubs can be undefined.
-      let cloudItemIds = Object.keys(cloud_items_in_sphere);
-      if (reqSphere[fieldname]) {
-        // we will first iterate over all hubs in the user request.
-        // this handles:
-        //  - user has one more than cloud (new)
-        //  - user has synced data, or user has data that has been deleted.
-        let clientItemIds = Object.keys(reqSphere[fieldname]);
-        for (let j = 0; j < clientItemIds.length; j++) {
-          let itemId = clientItemIds[j];
-          let clientItem = reqSphere[fieldname][itemId];
-          if (clientItem.new) {
-            // create hub in cloud.
-            try {
-              let newItem = await Dbs.hub.create({...clientItem.data, sphereId: sphereId});
-              reply.spheres[sphereId][fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
-            }
-            catch (e) {
-              reply.spheres[sphereId][fieldname][itemId] = { data: { status: "ERROR", error: {code:0, msg: e} }}
-            }
-          }
-          else {
-            reply.spheres[sphereId][fieldname][itemId] = { data: getReply(clientItem, cloud_items_in_sphere[itemId]) }
-          }
-        }
 
-        // now we will iterate over all hubs in the cloud
-        // this handles:
-        //  - cloud has hub that the user does not know.
-        for (let j = 0; j < cloudItemIds.length; j++) {
-          let cloudItemId = cloudItemIds[j];
-          if (reqSphere[fieldname] && reqSphere[fieldname][cloudItemId] === undefined) {
-            reply.spheres[sphereId][fieldname][cloudItemId] = { data: getReply(null, cloud_items_in_sphere[cloudItemId]) };
-          }
-        }
-      }
-      else {
-        // there are no hubs for the user, give the user all the hubs.
-        for (let j = 0; j < cloudItemIds.length; j++) {
-          let cloudItemId = cloudItemIds[j];
-          reply.spheres[sphereId][fieldname][cloudItemId] = { data: getReply(null, cloud_items_in_sphere[cloudItemId]) };
-        }
-      }
-    }
 
     // first we check the users
     if (dataStructure.user) {
-      reply.user = getShallowReply(dataStructure.user, user)
+      reply.user = await getShallowReply(dataStructure.user, user, () => { return Dbs.user.findById(userId)})
     }
     
     if (dataStructure.spheres) {
       let requestSphereIds = Object.keys(dataStructure.spheres);
       for (let i = 0; i < requestSphereIds.length; i++) {
         let sphereId = requestSphereIds[i];
-        let reqSphere = dataStructure.spheres[sphereId];
+        let requestSphere = dataStructure.spheres[sphereId];
         reply.spheres[sphereId] = {};
-        reply.spheres[sphereId].sphere = getShallowReply(reqSphere.data, cloud_spheres[sphereId]);
+        reply.spheres[sphereId].sphere = await getShallowReply(requestSphere.data, cloud_spheres[sphereId], () => { return Dbs.sphere.findById(sphereId) });
+        let replySphere = reply.spheres[sphereId];
 
-        await processSphereCollection(sphereId, 'hubs',            cloud_hubs[sphereId])
-        await processSphereCollection(sphereId, 'features',        cloud_features[sphereId])
-        await processSphereCollection(sphereId, 'scenes',          cloud_scenes[sphereId])
-        await processSphereCollection(sphereId, 'sortedLists',     cloud_sortedLists[sphereId])
-        await processSphereCollection(sphereId, 'trackingNumbers', cloud_trackingNumbers[sphereId])
-        await processSphereCollection(sphereId, 'toons',           cloud_toons[sphereId])
+        if (!ignore.hubs) {
+          await processSyncCollection('hubs', Dbs.hub, {sphereId}, requestSphere, replySphere, cloud_hubs[sphereId]);
+        }
+        if (!ignore.features) {
+          await processSyncCollection('features',        Dbs.sphereFeature,        {sphereId}, requestSphere, replySphere, cloud_features[sphereId]);
+        }
+        if (!ignore.locations) {
+          await processSyncCollection('locations',       Dbs.location,             {sphereId}, requestSphere, replySphere, cloud_locations[sphereId]);
+        }
+        if (!ignore.scenes) {
+          await processSyncCollection('scenes',          Dbs.scene,                {sphereId}, requestSphere, replySphere, cloud_scenes[sphereId]);
+        }
+        if (!ignore.trackingNumbers) {
+          await processSyncCollection('trackingNumbers', Dbs.sphereTrackingNumber, {sphereId}, requestSphere, replySphere, cloud_trackingNumbers[sphereId]);
+        }
+        if (!ignore.toons) {
+          await processSyncCollection('toons', Dbs.toon, {sphereId}, requestSphere, replySphere, cloud_toons[sphereId]);
+        }
 
 
+        if (!ignore.stones) {
+          // if there is no item in the cloud, cloud_hubs can be undefined.
+          let cloud_stones_in_sphere = cloud_stones[sphereId] || {};
+          let cloudStoneIds = Object.keys(cloud_stones_in_sphere);
+          replySphere.stones = {};
+          if (requestSphere.stones) {
+            // we will first iterate over all hubs in the user request.
+            // this handles:
+            //  - user has one more than cloud (new)
+            //  - user has synced data, or user has data that has been deleted.
+            let clientStoneIds = Object.keys(requestSphere.stones);
+            for (let j = 0; j < clientStoneIds.length; j++) {
+              let stoneId = clientStoneIds[j];
+              let stoneCloudId = clientStoneIds[j];
+              let clientStone = requestSphere.stones[stoneId];
+              if (clientStone.new) {
+                // propegate new to behaviour and to abilities in case the user forgot to mark all children as new too.
+                markStoneChildrenAsNew(clientStone);
 
-        
+                // create stone in cloud.
+                try {
+                  let newItem = await Dbs.stone.create({...clientStone.data, sphereId: sphereId});
+                  stoneCloudId = newItem.id;
+                  replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
+                }
+                catch (e) {
+                  replySphere.stones[stoneId] = { data: { status: "ERROR", error: {code:0, msg: e} }}
+                }
+              }
+              else {
+                replySphere.stones[stoneId] = { data: await getReply(clientStone, cloud_stones_in_sphere[stoneId], () => { return Dbs.stone.findById(stoneCloudId) }) }
+              }
 
+              await processSyncCollection(
+                'behaviours',
+                Dbs.stoneBehaviour,
+                {stoneId: stoneCloudId, sphereId},
+                clientStone,
+                replySphere.stones[stoneId],
+                cloud_behaviours[stoneId]
+              );
+
+              async function syncClientAbilityProperties(abilityReply : any, clientAbility: any, abilityId: string, abilityCloudId: string) : Promise<void> {
+                await processSyncCollection(
+                  'properties',
+                  Dbs.stoneAbilityProperty,
+                  {stoneId: stoneCloudId, sphereId, abilityId: abilityCloudId},
+                  clientAbility,
+                  abilityReply[abilityId],
+                  cloud_abilityProperties[abilityId]
+                )
+              }
+
+              async function syncCloudAbilityProperties(abilityReply: any, cloudAbility: StoneAbility, abilityId : string) : Promise<void> {
+                if (cloudAbility.properties) {
+                  let abilityPropertyIds = Object.keys(cloudAbility.properties);
+                  for (let l = 0; l < abilityPropertyIds.length; l++) {
+                    let abilityPropertyId = abilityPropertyIds[l];
+                    abilityReply.properties[abilityPropertyId] = {data: await getReply(null, cloud_abilityProperties[abilityId][abilityPropertyId], () => { return Dbs.stoneAbilityProperty.findById(abilityPropertyId); })}
+                  }
+                }
+              }
+
+              await processSyncCollection(
+                'abilities',
+                Dbs.stoneAbility,
+                {stoneId: stoneCloudId, sphereId},
+                clientStone,
+                replySphere.stones[stoneId],
+                cloud_abilities[stoneId],
+                syncClientAbilityProperties,
+                syncCloudAbilityProperties,
+                (ability) => {
+                  if (ability.properties) {
+                    let propertyIds = Object.keys(ability.properties);
+                    for ( let k = 0; k < propertyIds.length; k++) { ability.properties[propertyIds[k]].new = true; }
+                  }
+                }
+              );
+            }
+
+            // now we will iterate over all stones in the cloud
+            // this handles:
+            //  - cloud has stone that the user does not know.
+            for (let j = 0; j < cloudStoneIds.length; j++) {
+              let cloudStoneId = cloudStoneIds[j];
+              if (requestSphere.stones && requestSphere.stones[cloudStoneId] === undefined) {
+                let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
+                await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
+              }
+            }
+          }
+          else {
+            // there are no stones for the user, give the user all the stones.
+            for (let j = 0; j < cloudStoneIds.length; j++) {
+              let cloudStoneId = cloudStoneIds[j];
+              let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
+              await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
+            }
+          }
+        }
+      }
+
+
+      // now we will iterate over all spheres in the cloud
+      // this handles:
+      //  - cloud has sphere that the user does not know.
+      for (let i = 0; i < sphereIds.length; i++) {
+        let cloudSphereId = sphereIds[i];
+        if (dataStructure.spheres[cloudSphereId] === undefined) {
+          reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore);
+        }
+      }
+    }
+    else {
+      // there are no spheres for the user, give the user all the spheres.
+      for (let i = 0; i < sphereIds.length; i++) {
+        let cloudSphereId = sphereIds[i];
+        reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore);
       }
     }
 
-    
-
-
-    console.log(JSON.stringify(sphereData, undefined, 2))
+    return reply;
   }
 
 
@@ -352,12 +431,12 @@ class Syncer {
    */
   async handleSync(userId: string, dataStructure: SyncRequest) : Promise<any | SyncRequestReply> {
     if (!dataStructure || Object.keys(dataStructure).length === 0) {
-      return this.downloadAll(userId)
+      throw new HttpErrors.BadRequest("No sync information provided.");
     }
 
     // Full is used on login and is essentially a partial dump for your user
     if (dataStructure.sync.type === "FULL") {
-      return this.downloadAll(userId);
+      return this.downloadAll(userId, dataStructure);
     }
     // Request is the first part of a real sync operation.
     else if (dataStructure.sync.type === "REQUEST") {
@@ -403,147 +482,6 @@ class Syncer {
 
 }
 
-function getUniqueIdMap<T>(list: T[], idField: string = 'id') : idMap<T> {
-  let result: idMap<T> = {};
-  for (let i = 0; i < list.length; i++) {
-    // @ts-ignore
-    let requestedId = list[i][idField];
-    result[requestedId] = list[i];
-  }
-  return result;
-}
-
-function getNestedIdMap<T>(list: T[], idField: string) : nestedIdMap<T> {
-  let result: { [id: string]: T[] } = {};
-  for (let i = 0; i < list.length; i++) {
-    // @ts-ignore
-    let requestedId = list[i][idField];
-    if (result[requestedId] === undefined) {
-      result[requestedId] = [];
-    }
-    result[requestedId].push(list[i]);
-  }
-  let masterKeys = Object.keys(result);
-  let nestedResult: nestedIdMap<T> = {};
-  for (let i = 0; i < masterKeys.length; i++) {
-    let mk = masterKeys[i];
-    nestedResult[mk] = getUniqueIdMap(result[mk]);
-  }
-
-  return nestedResult;
-}
-
-
-
-function getIds(collection: any[]) : string[] {
-  let ids = [];
-  for (let i = 0; i < collection.length; i++) { ids.push(collection[i].id); }
-  return ids;
-}
-
-
-
-function getShallowReply<T extends UpdatedAt>(requestObject: UpdatedAt, cloudEntity: T | null) : { status: SyncState, data?: DataObject<T>} {
-  if (!cloudEntity) {
-    return { status: "DELETED" }
-  }
-  else {
-    return getReplyBasedOnTime<T>(requestObject.updatedAt, cloudEntity.updatedAt, cloudEntity)
-  }
-}
-
-
-function getReply<T extends UpdatedAt>(requestObject: RequestItemCoreType | null | undefined, cloudEntity: T | null | undefined) : { status: SyncState, data?: DataObject<T>} {
-  if (!cloudEntity) {
-    if (requestObject.new) {
-      throw "New should have been handled before.";
-    }
-    else {
-      return { status: "DELETED" }
-    }
-  }
-  else if (!requestObject) {
-    return { status:"NEW_DATA_AVAILABLE", data: cloudEntity };
-  }
-  else {
-    return getReplyBasedOnTime<T>(requestObject.data.updatedAt, cloudEntity.updatedAt, cloudEntity)
-  }
-}
-
-function getReplyBasedOnTime<T extends UpdatedAt>(request : Date | number | string, cloud : Date | number | string, cloudEntity: T) : { status: SyncState, data?: DataObject<T>} {
-  let requestT = getTimestamp(request);
-  let cloudT   = getTimestamp(cloud);
-
-  if (requestT === cloudT) {
-    return { status: "IN_SYNC"};
-  }
-  else if (requestT < cloudT) {
-    return { status: "NEW_DATA_AVAILABLE", data: cloudEntity };
-  }
-  else {
-    return { status: "REQUEST_DATA"};
-  }
-}
-
-function getTimestamp(a : Date | number | string) : number {
-  let at
-  if (typeof a === 'string') {
-    at = new Date(a).valueOf();
-  }
-  else if (a instanceof Date) {
-    at = a.valueOf();
-  }
-  else {
-    at = a;
-  }
-  return at;
-}
-
 
 
 export const SyncHandler = new Syncer();
-
-// // if there is no hub in the cloud, cloud_hubs can be undefined.
-// let cloud_hubs_in_sphere = cloud_hubs[sphereId] ?? {};
-// let cloudHubIds = Object.keys(cloud_hubs_in_sphere);
-// if (reqSphere.hubs) {
-//   // we will first iterate over all hubs in the user request.
-//   // this handles:
-//   //  - user has one more than cloud (new)
-//   //  - user has synced data, or user has data that has been deleted.
-//   let hubIds = Object.keys(reqSphere.hubs);
-//   for (let j = 0; j < hubIds.length; j++) {
-//     let hubId = hubIds[j];
-//     let clientHub = reqSphere.hubs[hubId];
-//     if (clientHub.new) {
-//       // create hub in cloud.
-//       try {
-//         let newHub = await Dbs.hub.create({...clientHub.data, sphereId: sphereId});
-//         reply.spheres[sphereId].hubs[hubId] = { data: { status: "CREATED_IN_CLOUD", data: newHub }}
-//       }
-//       catch (e) {
-//         reply.spheres[sphereId].hubs[hubId] = { data: { status: "ERROR", error: {code:0, msg: e} }}
-//       }
-//     }
-//     else {
-//       reply.spheres[sphereId].hubs[hubId] = { data: getReply(clientHub, cloud_hubs_in_sphere[hubId]) }
-//     }
-//   }
-//
-//   // now we will iterate over all hubs in the cloud
-//   // this handles:
-//   //  - cloud has hub that the user does not know.
-//   for (let j = 0; j < cloudHubIds.length; j++) {
-//     let cloudHubId = cloudHubIds[j];
-//     if (reqSphere.hubs && reqSphere.hubs[cloudHubId] === undefined) {
-//       reply.spheres[sphereId].hubs[cloudHubId] = { data: getReply(null, cloud_hubs_in_sphere[cloudHubId]) };
-//     }
-//   }
-// }
-// else {
-//   // there are no hubs for the user, give the user all the hubs.
-//   for (let j = 0; j < cloudHubIds.length; j++) {
-//     let cloudHubId = cloudHubIds[j];
-//     reply.spheres[sphereId].hubs[cloudHubId] = { data: getReply(null, cloud_hubs_in_sphere[cloudHubId]) };
-//   }
-// }

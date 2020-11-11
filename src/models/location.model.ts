@@ -1,5 +1,4 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {Position} from "./position.model";
 import {Stone} from "./stone.model";
 import {Fingerprint} from "./fingerprint.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
@@ -32,9 +31,6 @@ export class Location extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => Stone, {keyTo: 'locationId'})
   stones: Stone[];
-
-  @hasOne(() => Position,  {keyTo: 'locationId'})
-  sphereOverviewPosition: Position
 
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
