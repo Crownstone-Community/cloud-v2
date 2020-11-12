@@ -86,7 +86,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {
     if (!entity.uuid) { entity.uuid = CloudUtil.createIBeaconUUID(); }
-    if (!entity.uid)  { entity.uid  = crypto.randomBytes(1)[0]; }
+    if (!entity.uid)  { entity.uid  = CloudUtil.createShortUID(); }
 
     let sphere = await super.create(entity, options);
 

@@ -17,8 +17,8 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
         entity.id = CloudUtil.createId(this.constructor.name)
       }
 
-      entity.createdAt = new Date();
-      entity.updatedAt = entity.updatedAt ?? new Date();
+      entity.createdAt = CloudUtil.getDate();
+      entity.updatedAt = entity.updatedAt ?? CloudUtil.getDate();
       return super.create(entity, options);
     }
 
@@ -27,7 +27,9 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
       where?: Where<E>,
       options?: Options,
     ): Promise<Count> {
-      data.updatedAt = new Date();
+      if (!options || options.dontOverwriteTimes !== true) {
+        data.updatedAt = CloudUtil.getDate();
+      }
       return super.updateAll(data, where, options);
     }
 
@@ -36,7 +38,7 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
       data: DataObject<E>,
       options?: Options,
     ): Promise<void> {
-      data.updatedAt = new Date();
+      data.updatedAt = CloudUtil.getDate();
       return super.replaceById(id, data, options);
     }
 }

@@ -62,16 +62,17 @@ interface SyncIgnoreList {
   stones:          boolean,
   trackingNumbers: boolean,
   toons:           boolean,
+  user:            boolean,
 }
 
 interface SyncRequest {
   sync: {
     type: SyncType,
-    lastTime: Date,
+    lastTime?: Date,
     scope?: SyncCategory[]
   },
-  user: UpdatedAt,
-  spheres: {
+  user?: UpdatedAt,
+  spheres?: {
     [sphereId: string]: {
       data?: UpdatedAt,
       hubs?: {

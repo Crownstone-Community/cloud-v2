@@ -89,12 +89,11 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
 
 
 function injectMajorMinor(stone: DataObject<Stone>) {
-  let buf = crypto.randomBytes(4);
   if (!stone.major) {
-    stone.major = buf.readUInt16BE(0);
+    stone.major = CloudUtil.createIBeaconMajor();
   }
   if (!stone.minor) {
-    stone.minor = buf.readUInt16BE(2);
+    stone.minor = CloudUtil.createIBeaconMinor();
   }
 
   // this catches the case where the random number is 0 for either

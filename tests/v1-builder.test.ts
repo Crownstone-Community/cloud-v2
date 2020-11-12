@@ -1,4 +1,4 @@
-
+test("None",() => {})
 
 /*
 This file is used to create a mock database on the old, locally running rest api, which MUST be connected to a local

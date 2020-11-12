@@ -9,6 +9,9 @@ import {Stone} from "../../src/models/stone.model";
 import {Location} from "../../src/models/location.model";
 import {generateName} from "../mocks/CloudUtil.mock";
 import {CloudUtil} from "../../src/util/CloudUtil";
+import {StoneBehaviour} from "../../src/models/stoneSubModels/stone-behaviour.model";
+import {StoneAbilityProperty} from "../../src/models/stoneSubModels/stone-ability-property.model";
+import {StoneAbility} from "../../src/models/stoneSubModels/stone-ability.model";
 
 
 
@@ -30,17 +33,14 @@ export async function createUser(email?, password?, updatedAt?) : Promise<User> 
   return user;
 }
 
-export async function createSphere(userId, name?, updatedAt?, children= false) : Promise<Sphere> {
+export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> {
   updatedAt ??= Date.now();
   name      ??= generateName();
 
   let dbs = getRepositories();
 
-  let sphere = await dbs.sphere.create({name, updatedAt})
+  let sphere = await dbs.sphere.create({name, updatedAt});
   await dbs.sphereAccess.create({sphereId: sphere.id, userId: userId, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()});
-  if (children) {
-
-  }
   return sphere;
 }
 
@@ -56,7 +56,7 @@ export async function createHub(sphereId, name?, updatedAt?, token?) : Promise<H
   return hub;
 }
 
-export async function createStone(sphereId, name?, updatedAt?) : Promise<Stone> {
+export async function createStone(sphereId, name?, updatedAt?) : Promise<{stone:Stone, behaviour:StoneBehaviour, ability:StoneAbility, abilityProperty: StoneAbilityProperty}> {
   updatedAt ??= Date.now();
   name      ??= generateName();
   let address = generateName()
@@ -64,11 +64,11 @@ export async function createStone(sphereId, name?, updatedAt?) : Promise<Stone> 
   let dbs = getRepositories();
 
   let stone = await dbs.stone.create({sphereId: sphereId, name: name, address: address, updatedAt})
-  await dbs.stoneBehaviour.create({ sphereId, stoneId: stone.id, type:'twilight', data:'helloMock', syncedToCrownstone: false, updatedAt});
+  let behaviour = await dbs.stoneBehaviour.create({ sphereId, stoneId: stone.id, type:'twilight', data:'helloMock', syncedToCrownstone: false, updatedAt});
   let ability = await dbs.stoneAbility.create({ sphereId, stoneId: stone.id, type:'dimming', enabled: false, syncedToCrownstone: false, updatedAt});
-  await dbs.stoneAbilityProperty.create({ sphereId, stoneId: stone.id, abilityId: ability.id, type:'smoothDimming', value: 'true', updatedAt});
+  let abilityProperty = await dbs.stoneAbilityProperty.create({ sphereId, stoneId: stone.id, abilityId: ability.id, type:'smoothDimming', value: 'true', updatedAt});
 
-  return stone;
+  return {stone, behaviour, ability, abilityProperty};
 }
 
 

@@ -1,3 +1,4 @@
+import {HttpErrors} from "@loopback/rest";
 
 export function getUniqueIdMap<T>(list: T[], idField: string = 'id') : idMap<T> {
   let result: idMap<T> = {};
@@ -62,6 +63,9 @@ export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreList {
     if (categories[scope[i]] !== undefined) {
       categories[scope[i]] = false;
     }
+    else {
+      throw new HttpErrors.BadRequest("Invalid scope")
+    }
   }
   return categories;
 }
@@ -79,5 +83,6 @@ function getSyncCategories(value: boolean) : SyncIgnoreList {
     stones:          value,
     trackingNumbers: value,
     toons:           value,
+    user:            value,
   }
 }

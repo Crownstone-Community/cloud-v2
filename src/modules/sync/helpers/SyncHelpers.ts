@@ -58,12 +58,15 @@ export async function processSyncCollection<T extends UpdatedAt>(
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
         catch (e) {
-          replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code:0, msg: e} }}
+          replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} }}
         }
       }
       else {
         // compare if everything is in sync
         replySource[fieldname][itemId] = { data: await getReply(clientItem, cloud_items_in_sphere[itemId], () => { return db.findById(itemId) })}
+        if (replySource[fieldname][itemId].data.status === "DELETED") {
+          continue;
+        }
       }
 
       if (syncClientItemCallback) {

@@ -47,7 +47,7 @@
     "casbin": "^5.2.0",
     "crownstone-logger": "^0.1.4",
     "helmet": "^3.21.2",
-    "jest": "^26.3.0",
+    "jest": "^26.6.3",
     "loopback-connector-mongodb": "^5.2.3",
     "node-fetch": "^2.6.0",
     "node-uuid": "^1.4.8",
@@ -55,7 +55,7 @@
     "passport-accesstoken": "^0.1.0",
     "passport-http-bearer": "^1.0.1",
     "socket.io-client": "^2.3.0",
-    "ts-jest": "^26.4.3",
+    "ts-jest": "^26.4.4",
     "tslib": "^2.0.3"
   },
   "devDependencies": {

@@ -25,7 +25,7 @@ export interface SyncRequestReply {
 }
 
 export interface SyncRequestReply_Sphere {
-  sphere?: SyncReplyItemCore<Sphere>,
+  data?: SyncReplyItemCore<Sphere>,
   hubs?: {
     [hubId: string]: {
       data: SyncReplyItemCore<Hub>,
