@@ -28,7 +28,11 @@ export function makeUtilDeterministic() {
         },
 
         createToken: function() : string {
-          return crypto.randomBytes(32).toString('hex');
+          let token = "TOKEN:" + RANDOM_COUNT++;
+          for (let i = token.length; i < 64; i++) {
+            token += 'x'
+          }
+          return token;
         },
 
         createShortUID() : number {

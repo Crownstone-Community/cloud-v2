@@ -1,5 +1,5 @@
 import {Dbs} from "../containers/RepoContainer";
-import {HttpErrors} from "@loopback/rest";
+import {HttpErrors, param} from "@loopback/rest";
 import {SyncRequestReply, SyncRequestReply_Sphere} from "../../declarations/syncTypes";
 import {Sphere} from "../../models/sphere.model";
 import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
@@ -7,11 +7,24 @@ import {fillSyncStoneData, markStoneChildrenAsNew} from "./helpers/StoneSyncHelp
 import {processSyncCollection} from "./helpers/SyncHelpers";
 import {getReply, getShallowReply} from "./helpers/ReplyHelpers";
 import {
+  filterForAppVersion, getHighestVersionPerHardwareVersion,
   getIds,
   getNestedIdMap,
   getSyncIgnoreList,
-  getUniqueIdMap
+  getUniqueIdMap, sortByHardwareVersion
 } from "./helpers/SyncUtil";
+import {User} from "../../models/user.model";
+import { hardwareVersions } from '../../constants/hardwareVersions';
+import {Bootloader } from "../../models/bootloader.model";
+import {Firmware} from "../../models/firmware.model";
+import {getEncryptionKeys} from "./helpers/KeyUtil";
+import {processSyncReply} from "./helpers/SyncReplyHelper";
+
+
+const admin  = true;
+const member = true;
+const guest  = true;
+const hub    = true;
 
 let sphereRelationsMap : {[id:string]:boolean} = {
   features:        true,
@@ -153,20 +166,63 @@ class Syncer {
   }
 
 
+  async getBootloaders(userId: string, request: SyncRequest, user?: User) {
+    if (!user) {
+      user = await Dbs.user.findById(userId, {fields: {earlyAccessLevel: true}});
+    }
+
+    let appVersion = request?.sync?.appVersion ?? null;
+    let hwVersions = hardwareVersions.util.getAllVersions();
+    let accessLevel = user.earlyAccessLevel;
+    let results = await Dbs.bootloader.find({where: {releaseLevel: {lte: accessLevel }}})
+    let filteredResults : Bootloader[] = filterForAppVersion(results, appVersion);
+
+    // generate a map of all bootloaders per hardware version.
+    let bootloaderForHardwareVersions : {[hwVersion:string]: Bootloader[] } = sortByHardwareVersion(hwVersions, filteredResults)
+
+    // pick the highest version per hardware type.
+    let highestBootloaderVersions = getHighestVersionPerHardwareVersion(hwVersions, bootloaderForHardwareVersions)
+
+    return highestBootloaderVersions;
+  }
+
+
+  async getFirmwares(userId: string, request: SyncRequest, user?: User) {
+    if (!user) {
+      user = await Dbs.user.findById(userId, {fields: {earlyAccessLevel: true}});
+    }
+
+    let appVersion = request?.sync?.appVersion ?? null;
+    let hwVersions = hardwareVersions.util.getAllVersions();
+    let accessLevel = user.earlyAccessLevel;
+    let results = await Dbs.firmware.find({where: {releaseLevel: {lte: accessLevel }}})
+    let filteredResults : Firmware[] = filterForAppVersion(results, appVersion);
+
+    // generate a map of all bootloaders per hardware version.
+    let firmwareForHardwareVersions : {[hwVersion:string]: Firmware[] } = sortByHardwareVersion(hwVersions, filteredResults)
+
+    // pick the highest version per hardware type.
+    let highestFirmwareVersions = getHighestVersionPerHardwareVersion(hwVersions, firmwareForHardwareVersions)
+
+    return highestFirmwareVersions;
+  }
+
   /**
    * This does a full grab of all syncable data the user has access to.
    * @param userId
    */
-  async downloadAll(userId: string, dataStructure: SyncRequest) {
-    let ignore = getSyncIgnoreList(dataStructure.sync.scope);
+  async downloadAll(userId: string, request: SyncRequest) {
+    let ignore = getSyncIgnoreList(request.sync.scope);
 
-    let result : SyncRequestReply = {
+    let reply : SyncRequestReply = {
       spheres: {},
     };
 
-    if (!ignore.user) {
-      let user = await Dbs.user.findById(userId);
-      result.user = { status: "VIEW", data: user };
+
+    let user : User;
+    if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
+      user = await Dbs.user.findById(userId);
+      reply.user = { status: "VIEW", data: user };
     }
     let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
 
@@ -174,19 +230,24 @@ class Syncer {
 
     for (let i = 0; i < access.length; i++) {
       let sphereId = access[i].sphereId;
-      result.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore);
+      reply.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore);
     }
 
-    return result;
+    if (!ignore.firmware)   { reply.firmwares   = {status: "VIEW", ...await this.getFirmwares(  userId, request, user)}; }
+    if (!ignore.bootloader) { reply.bootloaders = {status: "VIEW", ...await this.getBootloaders(userId, request, user)}; }
+    if (!ignore.keys)       { reply.keys = await getEncryptionKeys(userId, null, null, access); }
+
+    return reply;
   }
 
 
-  async requestSync(userId: string, request: SyncRequest) : Promise<SyncRequestReply> {
+  async handleRequestSync(userId: string, request: SyncRequest) : Promise<SyncRequestReply> {
     let ignore = getSyncIgnoreList(request.sync.scope);
 
     // this has the list of all required connection ids as wel as it's own ID and the updatedAt field.
     let filterFields = {
       id: true,
+      earlyAccessLevel: true, // used for bootloaders and firmwares.
       updatedAt:true,
       sphereId: true,
       messageDeliveredId: true,
@@ -195,16 +256,16 @@ class Syncer {
       abilityId: true
     };
 
-
-    let access = await Dbs.sphereAccess.find({where: {userId: userId}});
-
+    let access = await Dbs.sphereAccess.find({where: {userId: userId, invitePending: {neq: true}}});
     let sphereIds = [];
+    let accessMap : {[sphereId: string]: ACCESS_ROLE} = {};
 
     for (let i = 0; i < access.length; i++) {
       sphereIds.push(access[i].sphereId);
+      accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
     }
 
-    let sphereData = await Dbs.sphere.find({where: {id: {inq: sphereIds }},fields: filterFields})
+    let sphereData = await Dbs.sphere.find({where: {id: {inq: sphereIds}},fields: filterFields})
 
     // We do this in separate queries since Loopback also makes it separate queries and the fields filter for id an updated at true does
     // not work in the scope {}. It only supports fields filter where we remove fields. Go figure...
@@ -255,11 +316,9 @@ class Syncer {
 
     let reply : SyncRequestReply = {spheres:{}};
 
-
-
-    // first we check the users
-    if (!ignore.user) {
-      let user   = await Dbs.user.findById(userId, {fields: filterFields});
+    let user : User;
+    if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
+      user       = await Dbs.user.findById(userId, {fields: filterFields});
       reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
     }
 
@@ -275,23 +334,38 @@ class Syncer {
           continue;
         }
 
+        let accessRole = accessMap[sphereId];
+
         if (!ignore.hubs) {
-          await processSyncCollection('hubs',            Dbs.hub, {sphereId}, requestSphere, replySphere, cloud_hubs[sphereId]);
+          await processSyncCollection('hubs',      Dbs.hub,          {sphereId}, requestSphere, replySphere,
+            accessRole,{admin}, {admin}, cloud_hubs[sphereId]);
         }
         if (!ignore.features) {
-          await processSyncCollection('features',        Dbs.sphereFeature,        {sphereId}, requestSphere, replySphere, cloud_features[sphereId]);
+          await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere,
+            accessRole,{},{}, cloud_features[sphereId]);
         }
         if (!ignore.locations) {
-          await processSyncCollection('locations',       Dbs.location,             {sphereId}, requestSphere, replySphere, cloud_locations[sphereId]);
+          await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere,
+            accessRole,{admin, member},{admin, member},  cloud_locations[sphereId]);
         }
         if (!ignore.scenes) {
-          await processSyncCollection('scenes',          Dbs.scene,                {sphereId}, requestSphere, replySphere, cloud_scenes[sphereId]);
-        }
-        if (!ignore.trackingNumbers) {
-          await processSyncCollection('trackingNumbers', Dbs.sphereTrackingNumber, {sphereId}, requestSphere, replySphere, cloud_trackingNumbers[sphereId]);
+          await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere,
+            accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId]);
         }
         if (!ignore.toons) {
-          await processSyncCollection('toons',           Dbs.toon, {sphereId}, requestSphere, replySphere, cloud_toons[sphereId]);
+          await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere,
+            accessRole,{admin},{admin, member}, cloud_toons[sphereId]);
+        }
+        if (!ignore.trackingNumbers) {
+          await processSyncCollection(
+            'trackingNumbers',
+            Dbs.sphereTrackingNumber,
+            {sphereId}, requestSphere, replySphere,
+            accessRole,
+            {admin, member, guest},
+             {admin, member, guest},
+            cloud_trackingNumbers[sphereId]
+          );
         }
 
 
@@ -311,6 +385,10 @@ class Syncer {
               let stoneCloudId = clientStoneIds[j];
               let clientStone = requestSphere.stones[stoneId];
               if (clientStone.new) {
+                if (accessRole !== "admin") {
+                  replySphere.stones[stoneId] = { data: { status: "ACCESS_DENIED" } };
+                  continue;
+                }
                 // propegate new to behaviour and to abilities in case the user forgot to mark all children as new too.
                 markStoneChildrenAsNew(clientStone);
 
@@ -329,6 +407,9 @@ class Syncer {
                 if (replySphere.stones[stoneId].data.status === "DELETED") {
                   continue;
                 }
+                else if (replySphere.stones[stoneId].data.status === "REQUEST_DATA" && accessRole === 'guest') {
+                  replySphere.stones[stoneId].data.status = "IN_SYNC";
+                }
               }
 
               await processSyncCollection(
@@ -337,6 +418,9 @@ class Syncer {
                 {stoneId: stoneCloudId, sphereId},
                 clientStone,
                 replySphere.stones[stoneId],
+                accessRole,
+                {admin, member, hub},
+                {admin, member, hub},
                 cloud_behaviours[stoneId]
               );
 
@@ -350,6 +434,9 @@ class Syncer {
                   {stoneId: stoneCloudId, sphereId, abilityId: abilityCloudId},
                   clientAbility,
                   abilityReply[abilityId],
+                  accessRole,
+                  {admin, member, hub},
+                  {admin, member, hub},
                   cloud_abilityProperties[abilityId]
                 )
               }
@@ -373,6 +460,9 @@ class Syncer {
                 {stoneId: stoneCloudId, sphereId},
                 clientStone,
                 replySphere.stones[stoneId],
+                accessRole,
+                {admin, member},
+                {admin, member},
                 cloud_abilities[stoneId],
                 syncClientAbilityProperties,
                 syncCloudAbilityProperties,
@@ -426,20 +516,83 @@ class Syncer {
       }
     }
 
-    // TODO:
-    // inject keys and firmwares, bootloaders
+    if (!ignore.firmware)   { reply.firmwares   = {status: "VIEW", ...await this.getFirmwares(  userId, request, user)}; }
+    if (!ignore.bootloader) { reply.bootloaders = {status: "VIEW", ...await this.getBootloaders(userId, request, user)}; }
+    if (!ignore.keys)       { reply.keys = await getEncryptionKeys(userId, null, null, access); }
 
     return reply;
   }
 
 
+  async handleReplySync(userId: string, request: SyncRequest) {
+    let ignore = getSyncIgnoreList(request.sync.scope);
+
+    let access = await Dbs.sphereAccess.find({where: {userId: userId, invitePending: {neq: true}}});
+    let sphereIds = [];
+    let accessMap: { [sphereId: string]: ACCESS_ROLE } = {};
+
+    for (let i = 0; i < access.length; i++) {
+      sphereIds.push(access[i].sphereId);
+      accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
+    }
+
+    let reply : SyncRequestReply = {spheres:{}};
+
+    if (request.user) {
+      try {
+        await Dbs.user.updateById(userId, request.user, {acceptTimes: true});
+        reply.user = {status: "UPDATED_IN_CLOUD"};
+      }
+      catch (e) {
+        reply.user = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
+      }
+    }
+
+    if (request.spheres) {
+      let requestSphereIds = Object.keys(request.spheres);
+      for (let i = 0; i < requestSphereIds.length; i++) {
+        let sphereId = requestSphereIds[i];
+        let accessRole = accessMap[sphereId];
+        let requestSphere = request.spheres[sphereId];
+        reply.spheres[sphereId] = {};
+        let sphereReply = reply.spheres[sphereId];
+
+        if (requestSphere.data) {
+          // update model in cloud.
+          if (accessRole !== 'admin' && accessRole !== 'member') {
+            sphereReply.data = {status: "ACCESS_DENIED"};
+          }
+          else {
+            try {
+              await Dbs.sphere.updateById(sphereId, requestSphere.data, {acceptTimes: true});
+              sphereReply.data = {status: "UPDATED_IN_CLOUD"};
+            }
+            catch (e) {
+              sphereReply.data = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
+            }
+          }
+        }
+
+        await processSyncReply('hubs',            Dbs.hub,                  requestSphere.hubs,            sphereReply, accessRole, {admin});
+        await processSyncReply('locations',       Dbs.location,             requestSphere.locations,       sphereReply, accessRole, {admin, member});
+        await processSyncReply('scenes',          Dbs.scene,                requestSphere.scenes,          sphereReply, accessRole, {admin, member});
+        await processSyncReply('toons',           Dbs.toon,                 requestSphere.toons,           sphereReply, accessRole, {admin});
+        await processSyncReply('trackingNumbers', Dbs.sphereTrackingNumber, requestSphere.trackingNumbers, sphereReply, accessRole, {admin, member, guest});
 
 
+        const checkStones = async (stoneReply: any, stone: any) => {
+          const checkToUpdateAbilities = async (abilityReply: any, ability: any) => {
+            await processSyncReply('properties', Dbs.stoneAbilityProperty, ability.properties, abilityReply, accessRole,{admin, member});
+          }
+          await processSyncReply('abilities',  Dbs.stoneAbility,   stone.abilities, stoneReply, accessRole, {admin, member}, checkToUpdateAbilities);
+          await processSyncReply('behaviours', Dbs.stoneBehaviour, stone.behaviour, stoneReply, accessRole, {admin, member});
+        }
+        await processSyncReply('stones', Dbs.stone, requestSphere.stones, sphereReply, accessRole, {admin}, checkStones);
+      }
+    }
 
-
-
-
-
+    return reply;
+  }
 
 
   /**
@@ -469,36 +622,19 @@ class Syncer {
       //            SOLUTION: the cloud marks this id as DELETED
       // If we want to only query items that are newer, we would not be able to differentiate between deleted and updated.
       // To allow for this optimization, we should keep a deleted event.
-      return this.requestSync(userId, dataStructure);
+      return this.handleRequestSync(userId, dataStructure);
     }
     else if (dataStructure.sync.type === "REPLY") {
       // this phase will provide the cloud with ids and data. The cloud has requested this, we update the models with the new data.
       // this returns a simple 200 {status: "OK"} or something
+
+      return this.handleReplySync(userId, dataStructure);
     }
     else {
       throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST REPLY or FULL")
     }
-
-
-
-    // let syncData = dataStructure.sync;
-    let userSync = dataStructure.user;
-    if (!userSync) {
-      throw new HttpErrors.BadRequest("User entry required.");
-    }
-
-
-
-    // if (dataStructure)
-    // let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
-
-
-
   }
 
-  async replyPhase(userId: string) {
-
-  }
 
 }
 

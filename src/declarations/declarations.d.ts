@@ -63,10 +63,14 @@ interface SyncIgnoreList {
   trackingNumbers: boolean,
   toons:           boolean,
   user:            boolean,
+  firmware:        boolean,
+  bootloader:      boolean,
+  keys:            boolean,
 }
 
 interface SyncRequest {
   sync: {
+    appVersion?: string,
     type: SyncType,
     lastTime?: Date,
     scope?: SyncCategory[]
@@ -138,7 +142,9 @@ type SyncState = "DELETED" |  // this entity has been deleted
                    "ERROR" |  // something went wrong (HAS ERROR)
       "NEW_DATA_AVAILABLE" |  // cloud has newer data (HAS DATA)
             "REQUEST_DATA" |  // you have newer data, please give to cloud.
+        "UPDATED_IN_CLOUD" |  // the cloud has been updated with your model
         "CREATED_IN_CLOUD" |  // the cloud has an additional id other than what you requested
+           "ACCESS_DENIED" |  // user has no permission to create/delete something.
                     "VIEW"    // you have requested data, here it is. No syncing information. (HAS DATA)
 
 
@@ -155,4 +161,17 @@ interface nestedIdMap<T> {
   [id: string]: {
     [id: string] : T
   }
+}
+
+interface nestedIdArray<T> {
+  [id: string]: T[]
+}
+
+type ACCESS_ROLE = 'admin' | 'member' | 'guest' | 'hub';
+
+interface RolePermissions {
+  admin?  : boolean,
+  member? : boolean,
+  guest?  : boolean,
+  hub?    : boolean
 }

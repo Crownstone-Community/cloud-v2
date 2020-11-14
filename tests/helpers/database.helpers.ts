@@ -25,14 +25,18 @@ import {CrownstoneTokenRepository} from "../../src/repositories/users/crownstone
 import {StoneKeyRepository} from "../../src/repositories/data/stone-key.repository";
 import {SphereKeyRepository} from "../../src/repositories/data/sphere-key.repository";
 import {RepositoryContainer} from "../../src/modules/containers/RepoContainer";
+import {BootloaderRepository} from "../../src/repositories/data/bootloader.repository";
+import {FirmwareRepository} from "../../src/repositories/data/firmware.repository";
 
 function initRepositories() : RepositoryContainer {
   let sphere : SphereRepository;
+  let bootloader : BootloaderRepository;
   let appInstallation : AppInstallationRepository;
   let devicePreferences : DevicePreferencesRepository
   let device : DeviceRepository;
   let fingerprintLinker: FingerprintLinkerRepository;
   let fingerprint: FingerprintRepository;
+  let firmware: FirmwareRepository;
   let location: LocationRepository;
   let message: MessageRepository;
   let messageState: MessageStateRepository;
@@ -69,6 +73,8 @@ function initRepositories() : RepositoryContainer {
 
   hub                  = new HubRepository(testdb, sphereGetter)
   crownstoneToken      = new CrownstoneTokenRepository(testdb)
+  bootloader           = new BootloaderRepository(testdb)
+  firmware             = new FirmwareRepository(testdb)
 
   appInstallation      = new AppInstallationRepository(testdb, deviceGetter);
   devicePreferences    = new DevicePreferencesRepository(testdb, deviceGetter);
@@ -98,11 +104,13 @@ function initRepositories() : RepositoryContainer {
 
   return {
     sphere,
+    bootloader,
     appInstallation,
     devicePreferences,
     device,
     fingerprintLinker,
     fingerprint,
+    firmware,
     location,
     message,
     messageState,

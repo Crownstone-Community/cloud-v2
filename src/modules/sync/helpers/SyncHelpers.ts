@@ -7,7 +7,7 @@ import {getReply} from "./ReplyHelpers";
  * {
     [itemId: string]: RequestItemCoreType
    }
- * from a requestSync and give it's reply. This has to be done a lot, so there are a lot of variables in here to avoid
+ * from a handleRequestSync and give it's reply. This has to be done a lot, so there are a lot of variables in here to avoid
  * code duplication.
  * @param fieldname              | This is the field in the sphere like 'hubs' and it uses this to populate the reply and search the request
  * @param db                     | This is the repository of the model that describes this category. It is used to get new data from when the client does not know the data, and used to insert data to.
@@ -24,6 +24,9 @@ export async function processSyncCollection<T extends UpdatedAt>(
   creationAddition: object,
   clientSource: any,
   replySource: any,
+  role: ACCESS_ROLE,
+  writePermissions: RolePermissions,
+  editPermissions: RolePermissions,
   cloud_items_in_sphere : idMap<T> = {},
   syncClientItemCallback?: (replyAtPoint: any, clientItem: any, id: string, cloudId: string) => Promise<void>,
   syncCloudItemCallback?: (replyAtPoint: any, cloudItem: T, cloudId: string) => Promise<void>,
@@ -46,6 +49,11 @@ export async function processSyncCollection<T extends UpdatedAt>(
       let clientItem = clientSource[fieldname][itemId];
 
       if (clientItem.new) {
+        if (writePermissions[role] !== true) {
+          replySource[fieldname][itemId] = { data: { status: "ACCESS_DENIED" } };
+          continue;
+        }
+
         if (markChildrenAsNew) {
           markChildrenAsNew(clientItem);
         }
@@ -66,6 +74,9 @@ export async function processSyncCollection<T extends UpdatedAt>(
         replySource[fieldname][itemId] = { data: await getReply(clientItem, cloud_items_in_sphere[itemId], () => { return db.findById(itemId) })}
         if (replySource[fieldname][itemId].data.status === "DELETED") {
           continue;
+        }
+        else if (replySource[fieldname][itemId].data.status === "REQUEST_DATA" && editPermissions[role] !== true) {
+          replySource[fieldname][itemId].data.status = "IN_SYNC";
         }
       }
 

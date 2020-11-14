@@ -15,6 +15,9 @@ export class SphereKey extends AddTimestamps(BaseEntity) {
   @property({type: 'string', required: true})
   key: string;
 
+  @property({type: 'number', required: true})
+  ttl: number;
+
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
 

@@ -1,4 +1,5 @@
 import {HttpErrors} from "@loopback/rest";
+import {VersionUtil} from "../../../util/VersionUtil";
 
 export function getUniqueIdMap<T>(list: T[], idField: string = 'id') : idMap<T> {
   let result: idMap<T> = {};
@@ -10,8 +11,21 @@ export function getUniqueIdMap<T>(list: T[], idField: string = 'id') : idMap<T> 
   return result;
 }
 
-export function getNestedIdMap<T>(list: T[], idField: string) : nestedIdMap<T> {
-  let result: { [id: string]: T[] } = {};
+
+export function getNestedIdMap<T>(list: T[], idField: string, secondary: string = 'id') : nestedIdMap<T> {
+  let nestedIdArray = getNestedIdArray(list, idField);
+  let masterKeys = Object.keys(nestedIdArray);
+  let nestedResult: nestedIdMap<T> = {};
+  for (let i = 0; i < masterKeys.length; i++) {
+    let mk = masterKeys[i];
+    nestedResult[mk] = getUniqueIdMap(nestedIdArray[mk]);
+  }
+
+  return nestedResult;
+}
+
+export function getNestedIdArray<T>(list: T[], idField: string) : nestedIdArray<T> {
+  let result: nestedIdArray<T> = {};
   for (let i = 0; i < list.length; i++) {
     // @ts-ignore
     let requestedId = list[i][idField];
@@ -20,14 +34,8 @@ export function getNestedIdMap<T>(list: T[], idField: string) : nestedIdMap<T> {
     }
     result[requestedId].push(list[i]);
   }
-  let masterKeys = Object.keys(result);
-  let nestedResult: nestedIdMap<T> = {};
-  for (let i = 0; i < masterKeys.length; i++) {
-    let mk = masterKeys[i];
-    nestedResult[mk] = getUniqueIdMap(result[mk]);
-  }
 
-  return nestedResult;
+  return result;
 }
 
 
@@ -84,5 +92,63 @@ function getSyncCategories(value: boolean) : SyncIgnoreList {
     trackingNumbers: value,
     toons:           value,
     user:            value,
+    firmware:        value,
+    bootloader:      value,
+    keys:            value,
   }
 }
+
+export function filterForAppVersion<T extends {minimumAppVersion: string}>(data: T[], appVersion : string | null) : T[] {
+  if (appVersion) {
+    let filteredResults = [];
+    for (let i = 0; i < data.length; i++) {
+      let item = data[i];
+      if (!item.minimumAppVersion || VersionUtil.isHigherOrEqual(appVersion, item.minimumAppVersion)) {
+        filteredResults.push(item);
+      }
+    }
+    return filteredResults;
+  }
+  return data;
+}
+
+export function sortByHardwareVersion<T>(hardwareVersions: string[], data: T[]) : {[hwVersion:string]: T[]} {
+  let result : {[hwVersion:string]: T[] } = {};
+  for (let i = 0; i < hardwareVersions.length; i++) {
+    let hwVersion = hardwareVersions[i];
+    result[hwVersion] = [];
+
+    data.forEach((item) => {
+      // @ts-ignore
+      if (item.supportedHardwareVersions.indexOf(hwVersion) !== -1) {
+        result[hwVersion].push(item);
+      }
+    })
+  }
+  return result;
+}
+
+
+export function getHighestVersionPerHardwareVersion<T extends { version: string }>(hardwareVersions: string[], data: {[hwVersion:string]: T[]}) : {[hwVersion:string]: string} {
+  let result : { [hardwareVersion: string]: string } = {};
+  for (let i = 0; i < hardwareVersions.length; i++) {
+    let hwVersion = hardwareVersions[i];
+    let latestVersion = '0.0.0';
+    for (let j = 0; j < data[hwVersion].length; j++) {
+      let item = data[hwVersion][j];
+      if (VersionUtil.isHigher(item.version, latestVersion)) {
+        latestVersion = item.version;
+      }
+    }
+    if (latestVersion !== '0.0.0') {
+      result[hwVersion] = latestVersion;
+    }
+    else {
+      result[hwVersion] = null;
+    }
+  }
+  return result;
+}
+
+
+

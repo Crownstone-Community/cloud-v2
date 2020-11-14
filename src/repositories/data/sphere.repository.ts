@@ -29,7 +29,6 @@ import {SphereAccessRepository} from "./sphere-access.repository";
 import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
 import {SphereTrackingNumberRepository} from "./sphere-tracking-number.repository";
 import {CloudUtil} from "../../util/CloudUtil";
-import * as crypto from "crypto";
 import {keyTypes} from "../../enums";
 import {HttpErrors} from "@loopback/rest";
 import {Dbs} from "../../modules/containers/RepoContainer";
@@ -91,13 +90,13 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     let sphere = await super.create(entity, options);
 
     await Dbs.sphereKeys.createAll([
-      {sphereId: sphere.id, keyType: keyTypes.ADMIN_KEY,            key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.MEMBER_KEY,           key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.BASIC_KEY,            key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.LOCALIZATION_KEY,     key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.SERVICE_DATA_KEY,     key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.MESH_APPLICATION_KEY, key: CloudUtil.createKey()},
-      {sphereId: sphere.id, keyType: keyTypes.MESH_NETWORK_KEY,     key: CloudUtil.createKey()},
+      {sphereId: sphere.id, keyType: keyTypes.ADMIN_KEY,            key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.MEMBER_KEY,           key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.BASIC_KEY,            key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.LOCALIZATION_KEY,     key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.SERVICE_DATA_KEY,     key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.MESH_APPLICATION_KEY, key: CloudUtil.createKey(), ttl:0},
+      {sphereId: sphere.id, keyType: keyTypes.MESH_NETWORK_KEY,     key: CloudUtil.createKey(), ttl:0},
     ]);
     return sphere;
   }

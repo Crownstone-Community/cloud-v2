@@ -15,6 +15,12 @@ import {StoneAbility} from "../../src/models/stoneSubModels/stone-ability.model"
 
 
 
+
+export let USERS = {};
+export function resetUsers() {
+  USERS = {};
+}
+
 export let lastCreatedUser = {
   email: null,
   password: null,
@@ -25,11 +31,12 @@ export async function createUser(email?, password?, updatedAt?) : Promise<User> 
   email     ??= generateName() + "@test.com";
   password  ??= 'test';
   let hashedPassword = CloudUtil.hashPassword(password);
-
-  let dbs = getRepositories();
   lastCreatedUser.email = email;
   lastCreatedUser.password = hashedPassword;
+
+  let dbs = getRepositories();
   let user = await dbs.user.create({email: email, password: hashedPassword, updatedAt: updatedAt })
+  USERS[user.id] = {item: user, email: email, password: hashedPassword}
   return user;
 }
 

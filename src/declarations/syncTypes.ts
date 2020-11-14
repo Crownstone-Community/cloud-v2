@@ -13,14 +13,16 @@ import {Location} from "../models/location.model";
 import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
 import {Entity} from "@loopback/repository";
+import {SphereKey} from "../models/sphere-key.model";
+import {StoneKey} from "../models/stoneSubModels/stone-key.model";
 
 export interface SyncRequestReply {
   user?: SyncReplyItemCore<User>,
   spheres: {
     [sphereId: string]: SyncRequestReply_Sphere
   },
-  firmwares?:   { },
-  bootloaders?: { },
+  firmwares?:   { status: SyncState, [hardwareVersion: string] : any },
+  bootloaders?: { status: SyncState, [hardwareVersion: string] : any },
   keys?:        { },
 }
 
@@ -89,4 +91,13 @@ export interface SyncReplyStone {
       data: SyncReplyItemCore<StoneBehaviour>
     }
   },
+}
+
+
+export type UserKeySet = UserKeys[]
+export interface UserKeys {
+  sphereId: string,
+  sphereAuthorizationToken: string,
+  sphereKeys: SphereKey[]
+  stoneKeys: {[stoneId: string] : StoneKey[]}
 }

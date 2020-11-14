@@ -8,7 +8,7 @@ export class SphereAccess extends Entity {
   @property({type: 'string', id: true})
   id: string;
 
-  @property({type:'boolean', default: true})
+  @property({type:'boolean', default: false})
   invitePending: boolean
 
   @property({type:'string'})

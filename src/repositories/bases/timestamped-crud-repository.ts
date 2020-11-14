@@ -12,14 +12,17 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
   ID> extends DefaultCrudRepository<E, ID> {
 
     async create(entity: DataObject<E>, options?: Options): Promise<E> {
-      if (CONFIG.generateCustomIds) {
-        // @ts-ignore
-        entity.id = CloudUtil.createId(this.constructor.name)
-      }
-
-      entity.createdAt = CloudUtil.getDate();
-      entity.updatedAt = entity.updatedAt ?? CloudUtil.getDate();
+      this.__handleId(entity);
+      this.__updateTimes(entity);
       return super.create(entity, options);
+    }
+
+    async createAll(entities: DataObject<E>[], options?: Options): Promise<E[]> {
+      for (let i = 0; i < entities.length; i++) {
+        this.__handleId(entities[i]);
+        this.__updateTimes(entities[i], options);
+      }
+      return super.createAll(entities, options);
     }
 
     async updateAll(
@@ -27,7 +30,7 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
       where?: Where<E>,
       options?: Options,
     ): Promise<Count> {
-      if (!options || options.dontOverwriteTimes !== true) {
+      if (!options || options.acceptTimes !== true) {
         data.updatedAt = CloudUtil.getDate();
       }
       return super.updateAll(data, where, options);
@@ -41,4 +44,17 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
       data.updatedAt = CloudUtil.getDate();
       return super.replaceById(id, data, options);
     }
+
+
+    __handleId(entity: DataObject<E>) {
+      if (CONFIG.generateCustomIds) {
+        // @ts-ignore
+        entity.id = CloudUtil.createId(this.constructor.name)
+      }
+    }
+    __updateTimes(entity: DataObject<E>, options?: Options) {
+      entity.createdAt = CloudUtil.getDate();
+      entity.updatedAt = entity.updatedAt ?? CloudUtil.getDate();
+    }
 }
+

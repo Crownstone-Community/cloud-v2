@@ -24,14 +24,18 @@ import {UserRepository} from "../../repositories/users/user.repository";
 import {HubRepository} from "../../repositories/users/hub.repository";
 import {CrownstoneTokenRepository} from "../../repositories/users/crownstone-token.repository";
 import {CrownstoneCloud} from "../../application";
+import {FirmwareRepository} from "../../repositories/data/firmware.repository";
+import {BootloaderRepository} from "../../repositories/data/bootloader.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
+  bootloader:           BootloaderRepository,
   crownstoneToken:      CrownstoneTokenRepository,
   devicePreferences:    DevicePreferencesRepository,
   device:               DeviceRepository,
   fingerprintLinker:    FingerprintLinkerRepository,
   fingerprint:          FingerprintRepository,
+  firmware:             FirmwareRepository,
   hub:                  HubRepository,
   location:             LocationRepository,
   message:              MessageRepository,
@@ -56,11 +60,13 @@ export interface RepositoryContainer {
 
 export let Dbs : RepositoryContainer = {
   appInstallation:      null,
+  bootloader:           null,
   crownstoneToken:      null,
   devicePreferences :   null,
   device :              null,
   fingerprintLinker:    null,
   fingerprint:          null,
+  firmware:             null,
   hub:                  null,
   location:             null,
   message:              null,
@@ -84,11 +90,13 @@ export let Dbs : RepositoryContainer = {
 
 export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.appInstallation      = await app.getRepository(AppInstallationRepository);
+  Dbs.bootloader           = await app.getRepository(BootloaderRepository);
   Dbs.crownstoneToken      = await app.getRepository(CrownstoneTokenRepository);
   Dbs.devicePreferences    = await app.getRepository(DevicePreferencesRepository);
   Dbs.device               = await app.getRepository(DeviceRepository);
   Dbs.fingerprintLinker    = await app.getRepository(FingerprintLinkerRepository);
   Dbs.fingerprint          = await app.getRepository(FingerprintRepository);
+  Dbs.firmware             = await app.getRepository(FirmwareRepository);
   Dbs.hub                  = await app.getRepository(HubRepository);
   Dbs.location             = await app.getRepository(LocationRepository);
   Dbs.message              = await app.getRepository(MessageRepository);
@@ -109,29 +117,3 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.toon                 = await app.getRepository(ToonRepository);
   Dbs.user                 = await app.getRepository(UserRepository);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
