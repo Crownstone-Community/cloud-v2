@@ -21,8 +21,8 @@ const EVENT_ROOM_NAME = "/SSE_EVENTS";
 const protocolTopics = {
   requestForOauthTokenCheck:  "requestForOauthTokenCheck",
   requestForAccessTokenCheck: "requestForAccessTokenCheck",
-  authenticationRequest: "authenticationRequest",
-  event: "event",
+  authenticationRequest:      "authenticationRequest",
+  event:                      "event",
 }
 
 
@@ -85,10 +85,10 @@ class SSEConnection {
       this.socket.on(protocolTopics.requestForAccessTokenCheck, (token, callback) => {
         this.handleAccessTokenRequest(token, callback);
       })
-      // // check if an accesstoken is valid.
-      // this.socket.on(protocolTopics.requestForOauthTokenCheck, (token, callback) => {
-      //   this.handleOauthTokenRequest(token, callback);
-      // })
+      // check if an accesstoken is valid.
+      this.socket.on(protocolTopics.requestForOauthTokenCheck, (token, callback) => {
+        this.handleOauthTokenRequest(token, callback);
+      })
     });
 
     this.socket.on("disconnect", () => { this.destroy(); });
@@ -138,47 +138,34 @@ class SSEConnection {
     return resultTokenData;
   }
 
-  // async _isValidOauthToken(token: string) : Promise<AccessModel> {
-    //TODO: support OAUTH
+  async _isValidOauthToken(token: string) : Promise<AccessModel> {
+    let resultTokenData: AccessModel = {
+      accessToken: token,
+      ttl: 0,
+      createdAt: new Date(),
+      userId: null,
+      spheres: {},
+      scopes: [],
+    };
 
-    // const AccessTokens = loopback.getModel('OAuthAccessToken');
-    // const SphereAccess = loopback.getModel('SphereAccess');
-    // return new Promise((resolve, reject) => {
-    //   let resultTokenData = {
-    //     accessToken: token,
-    //     ttl: 0,
-    //     createdAt: 0,
-    //     userId: null,
-    //     spheres: {},
-    //     scopes: [],
-    //   };
-    //
-    //   // get the token from the db, if successful,
-    //   AccessTokens.findById(token)
-    //     .then((data) => {
-    //       if (!data) { throw "INVALID_TOKEN" }
-    //       if (new Date().valueOf() < new Date(data.createdAt).valueOf() + data.ttl*1000) {
-    //         throw "EXPIRED_TOKEN"
-    //       }
-    //
-    //       resultTokenData.ttl = data.ttl || data.expiresIn;
-    //       resultTokenData.createdAt = data.created || data.issuedAt;
-    //
-    //       resultTokenData.userId = data.userId;
-    //       resultTokenData.scopes = data.scopes;
-    //       return SphereAccess.find({where: {and: [{userId: data.userId}, {invitePending: {neq: true}}]}, fields: "sphereId"})
-    //     })
-    //     .then((sphereIdObjectArray) => {
-    //       for (let i = 0; i < sphereIdObjectArray.length; i++) {
-    //         resultTokenData.spheres[sphereIdObjectArray[i].sphereId] = true;
-    //       }
-    //       resolve(resultTokenData);
-    //     })
-    //     .catch((err) => {
-    //       reject(err)
-    //     });
-    // })
-  // }
+    // get the token from the db, if successful,
+    let tokenData = await Dbs.oauthToken.findById(token);
+    if (!tokenData) { throw "INVALID_TOKEN" }
+    if (new Date().valueOf() < new Date(tokenData.expiredAt).valueOf()) {
+      throw "EXPIRED_TOKEN"
+    }
+    resultTokenData.ttl       = tokenData.expiresIn;
+    resultTokenData.createdAt = tokenData.issuedAt;
+    resultTokenData.userId    = tokenData.userId;
+    resultTokenData.scopes    = tokenData.scopes as oauthScope[];
+
+    let access = await Dbs.sphereAccess.find({where: {and: [{userId: tokenData.userId}, {invitePending: {neq: true}}]}, fields: {sphereId: true}})
+
+    for (let i = 0; i < access.length; i++) {
+      resultTokenData.spheres[access[i].sphereId] = true;
+    }
+    return resultTokenData;
+  }
 
   handleAccessTokenRequest(token: string, callback: (result: any) => void) {
     this._isValidAccessToken(token)
@@ -192,15 +179,15 @@ class SSEConnection {
       })
   }
 
-  // handleOauthTokenRequest(token: string, callback: (result: any) => void) {
-  //   this._isValidOauthToken(token)
-  //     .then((result) => {
-  //       if (!result) { throw "Invalid Token" }
-  //
-  //       callback({code: 200, data: result});
-  //     })
-  //     .catch((err) => {
-  //       return callback({code: 401, err: err});
-  //     })
-  // }
+  handleOauthTokenRequest(token: string, callback: (result: any) => void) {
+    this._isValidOauthToken(token)
+      .then((result) => {
+        if (!result) { throw "Invalid Token" }
+
+        callback({code: 200, data: result});
+      })
+      .catch((err) => {
+        return callback({code: 401, err: err});
+      })
+  }
 }

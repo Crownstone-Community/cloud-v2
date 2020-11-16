@@ -26,10 +26,12 @@ import {CrownstoneTokenRepository} from "../../repositories/users/crownstone-tok
 import {CrownstoneCloud} from "../../application";
 import {FirmwareRepository} from "../../repositories/data/firmware.repository";
 import {BootloaderRepository} from "../../repositories/data/bootloader.repository";
+import {OauthTokenRepository} from "../../repositories/users/oauth-token.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
   bootloader:           BootloaderRepository,
+  oauthToken:           OauthTokenRepository,
   crownstoneToken:      CrownstoneTokenRepository,
   devicePreferences:    DevicePreferencesRepository,
   device:               DeviceRepository,
@@ -61,6 +63,7 @@ export interface RepositoryContainer {
 export let Dbs : RepositoryContainer = {
   appInstallation:      null,
   bootloader:           null,
+  oauthToken:           null,
   crownstoneToken:      null,
   devicePreferences :   null,
   device :              null,
@@ -91,6 +94,7 @@ export let Dbs : RepositoryContainer = {
 export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.appInstallation      = await app.getRepository(AppInstallationRepository);
   Dbs.bootloader           = await app.getRepository(BootloaderRepository);
+  Dbs.oauthToken           = await app.getRepository(OauthTokenRepository);
   Dbs.crownstoneToken      = await app.getRepository(CrownstoneTokenRepository);
   Dbs.devicePreferences    = await app.getRepository(DevicePreferencesRepository);
   Dbs.device               = await app.getRepository(DeviceRepository);

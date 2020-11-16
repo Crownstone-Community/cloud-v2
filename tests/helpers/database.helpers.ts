@@ -1,61 +1,65 @@
-import {testdb} from "../fixtures/datasources/testdb.datasource";
-import {ToonRepository} from "../../src/repositories/data/toon.repository";
-import {AppInstallationRepository} from "../../src/repositories/data/app-installation.repository";
-import {DevicePreferencesRepository} from "../../src/repositories/data/device-preferences.repository";
-import {DeviceRepository} from "../../src/repositories/data/device.repository";
-import {FingerprintLinkerRepository} from "../../src/repositories/data/fingerprint-linker.repository";
-import {FingerprintRepository} from "../../src/repositories/data/fingerprint.repository";
-import {LocationRepository} from "../../src/repositories/data/location.repository";
-import {MessageRepository} from "../../src/repositories/data/message.repository";
-import {MessageStateRepository} from "../../src/repositories/data/message-state.repository";
-import {MessageUserRepository} from "../../src/repositories/data/message-user.repository";
-import {SceneRepository} from "../../src/repositories/data/scene.repository";
-import {SphereAccessRepository} from "../../src/repositories/data/sphere-access.repository";
-import {SphereFeatureRepository} from "../../src/repositories/data/sphere-feature.repository";
+import {testdb}                         from "../fixtures/datasources/testdb.datasource";
+
+import {ToonRepository}                 from "../../src/repositories/data/toon.repository";
+import {AppInstallationRepository}      from "../../src/repositories/data/app-installation.repository";
+import {DevicePreferencesRepository}    from "../../src/repositories/data/device-preferences.repository";
+import {DeviceRepository}               from "../../src/repositories/data/device.repository";
+import {FingerprintLinkerRepository}    from "../../src/repositories/data/fingerprint-linker.repository";
+import {FingerprintRepository}          from "../../src/repositories/data/fingerprint.repository";
+import {LocationRepository}             from "../../src/repositories/data/location.repository";
+import {MessageRepository}              from "../../src/repositories/data/message.repository";
+import {MessageStateRepository}         from "../../src/repositories/data/message-state.repository";
+import {MessageUserRepository}          from "../../src/repositories/data/message-user.repository";
+import {SceneRepository}                from "../../src/repositories/data/scene.repository";
+import {SphereAccessRepository}         from "../../src/repositories/data/sphere-access.repository";
+import {SphereFeatureRepository}        from "../../src/repositories/data/sphere-feature.repository";
 import {SphereTrackingNumberRepository} from "../../src/repositories/data/sphere-tracking-number.repository";
-import {SphereRepository} from "../../src/repositories/data/sphere.repository";
-import {StoneRepository} from "../../src/repositories/data/stone.repository";
+import {SphereRepository}               from "../../src/repositories/data/sphere.repository";
+import {StoneRepository}                from "../../src/repositories/data/stone.repository";
 import {StoneAbilityPropertyRepository} from "../../src/repositories/data/stone-ability-property.repository";
-import {StoneAbilityRepository} from "../../src/repositories/data/stone-ability.repository";
-import {StoneBehaviourRepository} from "../../src/repositories/data/stone-behaviour.repository";
-import {StoneSwitchStateRepository} from "../../src/repositories/data/stone-switch-state.repository";
-import {UserRepository} from "../../src/repositories/users/user.repository";
-import {HubRepository} from "../../src/repositories/users/hub.repository";
-import {CrownstoneTokenRepository} from "../../src/repositories/users/crownstone-token.repository";
-import {StoneKeyRepository} from "../../src/repositories/data/stone-key.repository";
-import {SphereKeyRepository} from "../../src/repositories/data/sphere-key.repository";
-import {RepositoryContainer} from "../../src/modules/containers/RepoContainer";
-import {BootloaderRepository} from "../../src/repositories/data/bootloader.repository";
-import {FirmwareRepository} from "../../src/repositories/data/firmware.repository";
+import {StoneAbilityRepository}         from "../../src/repositories/data/stone-ability.repository";
+import {StoneBehaviourRepository}       from "../../src/repositories/data/stone-behaviour.repository";
+import {StoneSwitchStateRepository}     from "../../src/repositories/data/stone-switch-state.repository";
+import {UserRepository}                 from "../../src/repositories/users/user.repository";
+import {HubRepository}                  from "../../src/repositories/users/hub.repository";
+import {CrownstoneTokenRepository}      from "../../src/repositories/users/crownstone-token.repository";
+import {StoneKeyRepository}             from "../../src/repositories/data/stone-key.repository";
+import {SphereKeyRepository}            from "../../src/repositories/data/sphere-key.repository";
+import {BootloaderRepository}           from "../../src/repositories/data/bootloader.repository";
+import {FirmwareRepository}             from "../../src/repositories/data/firmware.repository";
+import {OauthTokenRepository}           from "../../src/repositories/users/oauth-token.repository";
+
+import {RepositoryContainer}            from "../../src/modules/containers/RepoContainer";
 
 function initRepositories() : RepositoryContainer {
-  let sphere : SphereRepository;
-  let bootloader : BootloaderRepository;
-  let appInstallation : AppInstallationRepository;
-  let devicePreferences : DevicePreferencesRepository
-  let device : DeviceRepository;
-  let fingerprintLinker: FingerprintLinkerRepository;
-  let fingerprint: FingerprintRepository;
-  let firmware: FirmwareRepository;
-  let location: LocationRepository;
-  let message: MessageRepository;
-  let messageState: MessageStateRepository;
-  let messageUser: MessageUserRepository;
-  let scene: SceneRepository;
-  let sphereAccess:SphereAccessRepository;
-  let sphereFeature:SphereFeatureRepository;
+  let sphere:               SphereRepository;
+  let bootloader:           BootloaderRepository;
+  let oauthToken:           OauthTokenRepository;
+  let appInstallation:      AppInstallationRepository;
+  let devicePreferences:    DevicePreferencesRepository
+  let device:               DeviceRepository;
+  let fingerprintLinker:    FingerprintLinkerRepository;
+  let fingerprint:          FingerprintRepository;
+  let firmware:             FirmwareRepository;
+  let location:             LocationRepository;
+  let message:              MessageRepository;
+  let messageState:         MessageStateRepository;
+  let messageUser:          MessageUserRepository;
+  let scene:                SceneRepository;
+  let sphereAccess:         SphereAccessRepository;
+  let sphereFeature:        SphereFeatureRepository;
   let sphereTrackingNumber: SphereTrackingNumberRepository;
-  let sphereKeys: SphereKeyRepository;
-  let stone: StoneRepository;
+  let sphereKeys:           SphereKeyRepository;
+  let stone:                StoneRepository;
   let stoneAbilityProperty: StoneAbilityPropertyRepository;
-  let stoneAbility: StoneAbilityRepository;
-  let stoneBehaviour: StoneBehaviourRepository;
-  let stoneSwitchState: StoneSwitchStateRepository;
-  let stoneKeys: StoneKeyRepository;;
-  let toon: ToonRepository;
-  let user: UserRepository;
-  let hub: HubRepository;
-  let crownstoneToken: CrownstoneTokenRepository;
+  let stoneAbility:         StoneAbilityRepository;
+  let stoneBehaviour:       StoneBehaviourRepository;
+  let stoneSwitchState:     StoneSwitchStateRepository;
+  let stoneKeys:            StoneKeyRepository;;
+  let toon:                 ToonRepository;
+  let user:                 UserRepository;
+  let hub:                  HubRepository;
+  let crownstoneToken:      CrownstoneTokenRepository;
 
 
   let sphereGetter       = () : Promise<SphereRepository>       => { return new Promise((resolve, _) => { resolve(sphere) })}
@@ -71,10 +75,11 @@ function initRepositories() : RepositoryContainer {
   let userGetter         = () : Promise<UserRepository>        => { return new Promise((resolve, _) => { resolve(user) })}
 
 
-  hub                  = new HubRepository(testdb, sphereGetter)
-  crownstoneToken      = new CrownstoneTokenRepository(testdb)
-  bootloader           = new BootloaderRepository(testdb)
-  firmware             = new FirmwareRepository(testdb)
+  hub                  = new HubRepository(testdb, sphereGetter);
+  crownstoneToken      = new CrownstoneTokenRepository(testdb);
+  bootloader           = new BootloaderRepository(testdb);
+  firmware             = new FirmwareRepository(testdb);
+  oauthToken           = new OauthTokenRepository(testdb);
 
   appInstallation      = new AppInstallationRepository(testdb, deviceGetter);
   devicePreferences    = new DevicePreferencesRepository(testdb, deviceGetter);
@@ -105,6 +110,7 @@ function initRepositories() : RepositoryContainer {
   return {
     sphere,
     bootloader,
+    oauthToken,
     appInstallation,
     devicePreferences,
     device,
