@@ -54,6 +54,7 @@
     "passport": "^0.4.1",
     "passport-accesstoken": "^0.1.0",
     "passport-http-bearer": "^1.0.1",
+    "socket.io": "^3.0.1",
     "socket.io-client": "^2.3.0",
     "ts-jest": "^26.4.4",
     "tslib": "^2.0.3"

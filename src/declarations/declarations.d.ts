@@ -175,3 +175,4 @@ interface RolePermissions {
   guest?  : boolean,
   hub?    : boolean
 }
+

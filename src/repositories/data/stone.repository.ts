@@ -1,4 +1,11 @@
-import {BelongsToAccessor, Getter, HasManyRepositoryFactory, juggler, repository} from '@loopback/repository';
+import {
+  BelongsToAccessor,
+  Getter,
+  HasManyRepositoryFactory,
+  HasOneRepositoryFactory,
+  juggler,
+  repository
+} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
 import {DataObject, Options} from "@loopback/repository/src/common-types";
@@ -13,7 +20,6 @@ import {Location} from "../../models/location.model";
 import {StoneSwitchState} from "../../models/stoneSubModels/stone-switch-state.model";
 import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
 import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
-import * as crypto from "crypto";
 import {HttpErrors} from "@loopback/rest";
 import {keyTypes} from "../../enums";
 import {Dbs} from "../../modules/containers/RepoContainer";
@@ -21,29 +27,30 @@ import {CloudUtil} from "../../util/CloudUtil";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
-  public readonly sphere:             BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
-  public readonly location:           BelongsToAccessor<Location, typeof Location.prototype.id>;
-  public readonly currentSwitchState: BelongsToAccessor<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
+  public readonly sphere:             BelongsToAccessor<Sphere,                 typeof Sphere.prototype.id>;
+  public readonly location:           BelongsToAccessor<Location,               typeof Location.prototype.id>;
+  public readonly currentSwitchState: HasOneRepositoryFactory<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
 
-  public behaviours:         HasManyRepositoryFactory<StoneBehaviour,     typeof StoneBehaviour.prototype.id>;
-  public abilities:          HasManyRepositoryFactory<StoneAbility,       typeof StoneAbility.prototype.id>;
-  public switchStateHistory: HasManyRepositoryFactory<StoneSwitchState,   typeof StoneSwitchState.prototype.id>;
+  public behaviours:         HasManyRepositoryFactory<StoneBehaviour,   typeof StoneBehaviour.prototype.id>;
+  public abilities:          HasManyRepositoryFactory<StoneAbility,     typeof StoneAbility.prototype.id>;
+  public switchStateHistory: HasManyRepositoryFactory<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
 
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
-    @repository.getter('LocationRepository') locationRepoGetter: Getter<LocationRepository>,
+    @repository.getter('SphereRepository')           sphereRepoGetter: Getter<SphereRepository>,
+    @repository.getter('LocationRepository')         locationRepoGetter: Getter<LocationRepository>,
     @repository.getter('StoneSwitchStateRepository') stoneSwitchStateRepoGetter: Getter<StoneSwitchStateRepository>,
 
-    @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo: StoneBehaviourRepository,
-    @repository(StoneAbilityRepository)     protected stoneAbilityRepo: StoneAbilityRepository,
+    @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo:   StoneBehaviourRepository,
+    @repository(StoneAbilityRepository)     protected stoneAbilityRepo:     StoneAbilityRepository,
     @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepo: StoneSwitchStateRepository,
     ) {
     super(Stone, datasource);
-    this.sphere = this.createBelongsToAccessorFor(  'sphere',   sphereRepoGetter);
-    this.location = this.createBelongsToAccessorFor('location', locationRepoGetter);
-    this.currentSwitchState = this.createBelongsToAccessorFor('currentSwitchState', stoneSwitchStateRepoGetter);
+    this.sphere             = this.createBelongsToAccessorFor('sphere',   sphereRepoGetter);
+    this.location           = this.createBelongsToAccessorFor('location', locationRepoGetter);
+
+    this.currentSwitchState = this.createHasOneRepositoryFactoryFor('currentSwitchState', stoneSwitchStateRepoGetter);
 
     this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
     this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
@@ -70,7 +77,6 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
       {sphereId: entity.sphereId, stoneId: entity.id, keyType: keyTypes.MESH_DEVICE_KEY, key: CloudUtil.createKey(), ttl:0}
     ]);
 
-    // todo: EVENT HOOK
     return stone;
   }
 
