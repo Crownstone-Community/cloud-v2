@@ -19,7 +19,8 @@ export async function processSyncReply<T extends UpdatedAt>(
   replySource: any,
   role: ACCESS_ROLE,
   editPermissions: RolePermissions,
-  updateClientItemCallback?: (replyAtPoint: any, clientItem: any,) => Promise<void>,
+  updateEventCallback: (itemId: string, clientData: any) => void,
+  updateClientItemCallback?: (replyAtPoint: any, clientItem: any, itemId: string) => Promise<void>,
   ) {
   if (requestItems) {
     replySource[fieldname] = {};
@@ -36,13 +37,14 @@ export async function processSyncReply<T extends UpdatedAt>(
       try {
         await db.updateById(itemId, item.data, {acceptTimes: true});
         replySource[fieldname][itemId].data = {status: "UPDATED_IN_CLOUD"};
+        updateEventCallback(itemId, item)
       }
       catch (e) {
         replySource[fieldname][itemId].data = { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} };
       }
 
       if (updateClientItemCallback) {
-        await updateClientItemCallback(replySource[fieldname][itemId], item);
+        await updateClientItemCallback(replySource[fieldname][itemId], item, itemId);
       }
 
     }

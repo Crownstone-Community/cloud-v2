@@ -22,7 +22,7 @@ export async function getToken(client : supertest.SuperTest<supertest.Test>, use
   return tokenData.id;
 }
 
-export async function setAuthToUser(client : supertest.SuperTest<supertest.Test>, user?) {
+export async function setAuthToUser(client : supertest.SuperTest<supertest.Test>, user) {
   return await getToken(client, user);
 }
 

@@ -3,7 +3,7 @@ import * as http from "http";
 import Timeout = NodeJS.Timeout;
 import * as crypto from "crypto";
 import {Dbs} from "../containers/RepoContainer";
-let config  = require('../config.' + (process.env.NODE_ENV || 'local'));
+import {CONFIG} from "../../config";
 
 const S4 = function () {
   return Math.floor(Math.random() * 0x10000 /* 65536 */).toString(16);
@@ -24,8 +24,6 @@ const protocolTopics = {
   authenticationRequest:      "authenticationRequest",
   event:                      "event",
 }
-
-
 
 class SSEManagerClass {
   io : Server;
@@ -104,7 +102,7 @@ class SSEConnection {
 
   authenticate(reply: string) {
     let hasher = crypto.createHash('sha256');
-    let output = hasher.update(this.handshake + config.SSEToken).digest('hex')
+    let output = hasher.update(this.handshake + CONFIG.SSEToken).digest('hex')
     return reply === output;
   }
 

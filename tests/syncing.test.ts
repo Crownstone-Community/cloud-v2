@@ -162,7 +162,7 @@ test("Sync REQUEST with request body", async () => {
       expect(body.spheres[sphere.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].locations[location.id].data.status).toBe("IN_SYNC")
-      expect(body.spheres[sphere.id].scenes["my-new-scene-id"].data.status).toBe("DELETED")
+      expect(body.spheres[sphere.id].scenes["my-new-scene-id"].data.status).toBe("NOT_AVAILABLE")
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].stones[stone.id].behaviours[behaviour.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].stones[stone2.id].data.status).toBe("IN_SYNC")
@@ -353,7 +353,7 @@ test("Sync REQUEST with unknown sphereId (delete interrupt sphere)", async () =>
     }
   }
   let result = await SyncHandler.handleSync(admin.id, request as any);
-  expect(result.spheres["unknown"].data.status).toBe("DELETED");
+  expect(result.spheres["unknown"].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres["unknown"])).toHaveLength(1);
 });
 
@@ -370,7 +370,7 @@ test("Sync REQUEST with unknown stoneId (delete interrupt stone)", async () => {
     }
   }
   let result = await SyncHandler.handleSync(admin.id, request as any);
-  expect(result.spheres[sphere.id].stones['unknown'].data.status).toBe("DELETED");
+  expect(result.spheres[sphere.id].stones['unknown'].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres[sphere.id].stones['unknown'])).toHaveLength(1);
 });
 
@@ -398,7 +398,7 @@ test("Sync REQUEST with unknown abilityId (delete interrupt ability)", async () 
     }
   }
   let result = await SyncHandler.handleSync(admin.id, request as any);
-  expect(result.spheres[sphere.id].stones[stone.id].abilities['unknown'].data.status).toBe("DELETED");
+  expect(result.spheres[sphere.id].stones[stone.id].abilities['unknown'].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres[sphere.id].stones[stone.id].abilities['unknown'])).toHaveLength(1);
 });
 
@@ -466,3 +466,60 @@ test("Test request data without permission", async () => {
   expect(stoneRef.name).toBe("stone1");
   expect(new Date(stoneRef.updatedAt).valueOf()).toBe(0);
 });
+
+test("Check if we can't alter other people's spheres", async () => {
+  await populate();
+  let user2    = await createUser("frank@gmail.com", 'mySphere', 0);
+
+  let request = {
+    sync: {type: 'REQUEST' as SyncType},
+    spheres: {
+      [sphere.id]: {
+        data: {updatedAt: new Date(50)}
+      }
+    }
+  }
+  let reply = {
+    sync: {type: 'REPLY' as SyncType},
+    spheres: {
+      [sphere.id]: {
+        data: {name:"Pirates!", updatedAt: new Date(50)}
+      }
+    }
+  }
+
+  await setAuthToUser(client, user2)
+  await client.post(auth("/user/sync")).send(request)
+    .expect(({body}) => {
+      expect(body.spheres[sphere.id].data.status).toBe("NOT_AVAILABLE");
+    })
+  await client.post(auth("/user/sync")).send(reply)
+    .expect(({body}) => {
+      expect(body.spheres[sphere.id].data.status).toBe("ACCESS_DENIED");
+    })
+
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

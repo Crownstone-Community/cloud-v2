@@ -26,7 +26,6 @@ export class PresenceEventHandler {
   }
 
 
-
   sendEnterSphereFromId(userId: string, sphereId: string) {
     EventConstructor.getData({userId, sphereId})
       .then((data) => {

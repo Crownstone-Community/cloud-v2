@@ -21,9 +21,11 @@ Full data model of the request here:
 I want to focus on the top of the request payload:
 ```
 sync: {
-    type: SyncPhase,
-    lastTime: Date,
-  }
+    appVersion?: string,
+    type: SyncType,
+    lastTime?: Date,
+    scope?: SyncCategory[]
+  },
 ```
 
 With SyncType:
@@ -47,8 +49,8 @@ After which, the cloud will send it’s reply:
 Each field has a status, and optionally data.
 
 The status is one of these options:
-- "DELETED" 
-this entity has been deleted
+- "NOT_AVAILABLE" 
+this entity is not on the cloud or not available to you
 - "IN_SYNC" 
 same updatedAt time
 - "NEWER_DATA_AVAILABLE" 
@@ -58,9 +60,11 @@ you have newer data, please give to cloud.
 - “VIEW"	
 you have requested data, here it is. No syncing information.  (HAS DATA)
 - "CREATED_IN_CLOUD"
- the cloud has an additional id other than what you requested
+ the cloud has an additional id other than what you requested.
+- "UPDATED_IN_CLOUD"
+ the cloud has been updated with your model.
 - "ERROR"
- Something went wrong with this part of the query.
+ Something went wrong with this part of the query.  (HAS ERROR)
  - "ACCESS_DENIED"
  You tried to create a new field but you dont have access.
  
@@ -100,5 +104,5 @@ We could store change events to improve the probe step, except these may stack u
 #### Cache the bootloader and firmware database in memory
 This is a small bit of data and saves a few DB calls. We could update this every 30 minutes, and on invocation of change calls or something.
 
-#### Keep a 2 second cache of sync data to be able to safer handle reply phases (actually check the times again)
+#### Keep a 2 second cache of sync data to be able to safer handle reply phases (actually check the times again on update)
 

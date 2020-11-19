@@ -3,6 +3,7 @@ interface EventDataRequestOptions {
   sphereId?: string,
   locationId?: string,
   stoneId?: string,
+  abilityId?: string,
 }
 
 interface EventFilter {
@@ -152,6 +153,7 @@ type ArrayMap = { [key: string] : string[] }
 
 interface EventDataResult {
   user?: UserEventData,
+  ability?: AbilityData,
   sphere?: SphereEventData,
   location?: LocationEventData,
   stone?: StoneEventData,

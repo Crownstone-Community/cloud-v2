@@ -1,3 +1,6 @@
+import {Stone} from "../../../models/stone.model";
+import {StoneAbility} from "../../../models/stoneSubModels/stone-ability.model";
+
 export const SSEPacketGenerator = {
   // generateMultiSwitchCrownstoneEvent(sphere: SphereData, stone: CrownstoneData[], switchStateMap) {
   //   let stoneData = [];
@@ -149,7 +152,7 @@ export const SSEPacketGenerator = {
   },
 
   // STONES //
-  generateStoneCreatedEvent(sphere: SphereData, stone: CrownstoneData) : SseDataEvent {
+  generateStoneCreatedEvent(sphere: SphereData, stone: Stone) : SseDataEvent {
     return {
       type:        "dataChange",
       subType:     "stones",
@@ -177,10 +180,10 @@ export const SSEPacketGenerator = {
     };
   },
 
-  generateAbilityChangeEvent(sphere: SphereData, stone: CrownstoneData, ability: AbilityData) : SseDataEvent {
+  generateAbilityChangeEvent(sphere: SphereData, stone: CrownstoneData, ability: AbilityData | StoneAbility) : SseDataEvent {
     return {
       type:        "abilityChange",
-      subType:     ability.type,
+      subType:     ability.type as any,
       sphere:      sphereData(sphere),
       stone:       crownstoneData(stone),
       ability:     abilityData(ability)
@@ -218,11 +221,11 @@ export const SSEPacketGenerator = {
 };
 
 
-function sphereData( sphere: SphereData )     { return { id: String(sphere.id), name: sphere.name, uid: sphere.uid }; }
+function sphereData( sphere: SphereData )       { return { id: String(sphere.id), name: sphere.name, uid: sphere.uid }; }
 function locationData( location: LocationData ) { return nameIdSet(location); }
-function userData( user: UserData )         { return nameIdSet(user); }
-function nameIdSet( item : any )        { return { id: String(item.id), name: item.name}; }
-function abilityData( ability: AbilityData )   { return { type: ability.type, enabled: ability.enabled, syncedToCrownstone: ability.syncedToCrownstone }; }
+function userData( user: UserData )             { return nameIdSet(user); }
+function nameIdSet( item : any )                { return { id: String(item.id), name: item.name}; }
+function abilityData( ability: StoneAbility | AbilityData ): AbilityData { return { type: ability.type as any, enabled: ability.enabled, syncedToCrownstone: ability.syncedToCrownstone }; }
 
 function crownstoneData( stone: CrownstoneData )  {
   return { id: String(stone.id),  uid: stone.uid,  name: stone.name, macAddress: stone.macAddress };

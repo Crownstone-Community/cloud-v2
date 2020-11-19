@@ -4,7 +4,7 @@ import {getTimestamp} from "./SyncUtil";
 
 export async function getShallowReply<T extends UpdatedAt>(requestObject: UpdatedAt | undefined, cloudEntity: T | null, getter: () => Promise<T>) : Promise<{ status: SyncState, data?: DataObject<T>}> {
   if (!cloudEntity) {
-    return { status: "DELETED" }
+    return { status: "NOT_AVAILABLE" }
   }
   if (!requestObject || requestObject.updatedAt === undefined) {
     return { status:"NEW_DATA_AVAILABLE", data: await getter() };
@@ -21,7 +21,7 @@ export async function getReply<T extends UpdatedAt>(requestObject: RequestItemCo
       throw "New should have been handled before.";
     }
     else {
-      return { status: "DELETED" }
+      return { status: "NOT_AVAILABLE" }
     }
   }
   else if (!requestObject) {

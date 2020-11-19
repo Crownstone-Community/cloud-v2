@@ -1071,7 +1071,7 @@ Object {
       "scenes": Object {
         "my-new-scene-id": Object {
           "data": Object {
-            "status": "DELETED",
+            "status": "NOT_AVAILABLE",
           },
         },
       },

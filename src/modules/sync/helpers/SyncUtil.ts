@@ -26,6 +26,7 @@ export function getNestedIdMap<T>(list: T[], idField: string, secondary: string 
 
 export function getNestedIdArray<T>(list: T[], idField: string) : nestedIdArray<T> {
   let result: nestedIdArray<T> = {};
+  if (!list) { list = []; }
   for (let i = 0; i < list.length; i++) {
     // @ts-ignore
     let requestedId = list[i][idField];
@@ -41,6 +42,7 @@ export function getNestedIdArray<T>(list: T[], idField: string) : nestedIdArray<
 
 export function getIds(collection: any[]) : string[] {
   let ids = [];
+  if (!collection) { collection = []; }
   for (let i = 0; i < collection.length; i++) { ids.push(collection[i].id); }
   return ids;
 }

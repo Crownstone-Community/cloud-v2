@@ -1,5 +1,6 @@
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
 import {getReply} from "./ReplyHelpers";
+import {EventHandler} from "../../sse/EventHandler";
 
 
 /**
@@ -28,6 +29,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
   writePermissions: RolePermissions,
   editPermissions: RolePermissions,
   cloud_items_in_sphere : idMap<T> = {},
+  eventCallback: (item: T) => void,
   syncClientItemCallback?: (replyAtPoint: any, clientItem: any, id: string, cloudId: string) => Promise<void>,
   syncCloudItemCallback?: (replyAtPoint: any, cloudItem: T, cloudId: string) => Promise<void>,
   markChildrenAsNew?: (clientItem: any) => void
@@ -63,6 +65,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
           // @ts-ignore
           let newItem = await db.create({...clientItem.data, ...creationAddition});
           cloudId = newItem.id;
+          eventCallback(newItem);
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
         catch (e) {
@@ -72,7 +75,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
       else {
         // compare if everything is in sync
         replySource[fieldname][itemId] = { data: await getReply(clientItem, cloud_items_in_sphere[itemId], () => { return db.findById(itemId) })}
-        if (replySource[fieldname][itemId].data.status === "DELETED") {
+        if (replySource[fieldname][itemId].data.status === "NOT_AVAILABLE") {
           continue;
         }
         else if (replySource[fieldname][itemId].data.status === "REQUEST_DATA" && editPermissions[role] !== true) {

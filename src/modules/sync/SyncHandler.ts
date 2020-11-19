@@ -19,6 +19,18 @@ import {Bootloader } from "../../models/bootloader.model";
 import {Firmware} from "../../models/firmware.model";
 import {getEncryptionKeys} from "./helpers/KeyUtil";
 import {processSyncReply} from "./helpers/SyncReplyHelper";
+import {EventHandler} from "../sse/EventHandler";
+import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
+import {StoneAbilityProperty} from "../../models/stoneSubModels/stone-ability-property.model";
+import {Hub} from "../../models/hub.model";
+import {SphereFeature} from "../../models/sphere-feature.model";
+import {Scene} from "../../models/scene.model";
+import {Location} from "../../models/location.model";
+import {Toon} from "../../models/toon.model";
+import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
+import {EventLocationCache, EventSphereCache, EventStoneCache} from "../sse/events/EventConstructor";
+import {DataObject} from "@loopback/repository";
+import {Stone} from "../../models/stone.model";
 
 
 const admin  = true;
@@ -282,13 +294,13 @@ class Syncer {
     let messageStateData    = ignore.features ? [] : await Dbs.messageState.find(filter);
     let messageUserData     = ignore.features ? [] : await Dbs.messageUser.find( filter);
 
-    let hubData             = ignore.hubs   ? [] : await Dbs.hub.find(filter);
-    let sceneData           = ignore.scenes ? [] : await Dbs.scene.find(filter);
+    let hubData             = ignore.hubs     ? [] : await Dbs.hub.find(filter);
+    let sceneData           = ignore.scenes   ? [] : await Dbs.scene.find(filter);
 
-    let stoneData           = ignore.stones ? [] : await Dbs.stone.find(filter);
-    let behaviourData       = ignore.stones ? [] : await Dbs.stoneBehaviour.find(filter)
-    let abilityData         = ignore.stones ? [] : await Dbs.stoneAbility.find(filter)
-    let abilityPropertyData = ignore.stones ? [] : await Dbs.stoneAbilityProperty.find(filter)
+    let stoneData           = ignore.stones   ? [] : await Dbs.stone.find(filter);
+    let behaviourData       = ignore.stones   ? [] : await Dbs.stoneBehaviour.find(filter)
+    let abilityData         = ignore.stones   ? [] : await Dbs.stoneAbility.find(filter)
+    let abilityPropertyData = ignore.stones   ? [] : await Dbs.stoneAbilityProperty.find(filter)
 
     let trackingNumberData  = ignore.trackingNumbers ? [] : await Dbs.sphereTrackingNumber.find(filter);
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
@@ -330,7 +342,7 @@ class Syncer {
         reply.spheres[sphereId] = {};
         reply.spheres[sphereId].data = await getShallowReply(requestSphere.data, cloud_spheres[sphereId], () => { return Dbs.sphere.findById(sphereId) });
         let replySphere = reply.spheres[sphereId];
-        if (replySphere.data.status === 'DELETED') {
+        if (replySphere.data.status === 'NOT_AVAILABLE') {
           continue;
         }
 
@@ -338,23 +350,34 @@ class Syncer {
 
         if (!ignore.hubs) {
           await processSyncCollection('hubs',      Dbs.hub,          {sphereId}, requestSphere, replySphere,
-            accessRole,{admin}, {admin}, cloud_hubs[sphereId]);
+            accessRole,{admin}, {admin}, cloud_hubs[sphereId],
+            (hub: Hub) => {
+              // TODO: create hub event
+            });
         }
         if (!ignore.features) {
           await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere,
-            accessRole,{},{}, cloud_features[sphereId]);
+            accessRole,{},{}, cloud_features[sphereId],
+            (feature: SphereFeature) => { /** do nothing, this is not allowed to be set with sync **/ });
         }
         if (!ignore.locations) {
           await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere,
-            accessRole,{admin, member},{admin, member},  cloud_locations[sphereId]);
+            accessRole,{admin, member},{admin, member},  cloud_locations[sphereId],
+            (location: Location) => {
+            EventHandler.dataChange.sendLocationCreatedEventBySphereId(sphereId, location);
+          });
         }
         if (!ignore.scenes) {
           await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere,
-            accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId]);
+            accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId],
+            (scene: Scene) => {
+            // TODO: create scene event
+            });
         }
         if (!ignore.toons) {
           await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere,
-            accessRole,{admin},{admin, member}, cloud_toons[sphereId]);
+            accessRole,{admin},{admin, member}, cloud_toons[sphereId],
+            (toon: Toon) => { });
         }
         if (!ignore.trackingNumbers) {
           await processSyncCollection(
@@ -364,7 +387,10 @@ class Syncer {
             accessRole,
             {admin, member, guest},
              {admin, member, guest},
-            cloud_trackingNumbers[sphereId]
+            cloud_trackingNumbers[sphereId],
+            (trackingNumber: SphereTrackingNumber) => {
+              // TODO: create trackingNumber event
+            }
           );
         }
 
@@ -394,9 +420,10 @@ class Syncer {
 
                 // create stone in cloud.
                 try {
-                  let newItem = await Dbs.stone.create({...clientStone.data, sphereId: sphereId});
-                  stoneCloudId = newItem.id;
-                  replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
+                  let newStone = await Dbs.stone.create({...clientStone.data, sphereId: sphereId});
+                  stoneCloudId = newStone.id;
+                  EventHandler.dataChange.sendStoneCreatedEventBySphereId(sphereId, newStone);
+                  replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newStone }}
                 }
                 catch (e) {
                   replySphere.stones[stoneId] = { data: { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} }}
@@ -404,7 +431,7 @@ class Syncer {
               }
               else {
                 replySphere.stones[stoneId] = { data: await getReply(clientStone, cloud_stones_in_sphere[stoneId], () => { return Dbs.stone.findById(stoneCloudId) }) }
-                if (replySphere.stones[stoneId].data.status === "DELETED") {
+                if (replySphere.stones[stoneId].data.status === "NOT_AVAILABLE") {
                   continue;
                 }
                 else if (replySphere.stones[stoneId].data.status === "REQUEST_DATA" && accessRole === 'guest') {
@@ -421,11 +448,15 @@ class Syncer {
                 accessRole,
                 {admin, member, hub},
                 {admin, member, hub},
-                cloud_behaviours[stoneId]
+                cloud_behaviours[stoneId],
+                (behaviour: StoneBehaviour) => {
+                  if (clientStone.new) { return; }
+                  // TODO: create behaviour create event
+                },
               );
 
               async function syncClientAbilityProperties(abilityReply : any, clientAbility: any, abilityId: string, abilityCloudId: string) : Promise<void> {
-                if (abilityReply[abilityId].data.status === "DELETED") {
+                if (abilityReply[abilityId].data.status === "NOT_AVAILABLE") {
                   return;
                 }
                 await processSyncCollection(
@@ -437,7 +468,12 @@ class Syncer {
                   accessRole,
                   {admin, member, hub},
                   {admin, member, hub},
-                  cloud_abilityProperties[abilityId]
+                  cloud_abilityProperties[abilityId],
+                  (abilityProperty: StoneAbilityProperty) => {
+                    if (clientStone.new || clientAbility.new) { return; }
+                    // TODO: create ability property create event
+                    EventHandler.dataChange.sendAbilityChangeEventByIds(sphereId, stoneId, clientAbility);
+                  },
                 )
               }
 
@@ -464,6 +500,10 @@ class Syncer {
                 {admin, member},
                 {admin, member},
                 cloud_abilities[stoneId],
+                (ability: StoneAbility) => {
+                  if (clientStone.new) { return; }
+                  EventHandler.dataChange.sendAbilityChangeEventByParentIds(sphereId, stoneId, ability);
+                },
                 syncClientAbilityProperties,
                 syncCloudAbilityProperties,
                 (ability) => {
@@ -566,6 +606,8 @@ class Syncer {
             try {
               await Dbs.sphere.updateById(sphereId, requestSphere.data, {acceptTimes: true});
               sphereReply.data = {status: "UPDATED_IN_CLOUD"};
+              EventSphereCache.merge(sphereId, requestSphere.data);
+              EventHandler.dataChange.sendSphereUpdatedEventBySphereId(sphereId);
             }
             catch (e) {
               sphereReply.data = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
@@ -573,21 +615,49 @@ class Syncer {
           }
         }
 
-        await processSyncReply('hubs',            Dbs.hub,                  requestSphere.hubs,            sphereReply, accessRole, {admin});
-        await processSyncReply('locations',       Dbs.location,             requestSphere.locations,       sphereReply, accessRole, {admin, member});
-        await processSyncReply('scenes',          Dbs.scene,                requestSphere.scenes,          sphereReply, accessRole, {admin, member});
-        await processSyncReply('toons',           Dbs.toon,                 requestSphere.toons,           sphereReply, accessRole, {admin});
-        await processSyncReply('trackingNumbers', Dbs.sphereTrackingNumber, requestSphere.trackingNumbers, sphereReply, accessRole, {admin, member, guest});
+        await processSyncReply('hubs', Dbs.hub, requestSphere.hubs, sphereReply, accessRole, {admin},
+       (hubId: string, hubData: Hub) => {
+          // TODO: create update hub event
+        });
+        await processSyncReply('locations', Dbs.location, requestSphere.locations, sphereReply, accessRole, {admin, member},
+          (locationId: string, locationData: Location) => {
+            EventLocationCache.merge(locationId, locationData);
+            EventHandler.dataChange.sendLocationUpdatedEventByIds(sphereId, locationId);
+        });
+        await processSyncReply('scenes', Dbs.scene, requestSphere.scenes, sphereReply, accessRole, {admin, member},
+          (sceneId: string, sceneData: Scene) => {
+            // TODO: create update scene event
+        });
+        await processSyncReply('toons', Dbs.toon, requestSphere.toons, sphereReply, accessRole, {admin},
+          (toonId: string, toonData: Toon) => {
+            // TODO: create update toon event
+        });
+        await processSyncReply('trackingNumbers', Dbs.sphereTrackingNumber, requestSphere.trackingNumbers, sphereReply, accessRole, {admin, member, guest},
+          (trackingNumberId: string, trackingNumberData: SphereTrackingNumber) => {
+            // TODO: create update trackingNumber event
+        });
 
-
-        const checkStones = async (stoneReply: any, stone: any) => {
+        const checkStones = async (stoneReply: any, stone: any, stoneId: string) => {
           const checkToUpdateAbilities = async (abilityReply: any, ability: any) => {
-            await processSyncReply('properties', Dbs.stoneAbilityProperty, ability.properties, abilityReply, accessRole,{admin, member});
+            await processSyncReply('properties', Dbs.stoneAbilityProperty, ability.properties, abilityReply, accessRole,{admin, member},
+              (abilityPropertyId: string, abilityPropertyData: StoneAbilityProperty) => {
+                // TODO: create update abilityProperty event
+              });
           }
-          await processSyncReply('abilities',  Dbs.stoneAbility,   stone.abilities, stoneReply, accessRole, {admin, member}, checkToUpdateAbilities);
-          await processSyncReply('behaviours', Dbs.stoneBehaviour, stone.behaviour, stoneReply, accessRole, {admin, member});
+          await processSyncReply('abilities',  Dbs.stoneAbility,   stone.abilities, stoneReply, accessRole, {admin, member},
+            (abilityId: string, abilityData: StoneAbility) => {
+              EventHandler.dataChange.sendAbilityChangeEventByIds(sphereId, stoneId, abilityId);
+            }, checkToUpdateAbilities);
+          await processSyncReply('behaviours', Dbs.stoneBehaviour, stone.behaviour, stoneReply, accessRole, {admin, member},
+            (behaviourId: string, behaviourData: StoneBehaviour) => {
+              // TODO: create update trackingNumber event
+            });
         }
-        await processSyncReply('stones', Dbs.stone, requestSphere.stones, sphereReply, accessRole, {admin}, checkStones);
+        await processSyncReply('stones', Dbs.stone, requestSphere.stones, sphereReply, accessRole, {admin},
+          (stoneId: string, stoneData: Stone) => {
+            EventStoneCache.merge(stoneId, stoneData);
+            EventHandler.dataChange.sendStoneUpdatedEventByIds(sphereId, stoneId);
+          }, checkStones);
       }
     }
 
@@ -603,6 +673,7 @@ class Syncer {
    * @param dataStructure
    */
   async handleSync(userId: string, dataStructure: SyncRequest) : Promise<any | SyncRequestReply> {
+
     if (!dataStructure || Object.keys(dataStructure).length === 0) {
       throw new HttpErrors.BadRequest("No sync information provided.");
     }
@@ -619,7 +690,7 @@ class Syncer {
       //    1 - The user has an extra id: an entity has been created and not synced to the cloud yet.
       //            SOLUTION: It will be marked with new: true. The user knows that this is new since the user does not have a cloudId
       //    2 - The cloud has an id less: another user has deleted an entity from the cloud and this user doesnt know it yet.
-      //            SOLUTION: the cloud marks this id as DELETED
+      //            SOLUTION: the cloud marks this id as NOT_AVAILABLE
       // If we want to only query items that are newer, we would not be able to differentiate between deleted and updated.
       // To allow for this optimization, we should keep a deleted event.
       return this.handleRequestSync(userId, dataStructure);

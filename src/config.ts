@@ -10,6 +10,8 @@ export const CONFIG = {
 
   emailValidationRequired: process.env.EMAIL_VALIDATION_REQUIRED ?? true,
   generateCustomIds: process.env.GENERATE_CUSTOM_IDS ?? false,
+
+  SSEToken: process.env.SSE_TOKEN || "sse_token"
 }
 
 export const SecurityTypes = {
