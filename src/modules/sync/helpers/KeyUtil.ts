@@ -26,8 +26,6 @@ export async function getEncryptionKeys(userId: string, sphereId?: string, stone
     userAccess = await Dbs.sphereAccess.find({where: {and: queryArray}})
   }
 
-  console.log(userId, sphereId, stoneId, userAccess)
-
   let result : UserKeySet = [];
 
   let sphereIds = [];

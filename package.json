@@ -2,29 +2,15 @@
   "name": "Crownstone-Cloud",
   "version": "2.0.0",
   "description": "A fresh new version of the Crownstone Cloud",
-  "main": "execute.js.js",
+  "main": "execute.js",
   "engines": {
     "node": ">=12"
   },
   "scripts": {
     "build": "lb-tsc",
+    "postinstall": "tsc",
     "dev": "lb-tsc --watch",
-    "clean": "lb-clean dist *.tsbuildinfo",
-    "lint": "npm run prettier:check && npm run eslint",
-    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
-    "prettier:cli": "lb-prettier \"**/*.ts\" \"**/*.js\"",
-    "prettier:check": "npm run prettier:cli -- -l",
-    "prettier:fix": "npm run prettier:cli -- --write",
-    "eslint": "lb-eslint --report-unused-disable-directives .",
-    "eslint:fix": "npm run eslint -- --fix",
-    "test": "jest --useStderr",
-    "coverage": "jest --collect-coverage --collectCoverageFrom=src/**/*",
-    "docker:build": "docker build -t crownstone-hub .",
-    "docker:run": "docker run -p 3000:3000 -d crownstone-hub",
-    "migrate": "node ./dist/migrate",
-    "prestart": "npm run build",
-    "start": "node -r source-map-support/register .",
-    "prepublishOnly": "npm run test"
+    "start": "node execute.js"
   },
   "repository": {
     "type": "git"

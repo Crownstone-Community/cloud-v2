@@ -2,6 +2,10 @@ import {CONFIG} from "../src/config";
 CONFIG.emailValidationRequired = false;
 CONFIG.generateCustomIds = true;
 
+import {mockSSEmanager} from "./mocks/SSE";
+mockSSEmanager();
+import {SSEManager} from "../src/modules/sse/SSEManager";
+
 import {makeUtilDeterministic, resetMockDatabaseIds, resetMockRandom} from "./mocks/CloudUtil.mock";
 makeUtilDeterministic();
 
@@ -13,6 +17,7 @@ import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
 import {SyncHandler} from "../src/modules/sync/SyncHandler";
 import {getEncryptionKeys} from "../src/modules/sync/helpers/KeyUtil";
 import {CloudUtil} from "../src/util/CloudUtil";
+import { mocked } from 'ts-jest/utils'
 
 let app    : CrownstoneCloud;
 let client : Client;
@@ -50,6 +55,7 @@ async function populate() {
 }
 
 beforeEach(async () => {
+  mocked(SSEManager.emit).mockReset();
   await clearTestDatabase();
   resetUsers();
   resetMockRandom();
@@ -61,46 +67,8 @@ beforeAll(async () => {
 })
 afterAll(async () => { await app.stop(); })
 
-test("get encryption keys", async () => {
-  await populate();
-  let adminKeys = await getEncryptionKeys(admin.id);
-  let memberKeys = await getEncryptionKeys(member.id);
-  let guestKeys = await getEncryptionKeys(guest.id);
-
-  expect(adminKeys).toHaveLength(1)
-  expect(adminKeys[0].sphereKeys).toHaveLength(7)
-  expect(Object.keys(adminKeys[0].stoneKeys)).toHaveLength(3)
-  expect(memberKeys).toHaveLength(1)
-  expect(memberKeys[0].sphereKeys).toHaveLength(4)
-  expect(Object.keys(memberKeys[0].stoneKeys)).toHaveLength(0)
-  expect(guestKeys).toHaveLength(1)
-  expect(guestKeys[0].sphereKeys).toHaveLength(3)
-  expect(Object.keys(guestKeys[0].stoneKeys)).toHaveLength(0)
-})
 
 
-test("Sync FULL", async () => {
-  await populate();
-  await client.post(auth("/user/sync"))
-    .expect(200)
-    .send({sync: {type: "FULL"}})
-    .expect(({body}) => {
-      expect(body).toMatchSnapshot();
-    })
-});
-
-test("Sync FULL with scope", async () => {
-  await populate();
-  let sphereId = sphere.id;
-
-  await client.post(auth("/user/sync"))
-    .send({sync: {type: "FULL", scope: ['hubs']}})
-    .expect(({body}) => {
-      expect(Object.keys(body)).toEqual(['spheres'])
-      let sphere = body.spheres[sphereId];
-      expect(Object.keys(sphere)).toEqual(['data', 'hubs'])
-    })
-})
 test("Sync REQUEST with no body", async () => {
   await populate();
   await client.post(auth("/user/sync")).expect(400).expect(({body}) => { expect(body.error.code).toBe("MISSING_REQUIRED_PARAMETER")})
@@ -250,7 +218,7 @@ test("Sync REQUEST with request body and new items from app, propagate new", asy
         stones: {
           ['hello']: {
             new: true,
-            data: {updatedAt: 0, address:'yes!'},
+            data: {updatedAt: 0, name:'frank', address:'yes!'},
             abilities: {['who']: {
               data: {type:"test", enabled:true, syncedToCrownstone: true, updatedAt: 0},
               properties: {
@@ -269,6 +237,23 @@ test("Sync REQUEST with request body and new items from app, propagate new", asy
       expect(body.spheres[sphere.id].stones['hello'].data.status).toBe('CREATED_IN_CLOUD');
       expect(body.spheres[sphere.id].stones['hello'].abilities['who'].data.status).toBe('CREATED_IN_CLOUD');
       expect(body.spheres[sphere.id].stones['hello'].abilities['who'].properties['ack'].data.status).toBe('CREATED_IN_CLOUD');
+    })
+
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(1);
+  expect(mocked(SSEManager.emit).mock.calls[0][0]).toStrictEqual(
+    {
+      type:'dataChange',
+      subType:'stones',
+      operation:'create',
+      sphere: {
+        id:'dbId:SphereRepository:1',
+        name:'mySphere',
+        uid: 212
+      },
+      changedItem: {
+        id: "dbId:StoneRepository:4",
+        name: 'frank',
+      }
     })
 });
 
@@ -401,119 +386,6 @@ test("Sync REQUEST with unknown abilityId (delete interrupt ability)", async () 
   expect(result.spheres[sphere.id].stones[stone.id].abilities['unknown'].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres[sphere.id].stones[stone.id].abilities['unknown'])).toHaveLength(1);
 });
-
-test("Test request data phase", async () => {
-  await populate();
-  let request = {
-    sync: { type: 'REQUEST' as SyncType },
-    spheres: {
-      [sphere.id]: {
-        stones: {
-          [stone.id]: {data: {updatedAt: 2000}}
-        }
-      }
-    }
-  }
-  await client.post(auth("/user/sync")).send(request)
-    .expect(({body}) => {
-      expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("REQUEST_DATA");
-    })
-
-  let initialStoneRef = await dbs.stone.findById(stone.id);
-  expect(initialStoneRef.name).toBe("stone1");
-
-  let replyPhaseRequest = {
-    sync: { type: 'REPLY' as SyncType },
-    spheres: {
-      [sphere.id]: {
-        stones: {
-          [stone.id]: {data: {name: "AWESOME", updatedAt: 2000}}
-        }
-      }
-    }
-  }
-
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
-    .expect(({body}) => {
-      expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("UPDATED_IN_CLOUD");
-    })
-
-  let stoneRef = await dbs.stone.findById(stone.id);
-  expect(stoneRef.name).toBe("AWESOME");
-  expect(new Date(stoneRef.updatedAt).valueOf()).toBe(2000);
-});
-
-test("Test request data without permission", async () => {
-  await populate();
-  await setAuthToUser(client, guest)
-  let replyPhaseRequest = {
-    sync: { type: 'REPLY' as SyncType },
-    spheres: {
-      [sphere.id]: {
-        stones: {
-          [stone.id]: {data: {name: "AWESOME", updatedAt: 2000}}
-        }
-      }
-    }
-  }
-
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
-    .expect(({body}) => {
-      expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("ACCESS_DENIED");
-    })
-
-  let stoneRef = await dbs.stone.findById(stone.id);
-  expect(stoneRef.name).toBe("stone1");
-  expect(new Date(stoneRef.updatedAt).valueOf()).toBe(0);
-});
-
-test("Check if we can't alter other people's spheres", async () => {
-  await populate();
-  let user2    = await createUser("frank@gmail.com", 'mySphere', 0);
-
-  let request = {
-    sync: {type: 'REQUEST' as SyncType},
-    spheres: {
-      [sphere.id]: {
-        data: {updatedAt: new Date(50)}
-      }
-    }
-  }
-  let reply = {
-    sync: {type: 'REPLY' as SyncType},
-    spheres: {
-      [sphere.id]: {
-        data: {name:"Pirates!", updatedAt: new Date(50)}
-      }
-    }
-  }
-
-  await setAuthToUser(client, user2)
-  await client.post(auth("/user/sync")).send(request)
-    .expect(({body}) => {
-      expect(body.spheres[sphere.id].data.status).toBe("NOT_AVAILABLE");
-    })
-  await client.post(auth("/user/sync")).send(reply)
-    .expect(({body}) => {
-      expect(body.spheres[sphere.id].data.status).toBe("ACCESS_DENIED");
-    })
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
