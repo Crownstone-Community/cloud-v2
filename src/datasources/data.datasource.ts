@@ -7,8 +7,8 @@ import {CONFIG} from "../config";
 const MongoDbConfig = {
   name: "mongo",
   connector: "mongodb",
-  url: CONFIG.mongoURL,
-  database: CONFIG.mongoDataDb,
+  url: CONFIG.mongoDataURL,
+  sslValidate: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
   connectionTimeout: 10000,

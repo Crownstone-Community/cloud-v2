@@ -5,7 +5,10 @@ import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {SphereAccess} from "./sphere-access.model";
 
-@model({settings:{hiddenProperties:["earlyAccessLevel","password",'verificationToken']}})
+@model({settings: {
+    hiddenProperties: ["earlyAccessLevel", "password", 'verificationToken'],
+    mongodb: {collection: 'user'}
+  }})
 export class User extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})

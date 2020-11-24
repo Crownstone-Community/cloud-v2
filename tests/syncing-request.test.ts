@@ -275,6 +275,7 @@ test("Sync REQUEST with request and creation", async () => {
       expect(body.spheres[sphere.id].scenes["my-new-scene-id"].data.status).toBe("CREATED_IN_CLOUD")
     })
 
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
   let scenes = await dbs.scene.find();
   expect(scenes).toHaveLength(1)
   expect(scenes[0].name).toBe("AWESOME");
@@ -293,6 +294,7 @@ test("Sync REQUEST with request and creation outside of scope", async () => {
       }
     }
   }
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
   await client.post(auth("/user/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].scenes).toBeUndefined()
@@ -340,6 +342,7 @@ test("Sync REQUEST with unknown sphereId (delete interrupt sphere)", async () =>
   let result = await SyncHandler.handleSync(admin.id, request as any);
   expect(result.spheres["unknown"].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres["unknown"])).toHaveLength(1);
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
 });
 
 test("Sync REQUEST with unknown stoneId (delete interrupt stone)", async () => {
@@ -357,6 +360,7 @@ test("Sync REQUEST with unknown stoneId (delete interrupt stone)", async () => {
   let result = await SyncHandler.handleSync(admin.id, request as any);
   expect(result.spheres[sphere.id].stones['unknown'].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres[sphere.id].stones['unknown'])).toHaveLength(1);
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
 });
 
 test("Sync REQUEST with unknown abilityId (delete interrupt ability)", async () => {
@@ -385,6 +389,7 @@ test("Sync REQUEST with unknown abilityId (delete interrupt ability)", async () 
   let result = await SyncHandler.handleSync(admin.id, request as any);
   expect(result.spheres[sphere.id].stones[stone.id].abilities['unknown'].data.status).toBe("NOT_AVAILABLE");
   expect(Object.keys(result.spheres[sphere.id].stones[stone.id].abilities['unknown'])).toHaveLength(1);
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
 });
 
 

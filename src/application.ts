@@ -17,6 +17,7 @@ import {
 import {AuthorizationComponent} from '@loopback/authorization';
 import {UserService} from './services';
 import {AccessTokenStrategy} from "./security/authentication-strategies/access-token-strategy";
+import {SecurityTypes} from "./config";
 
 export interface PackageInfo {
   name: string;
@@ -46,14 +47,14 @@ export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(Rest
       info: {title: pkg.name, version: pkg.version},
       paths: {},
       components: {securitySchemes: {
-        AccessToken: {
+        [SecurityTypes.accessToken]: {
           type: 'apiKey',
-          in: 'body',
-          name:'access_token'
+          in: 'header',
+          name:'authorization'
         },
       }},
       servers:  [{url: '/api'}],
-      security: [{AccessToken: []}],
+      security: [{[SecurityTypes.accessToken]: []}],
     });
 
 

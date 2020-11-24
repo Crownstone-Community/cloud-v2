@@ -14,8 +14,6 @@ import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
 import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
-import {SyncHandler} from "../src/modules/sync/SyncHandler";
-import {getEncryptionKeys} from "../src/modules/sync/helpers/KeyUtil";
 import {CloudUtil} from "../src/util/CloudUtil";
 import { mocked } from 'ts-jest/utils'
 
@@ -102,6 +100,22 @@ test("Test request data phase", async () => {
   await client.post(auth("/user/sync")).send(replyPhaseRequest)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("UPDATED_IN_CLOUD");
+    })
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(1);
+  expect(mocked(SSEManager.emit).mock.calls[0][0]).toStrictEqual(
+    {
+      type:'dataChange',
+      subType:'stones',
+      operation:'update',
+      sphere: {
+        id:'dbId:SphereRepository:1',
+        name:'mySphere',
+        uid: 212
+      },
+      changedItem: {
+        id: "dbId:StoneRepository:1",
+        name: 'AWESOME',
+      }
     })
 
   let stoneRef = await dbs.stone.findById(stone.id);

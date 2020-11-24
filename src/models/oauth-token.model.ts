@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({settings:{mongodb: {collection: 'OAuthAccessToken'}}})
 export class OauthToken extends Entity {
 
   @property({type: 'string', id: true})

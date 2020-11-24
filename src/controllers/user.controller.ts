@@ -65,8 +65,6 @@ export class UserController {
     return await this.userRepo.findById(userProfile[securityId])
   }
 
-
-
   // returns a list of our objects
   @post('/user/sync')
   @authenticate(SecurityTypes.accessToken)

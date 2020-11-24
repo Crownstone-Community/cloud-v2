@@ -9,6 +9,7 @@ import {UserRepository} from "../../repositories/users/user.repository";
 import {HubRepository} from "../../repositories/users/hub.repository";
 import {SphereAccessRepository} from "../../repositories/data/sphere-access.repository";
 import {HttpErrors} from "@loopback/rest";
+import {SecurityTypes} from "../../config";
 
 
 export interface UserProfileDescription {
@@ -17,7 +18,7 @@ export interface UserProfileDescription {
 
 
 export class AccessTokenStrategy implements AuthenticationStrategy {
-  name = 'AccessToken';
+  name = SecurityTypes.accessToken;
 
   accessTokenCheck: any
 
@@ -39,6 +40,7 @@ export class AccessTokenStrategy implements AuthenticationStrategy {
       return userProfile;
     }
     catch (e) {
+      console.log(e)
       if (e instanceof HttpErrors) {
         throw e;
       }

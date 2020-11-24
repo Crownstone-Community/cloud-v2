@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({settings:{mongodb: {collection: 'CrownstoneAccessToken'}}})
 export class CrownstoneToken extends Entity {
 
   @property({type: 'string', id: true})

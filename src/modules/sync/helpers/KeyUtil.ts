@@ -50,7 +50,7 @@ export async function getEncryptionKeys(userId: string, sphereId?: string, stone
       sphereId: sphereId,
       sphereAuthorizationToken: sphereAccess.sphereAuthorizationToken,
       sphereKeys: [],
-      stoneKeys: {},
+      stoneKeys:  {},
     };
     switch (sphereAccess.role) {
       case "admin":

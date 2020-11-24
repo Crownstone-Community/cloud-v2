@@ -7,8 +7,8 @@ import {CONFIG} from "../config";
 const MongoDbConfig = {
   name: "mongo",
   connector: "mongodb",
-  url: CONFIG.mongoURL,
-  database: CONFIG.mongoUserDb,
+  url: CONFIG.mongoUserURL,
+  sslValidate: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
   connectionTimeout: 10000,
@@ -27,6 +27,8 @@ export class UsersDatasource extends juggler.DataSource {
   ) {
     super(dsConfig);
   }
+
+
 
   /**
    * Disconnect the datasource when application is stopped. This allows the
