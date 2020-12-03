@@ -42,7 +42,8 @@ export function generateTokenStrategy(userRepo : UserRepository, hubRepo: HubRep
           let item : TokenData = { data: null, type: crownstoneToken.principalType.toLowerCase() as TokenPrincipalType };
           if (item.type === 'hub') {
             item.data = await hubRepo.findById(crownstoneToken.userId);
-          } else {
+          }
+          else {
             let user = await userRepo.findById(crownstoneToken.userId);
             if (user.emailVerified !== true && CONFIG.emailValidationRequired) {
               throw new HttpErrors.Unauthorized('Email has not been verified yet.');

@@ -65,7 +65,7 @@ export function getTimestamp(a : Date | number | string) : number {
   return at;
 }
 
-export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreList {
+export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
   if (scope === undefined) { return getSyncCategories(false); }
 
   let categories = getSyncCategories(true);
@@ -80,23 +80,24 @@ export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreList {
   return categories;
 }
 
-function getSyncCategories(value: boolean) : SyncIgnoreList {
+function getSyncCategories(value: boolean) : SyncIgnoreMap {
   return {
-    hubs:            value,
-    features:        value,
     abilities:       value,
     behaviours:      value,
+    bootloader:      value,
+    features:        value,
+    firmware:        value,
+    hubs:            value,
+    keys:            value,
+    locations:       value,
     messages:        value,
     properties:      value,
-    locations:       value,
     scenes:          value,
+    spheres:         value,
     stones:          value,
     trackingNumbers: value,
     toons:           value,
     user:            value,
-    firmware:        value,
-    bootloader:      value,
-    keys:            value,
   }
 }
 

@@ -2,6 +2,8 @@ import {belongsTo, model, property} from '@loopback/repository';
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Sphere} from "./sphere.model";
+import {Stone} from "./stone.model";
+import {Location} from "./location.model";
 
 @model()
 export class Hub extends AddTimestamps(BaseEntity) {
@@ -29,5 +31,11 @@ export class Hub extends AddTimestamps(BaseEntity) {
 
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
+
+  @belongsTo(() => Stone, {name:'linkedStone'})
+  linkedStoneId: string;
+
+  @belongsTo(() => Location, {name:'location'})
+  locationId: string;
 
 }

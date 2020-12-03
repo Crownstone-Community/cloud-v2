@@ -78,13 +78,23 @@ test("Sync REQUEST with no data", async () => {
   await client.post(auth("/user/sync")).send({sync: {type:"REQUEST"}})
     .expect(({body}) => {expect(body).toMatchSnapshot();})
 })
-test("Sync REQUEST with scope and no data", async () => {
+test("Sync REQUEST with sphere and hub scope and no data", async () => {
+  await populate();
+  let sphereId = sphere.id;
+  await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['spheres','hubs']}})
+    .expect(({body}) => {
+      let sphere = body.spheres[sphereId];
+      expect(Object.keys(sphere)).toEqual(['data','hubs'])
+      expect(body).toMatchSnapshot();
+    })
+});
+test("Sync REQUEST with just hub scope and no data", async () => {
   await populate();
   let sphereId = sphere.id;
   await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}})
     .expect(({body}) => {
       let sphere = body.spheres[sphereId];
-      expect(Object.keys(sphere)).toEqual(['data', 'hubs'])
+      expect(Object.keys(sphere)).toEqual(['hubs'])
       expect(body).toMatchSnapshot();
     })
 });

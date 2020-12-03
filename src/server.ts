@@ -2,6 +2,7 @@ import {once} from 'events';
 import express, {Request, Response} from 'express';
 import http from 'http';
 import path from 'path';
+import cors from 'cors';
 import { ApplicationConfig } from '@loopback/core';
 import {CrownstoneCloud} from "./application";
 
@@ -14,8 +15,9 @@ export class ExpressServer {
 
   constructor(options: ApplicationConfig = {}) {
     this.app = express();
-    // this.app.use(passport.initialize());
     this.lbApp = new CrownstoneCloud(options);
+
+    this.app.use(cors());
 
     // Expose the front-end assets via Express, not as LB4 route
     this.app.use('/api', this.lbApp.requestHandler);
@@ -36,8 +38,7 @@ export class ExpressServer {
   public async start() {
     await this.lbApp.start();
     const port = this.lbApp.restServer.config.port ?? 3000;
-    const host = this.lbApp.restServer.config.host ?? 'NO-HOST';
-    this.server = this.app.listen(port, host);
+    this.server = this.app.listen(port);
     await once(this.server, 'listening');
   }
 

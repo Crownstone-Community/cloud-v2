@@ -40,7 +40,6 @@ export class AccessTokenStrategy implements AuthenticationStrategy {
       return userProfile;
     }
     catch (e) {
-      console.log(e)
       if (e instanceof HttpErrors) {
         throw e;
       }

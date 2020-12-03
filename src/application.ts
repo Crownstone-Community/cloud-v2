@@ -10,7 +10,6 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {CrownstoneSequence} from './sequence';
 import {
-  AuthenticationBindings,
   AuthenticationComponent,
   registerAuthenticationStrategy
 } from '@loopback/authentication';
@@ -30,7 +29,7 @@ export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(Rest
   constructor(options: ApplicationConfig = {}) {
     let executionPath = __dirname;
     if (options.customPath !== undefined) { executionPath = options.customPath; }
-    let customPort = process.env.PORT || 5050;
+    let customPort = process.env.PORT || 3050;
     if (options.rest && options.rest.port !== undefined) {
       customPort = options.rest.port;
     }
@@ -50,7 +49,7 @@ export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(Rest
         [SecurityTypes.accessToken]: {
           type: 'apiKey',
           in: 'header',
-          name:'authorization'
+          name:'Authorization'
         },
       }},
       servers:  [{url: '/api'}],

@@ -57,7 +57,7 @@ class Syncer {
    * @param sphereId
    * @param status
    */
-  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreList) : Promise<SyncRequestReply_Sphere> {
+  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap) : Promise<SyncRequestReply_Sphere> {
     let includeArray = [];
 
     if (!ignore.features) {
@@ -92,9 +92,7 @@ class Syncer {
       includeArray.push({relation:'toons'});
     }
 
-
-    let sphereData = await Dbs.sphere.findById(sphereId,{include: includeArray });
-
+    let sphereData = await Dbs.sphere.findById(sphereId,{include: includeArray});
 
     function injectSphereSimpleItem(sphere: Sphere, key: SyncCategory, sphereItem: any) {
       // @ts-ignore
@@ -110,11 +108,15 @@ class Syncer {
     }
 
     function parseSphere(sphere: Sphere) : SyncRequestReply_Sphere {
-      let sphereItem : SyncRequestReply_Sphere = { data: { status: status, data: {}}};
+      let sphereItem : SyncRequestReply_Sphere = {};
+      if (!ignore.spheres) {
+        sphereItem = { data: { status: status, data: {}}};
+      }
+
       let sphereKeys = Object.keys(sphere);
       for (let i = 0; i < sphereKeys.length; i++) {
         let key = sphereKeys[i];
-        if (sphereRelationsMap[key] === undefined) {
+        if (!ignore.spheres && sphereRelationsMap[key] === undefined) {
           // @ts-ignore
           sphereItem.data.data[key] = sphere[key];
         }
@@ -258,14 +260,14 @@ class Syncer {
 
     // this has the list of all required connection ids as wel as it's own ID and the updatedAt field.
     let filterFields = {
-      id: true,
-      earlyAccessLevel: true, // used for bootloaders and firmwares.
-      updatedAt:true,
-      sphereId: true,
+      id:                 true,
+      earlyAccessLevel:   true, // used for bootloaders and firmwares.
+      updatedAt:          true,
+      sphereId:           true,
       messageDeliveredId: true,
-      messageId: true,
-      stoneId: true,
-      abilityId: true
+      messageId:          true,
+      stoneId:            true,
+      abilityId:          true
     };
 
     let access = await Dbs.sphereAccess.find({where: {userId: userId, invitePending: {neq: true}}});
@@ -340,9 +342,20 @@ class Syncer {
         let sphereId = requestSphereIds[i];
         let requestSphere = request.spheres[sphereId];
         reply.spheres[sphereId] = {};
-        reply.spheres[sphereId].data = await getShallowReply(requestSphere.data, cloud_spheres[sphereId], () => { return Dbs.sphere.findById(sphereId) });
+        if (!ignore.spheres) {
+          reply.spheres[sphereId].data = await getShallowReply(requestSphere.data, cloud_spheres[sphereId], () => {
+            return Dbs.sphere.findById(sphereId)
+          });
+        }
+        else {
+          if (!cloud_spheres[sphereId]) {
+            reply.spheres[sphereId].data = {status: "NOT_AVAILABLE"};
+          }
+        }
+
         let replySphere = reply.spheres[sphereId];
-        if (replySphere.data.status === 'NOT_AVAILABLE') {
+
+        if (replySphere?.data?.status === 'NOT_AVAILABLE') {
           continue;
         }
 

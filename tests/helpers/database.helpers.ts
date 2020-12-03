@@ -75,7 +75,7 @@ function initRepositories() : RepositoryContainer {
   let userGetter         = () : Promise<UserRepository>        => { return new Promise((resolve, _) => { resolve(user) })}
 
 
-  hub                  = new HubRepository(testdb, sphereGetter);
+  hub                  = new HubRepository(testdb, sphereGetter, stoneGetter, locationGetter);
   crownstoneToken      = new CrownstoneTokenRepository(testdb);
   bootloader           = new BootloaderRepository(testdb);
   firmware             = new FirmwareRepository(testdb);
