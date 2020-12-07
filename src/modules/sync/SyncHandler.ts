@@ -667,7 +667,7 @@ class Syncer {
             }, checkToUpdateAbilities);
           await processSyncReply('behaviours', Dbs.stoneBehaviour, stone.behaviour, stoneReply, accessRole, {admin, member},
             (behaviourId: string, behaviourData: StoneBehaviour) => {
-              // TODO: create update trackingNumber event
+              // TODO: create update behaviours event
             });
         }
         await processSyncReply('stones', Dbs.stone, requestSphere.stones, sphereReply, accessRole, {admin},

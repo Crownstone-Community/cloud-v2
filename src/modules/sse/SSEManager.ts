@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io"
+import IO, {Socket} from "socket.io"
 import * as http from "http";
 import Timeout = NodeJS.Timeout;
 import * as crypto from "crypto";
@@ -26,7 +26,7 @@ const protocolTopics = {
 }
 
 class SSEManagerClass {
-  io : Server;
+  io : IO.Server;
   connections : {[id: string]: SSEConnection} = {};
 
   constructor() {
@@ -35,7 +35,7 @@ class SSEManagerClass {
   }
 
   init(server: http.Server) {
-    this.io = new Server(server, { pingInterval: 4000, pingTimeout: 2000, transports:["websocket"], cookie:false })
+    this.io = IO(server, { pingInterval: 4000, pingTimeout: 2000, transports:["websocket"], cookie:false })
     this.io.on('connect', (socket: Socket) => {
       let uid = getShortUUID()
       this.connections[uid] = new SSEConnection(socket, () => { delete this.connections[uid]; });

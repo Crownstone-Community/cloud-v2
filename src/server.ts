@@ -5,6 +5,7 @@ import path from 'path';
 import cors from 'cors';
 import { ApplicationConfig } from '@loopback/core';
 import {CrownstoneCloud} from "./application";
+import {SSEManager} from "./modules/sse/SSEManager";
 
 export {ApplicationConfig};
 
@@ -40,6 +41,7 @@ export class ExpressServer {
     const port = this.lbApp.restServer.config.port ?? 3000;
     this.server = this.app.listen(port);
     await once(this.server, 'listening');
+    SSEManager.init(this.server);
   }
 
   // For testing purposes
