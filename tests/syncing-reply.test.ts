@@ -120,5 +120,33 @@ test("Test request data phase", async () => {
 
   let stoneRef = await dbs.stone.findById(stone.id);
   expect(stoneRef.name).toBe("AWESOME");
+  expect(stoneRef.locationId).toBe(location.id);
+  expect(new Date(stoneRef.updatedAt).valueOf()).toBe(2000);
+});
+
+
+
+test("Test request data phase with value removal", async () => {
+  await populate();
+
+  let replyPhaseRequest = {
+    sync: { type: 'REPLY' as SyncType },
+    spheres: {
+      [sphere.id]: {
+        stones: {
+          [stone.id]: {data: {locationId: null, updatedAt: 2000}}
+        }
+      }
+    }
+  }
+
+  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+    .expect(({body}) => {
+      expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("UPDATED_IN_CLOUD");
+    })
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(1);
+
+  let stoneRef = await dbs.stone.findById(stone.id);
+  expect(stoneRef.locationId).toBe(null);
   expect(new Date(stoneRef.updatedAt).valueOf()).toBe(2000);
 });

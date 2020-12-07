@@ -16,79 +16,79 @@ import {Entity} from "@loopback/repository";
 import {SphereKey} from "../models/sphere-key.model";
 import {StoneKey} from "../models/stoneSubModels/stone-key.model";
 
-export interface SyncRequestReply {
-  user?: SyncReplyItemCore<User>,
+export interface SyncRequestResponse {
+  user?: SyncResponseItemCore<User>,
   spheres: {
-    [sphereId: string]: SyncRequestReply_Sphere
+    [sphereId: string]: SyncRequestResponse_Sphere
   },
   firmwares?:   { status: SyncState, [hardwareVersion: string] : any },
   bootloaders?: { status: SyncState, [hardwareVersion: string] : any },
   keys?:        { },
 }
 
-export interface SyncRequestReply_Sphere {
-  data?: SyncReplyItemCore<Sphere>,
+export interface SyncRequestResponse_Sphere {
+  data?: SyncResponseItemCore<Sphere>,
   hubs?: {
     [hubId: string]: {
-      data: SyncReplyItemCore<Hub>,
+      data: SyncResponseItemCore<Hub>,
     }
   },
   features?: {
     [featureId: string] : {
-      data: SyncReplyItemCore<SphereFeature>
+      data: SyncResponseItemCore<SphereFeature>
     }
   },
   locations?: {
     [locationId: string]: {
-      data: SyncReplyItemCore<Location>,
+      data: SyncResponseItemCore<Location>,
     }
   },
   messages?:  {
     [messageId: string] : {
-      data: SyncReplyItemCore<Message>
+      data: SyncResponseItemCore<Message>
     }
   },
   scenes?:  {
     [sceneId: string] : {
-      data: SyncReplyItemCore<Scene>
+      data: SyncResponseItemCore<Scene>
     }
   },
   stones?: {
-    [stoneId: string]: SyncReplyStone,
+    [stoneId: string]: SyncResponseStone,
   },
   trackingNumbers?: {
     [trackingNumberId: string] : {
-      data: SyncReplyItemCore<SphereTrackingNumber>
+      data: SyncResponseItemCore<SphereTrackingNumber>
     }
   }
   toons?:  {
     [toonId: string] : {
-      data: SyncReplyItemCore<Toon>
+      data: SyncResponseItemCore<Toon>
     }
   },
 }
 
-interface SyncReplyItemCore<T extends Entity> {
+interface SyncResponseItemCore<T extends Entity> {
   status: SyncState,
   data?: DataObject<T>,
   error?: SyncError
 }
 
-export interface SyncReplyStone {
-  data?: SyncReplyItemCore<Stone>,
+export interface SyncResponseStone {
+  data?: SyncResponseItemCore<Stone>,
   abilities?: {
     [abilityId:string]: {
-      data: SyncReplyItemCore<StoneAbility>
+      data: SyncResponseItemCore<StoneAbility>
       properties?: {
         [propertyId:string]: {
-          data: SyncReplyItemCore<StoneAbilityProperty>
+          data: SyncResponseItemCore<StoneAbilityProperty>
         }
       }
     }
   },
   behaviours?: {
     [behaviourId:string]: {
-      data: SyncReplyItemCore<StoneBehaviour>
+      data: SyncResponseItemCore<StoneBehaviour>
     }
   },
 }

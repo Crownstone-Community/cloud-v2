@@ -13,7 +13,7 @@ import {User} from "../models/user.model";
 import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
 import {SyncHandler} from "../modules/sync/SyncHandler";
-import {SyncRequestReply} from "../declarations/syncTypes";
+import {SyncRequestResponse} from "../declarations/syncTypes";
 
 
 const CredentialsSchema: SchemaObject = {
@@ -71,9 +71,9 @@ export class UserController {
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @requestBody({required: true}) syncData: any
-  ): Promise<SyncRequestReply> {
+  ): Promise<SyncRequestResponse> {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData)
-    return result
+    return result;
   }
 
 }

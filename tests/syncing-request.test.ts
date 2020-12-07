@@ -15,7 +15,6 @@ import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
 import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
 import {SyncHandler} from "../src/modules/sync/SyncHandler";
-import {getEncryptionKeys} from "../src/modules/sync/helpers/KeyUtil";
 import {CloudUtil} from "../src/util/CloudUtil";
 import { mocked } from 'ts-jest/utils'
 
@@ -54,6 +53,11 @@ async function populate() {
   token  = await getToken(client, admin);
 }
 
+async function populateMinimal() {
+  admin    = await createUser('test@test.com', 'test', 0);
+  sphere   = await createSphere(admin.id, 'mySphere', 0);
+}
+
 beforeEach(async () => {
   mocked(SSEManager.emit).mockReset();
   await clearTestDatabase();
@@ -88,6 +92,8 @@ test("Sync REQUEST with sphere and hub scope and no data", async () => {
       expect(body).toMatchSnapshot();
     })
 });
+
+
 test("Sync REQUEST with just hub scope and no data", async () => {
   await populate();
   let sphereId = sphere.id;
@@ -98,6 +104,21 @@ test("Sync REQUEST with just hub scope and no data", async () => {
       expect(body).toMatchSnapshot();
     })
 });
+
+
+test("Sync REQUEST with just hub scope and empty data", async () => {
+  await populate();
+  let sphereId = sphere.id;
+  await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}, spheres: {[sphere.id]: {hubs:{}}}})
+    .expect(({body}) => {
+      let sphere = body.spheres[sphereId];
+      expect(Object.keys(sphere)).toEqual(['hubs'])
+      expect(body).toMatchSnapshot();
+      // console.log(JSON.stringify(body, undefined, 2))
+    })
+});
+
+
 
 test("Sync REQUEST with request body", async () => {
   await populate();
@@ -402,6 +423,33 @@ test("Sync REQUEST with unknown abilityId (delete interrupt ability)", async () 
   expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
 });
 
+
+test("Sync REQUEST with multiple linked new files", async () => {
+  await populateMinimal();
+  let request = {
+    sync: {type: 'REQUEST'},
+    spheres: {
+      [sphere.id]: {
+        stones: {
+          ["newStone"]: {
+            new: true,
+            data: {updatedAt: 0, address:'address', locationId:"newLocation"},
+          },
+        },
+        locations: {
+          ["newLocation"]: {
+            new: true,
+            data: {name:"fred", updatedAt: 0},
+          },
+        },
+      }
+    }
+  }
+
+  let result = await SyncHandler.handleSync(admin.id, request as any);
+  expect(result.spheres[sphere.id].stones['newStone'].data.data.locationId).toBe('dbId:LocationRepository:1')
+  expect(result.spheres[sphere.id].locations['newLocation'].data.data.id).toBe('dbId:LocationRepository:1')
+});
 
 
 

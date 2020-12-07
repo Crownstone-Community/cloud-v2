@@ -43,6 +43,10 @@ interface idMap<T> {
   [id: string]: T
 }
 
+interface creationMap {
+  [id: string]: string
+}
+
 interface nestedIdMap<T> {
   [id: string]: {
     [id: string] : T

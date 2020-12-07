@@ -46,7 +46,7 @@ class ShortLivedCache<T> {
       let keys = Object.keys(item);
       for (let i = 0; i < keys.length; i++) {
         // @ts-ignore
-        this.ids[i].data[keys[i]] = item[keys[i]];
+        this.ids[id].data[keys[i]] = item[keys[i]];
       }
     }
   }

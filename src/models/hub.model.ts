@@ -5,7 +5,7 @@ import {Sphere} from "./sphere.model";
 import {Stone} from "./stone.model";
 import {Location} from "./location.model";
 
-@model()
+@model({settings: { hiddenProperties: ["token"] }})
 export class Hub extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})

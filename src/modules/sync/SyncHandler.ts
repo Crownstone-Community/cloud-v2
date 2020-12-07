@@ -1,6 +1,6 @@
 import {Dbs} from "../containers/RepoContainer";
 import {HttpErrors, param} from "@loopback/rest";
-import {SyncRequestReply, SyncRequestReply_Sphere} from "../../declarations/syncTypes";
+import {SyncRequestResponse, SyncRequestResponse_Sphere} from "../../declarations/syncTypes";
 import {Sphere} from "../../models/sphere.model";
 import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
 import {fillSyncStoneData, markStoneChildrenAsNew} from "./helpers/StoneSyncHelpers";
@@ -11,7 +11,7 @@ import {
   getIds,
   getNestedIdMap,
   getSyncIgnoreList,
-  getUniqueIdMap, sortByHardwareVersion
+  getUniqueIdMap, processCreationMap, sortByHardwareVersion
 } from "./helpers/SyncUtil";
 import {User} from "../../models/user.model";
 import { hardwareVersions } from '../../constants/hardwareVersions';
@@ -29,7 +29,6 @@ import {Location} from "../../models/location.model";
 import {Toon} from "../../models/toon.model";
 import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
 import {EventLocationCache, EventSphereCache, EventStoneCache} from "../sse/events/EventConstructor";
-import {DataObject} from "@loopback/repository";
 import {Stone} from "../../models/stone.model";
 
 
@@ -57,7 +56,7 @@ class Syncer {
    * @param sphereId
    * @param status
    */
-  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap) : Promise<SyncRequestReply_Sphere> {
+  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap) : Promise<SyncRequestResponse_Sphere> {
     let includeArray = [];
 
     if (!ignore.features) {
@@ -107,8 +106,8 @@ class Syncer {
       }
     }
 
-    function parseSphere(sphere: Sphere) : SyncRequestReply_Sphere {
-      let sphereItem : SyncRequestReply_Sphere = {};
+    function parseSphere(sphere: Sphere) : SyncRequestResponse_Sphere {
+      let sphereItem : SyncRequestResponse_Sphere = {};
       if (!ignore.spheres) {
         sphereItem = { data: { status: status, data: {}}};
       }
@@ -228,7 +227,7 @@ class Syncer {
   async downloadAll(userId: string, request: SyncRequest) {
     let ignore = getSyncIgnoreList(request.sync.scope);
 
-    let reply : SyncRequestReply = {
+    let reply : SyncRequestResponse = {
       spheres: {},
     };
 
@@ -255,7 +254,7 @@ class Syncer {
   }
 
 
-  async handleRequestSync(userId: string, request: SyncRequest) : Promise<SyncRequestReply> {
+  async handleRequestSync(userId: string, request: SyncRequest) : Promise<SyncRequestResponse> {
     let ignore = getSyncIgnoreList(request.sync.scope);
 
     // this has the list of all required connection ids as wel as it's own ID and the updatedAt field.
@@ -328,7 +327,7 @@ class Syncer {
     let cloud_trackingNumbers = getNestedIdMap(trackingNumberData,    'sphereId');
     let cloud_toons           = getNestedIdMap(toonData,              'sphereId');
 
-    let reply : SyncRequestReply = {spheres:{}};
+    let reply : SyncRequestResponse = {spheres:{}};
 
     let user : User;
     if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
@@ -336,6 +335,8 @@ class Syncer {
       reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
     }
 
+
+    let creationMap : creationMap = {};
     if (request.spheres) {
       let requestSphereIds = Object.keys(request.spheres);
       for (let i = 0; i < requestSphereIds.length; i++) {
@@ -361,34 +362,27 @@ class Syncer {
 
         let accessRole = accessMap[sphereId];
 
-        if (!ignore.hubs) {
-          await processSyncCollection('hubs',      Dbs.hub,          {sphereId}, requestSphere, replySphere,
-            accessRole,{admin}, {admin}, cloud_hubs[sphereId],
-            (hub: Hub) => {
-              // TODO: create hub event
-            });
-        }
-        if (!ignore.features) {
-          await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere,
-            accessRole,{},{}, cloud_features[sphereId],
-            (feature: SphereFeature) => { /** do nothing, this is not allowed to be set with sync **/ });
-        }
         if (!ignore.locations) {
-          await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere,
+          await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere, creationMap,
             accessRole,{admin, member},{admin, member},  cloud_locations[sphereId],
             (location: Location) => {
             EventHandler.dataChange.sendLocationCreatedEventBySphereId(sphereId, location);
           });
         }
+        if (!ignore.features) {
+          await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere, creationMap,
+            accessRole,{},{}, cloud_features[sphereId],
+            (feature: SphereFeature) => { /** do nothing, this is not allowed to be set with sync **/ });
+        }
         if (!ignore.scenes) {
-          await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere,
+          await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere, creationMap,
             accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId],
             (scene: Scene) => {
             // TODO: create scene event
             });
         }
         if (!ignore.toons) {
-          await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere,
+          await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere, creationMap,
             accessRole,{admin},{admin, member}, cloud_toons[sphereId],
             (toon: Toon) => { });
         }
@@ -396,7 +390,7 @@ class Syncer {
           await processSyncCollection(
             'trackingNumbers',
             Dbs.sphereTrackingNumber,
-            {sphereId}, requestSphere, replySphere,
+            {sphereId}, requestSphere, replySphere, creationMap,
             accessRole,
             {admin, member, guest},
              {admin, member, guest},
@@ -433,9 +427,11 @@ class Syncer {
 
                 // create stone in cloud.
                 try {
-                  let newStone = await Dbs.stone.create({...clientStone.data, sphereId: sphereId});
+                  let updatedData = processCreationMap(creationMap, clientStone.data);
+                  let newStone = await Dbs.stone.create({...updatedData, sphereId: sphereId});
                   stoneCloudId = newStone.id;
                   EventHandler.dataChange.sendStoneCreatedEventBySphereId(sphereId, newStone);
+                  creationMap[stoneId] = stoneCloudId;
                   replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newStone }}
                 }
                 catch (e) {
@@ -457,7 +453,7 @@ class Syncer {
                 Dbs.stoneBehaviour,
                 {stoneId: stoneCloudId, sphereId},
                 clientStone,
-                replySphere.stones[stoneId],
+                replySphere.stones[stoneId], creationMap,
                 accessRole,
                 {admin, member, hub},
                 {admin, member, hub},
@@ -477,7 +473,7 @@ class Syncer {
                   Dbs.stoneAbilityProperty,
                   {stoneId: stoneCloudId, sphereId, abilityId: abilityCloudId},
                   clientAbility,
-                  abilityReply[abilityId],
+                  abilityReply[abilityId], creationMap,
                   accessRole,
                   {admin, member, hub},
                   {admin, member, hub},
@@ -508,7 +504,7 @@ class Syncer {
                 Dbs.stoneAbility,
                 {stoneId: stoneCloudId, sphereId},
                 clientStone,
-                replySphere.stones[stoneId],
+                replySphere.stones[stoneId], creationMap,
                 accessRole,
                 {admin, member},
                 {admin, member},
@@ -547,6 +543,14 @@ class Syncer {
               await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
             }
           }
+        }
+
+        if (!ignore.hubs) {
+          await processSyncCollection('hubs',      Dbs.hub,{sphereId}, requestSphere, replySphere, creationMap,
+            accessRole,{admin}, {admin}, cloud_hubs[sphereId],
+            (hub: Hub) => {
+              // TODO: create hub event
+            });
         }
       }
 
@@ -589,7 +593,7 @@ class Syncer {
       accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
     }
 
-    let reply : SyncRequestReply = {spheres:{}};
+    let reply : SyncRequestResponse = {spheres:{}};
 
     if (request.user) {
       try {
@@ -685,7 +689,7 @@ class Syncer {
    * @param userId
    * @param dataStructure
    */
-  async handleSync(userId: string, dataStructure: SyncRequest) : Promise<any | SyncRequestReply> {
+  async handleSync(userId: string, dataStructure: SyncRequest) : Promise<any | SyncRequestResponse> {
 
     if (!dataStructure || Object.keys(dataStructure).length === 0) {
       throw new HttpErrors.BadRequest("No sync information provided.");

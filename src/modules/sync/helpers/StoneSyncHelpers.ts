@@ -1,4 +1,4 @@
-import {SyncReplyStone} from "../../../declarations/syncTypes";
+import {SyncResponseStone} from "../../../declarations/syncTypes";
 import {Stone} from "../../../models/stone.model";
 import {StoneBehaviour} from "../../../models/stoneSubModels/stone-behaviour.model";
 import {StoneAbility} from "../../../models/stoneSubModels/stone-ability.model";
@@ -16,7 +16,7 @@ import {getReply} from "./ReplyHelpers";
  * @param cloud_abilities
  * @param cloud_abilityProperties
  */
-export async function fillSyncStoneData(stoneReply: SyncReplyStone, cloudStoneId: string, cloudStone: Stone, cloud_behaviours: nestedIdMap<StoneBehaviour>, cloud_abilities: nestedIdMap<StoneAbility>, cloud_abilityProperties: nestedIdMap<StoneAbilityProperty>) {
+export async function fillSyncStoneData(stoneReply: SyncResponseStone, cloudStoneId: string, cloudStone: Stone, cloud_behaviours: nestedIdMap<StoneBehaviour>, cloud_abilities: nestedIdMap<StoneAbility>, cloud_abilityProperties: nestedIdMap<StoneAbilityProperty>) {
   stoneReply.data = await getReply(null, cloudStone,() => { return Dbs.stone.findById(cloudStoneId) });
   stoneReply.behaviours = {};
   stoneReply.abilities  = {};

@@ -149,6 +149,7 @@ export async function clearTestDatabase() {
   let dbObject = initRepositories();
   let dbs = Object.keys(dbObject);
   for (let i = 0; i < dbs.length; i++) {
+    // @ts-ignore
     await dbObject[dbs[i]].deleteAll();
   }
 }

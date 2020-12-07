@@ -15,6 +15,7 @@ import {EventHandler} from "../../sse/EventHandler";
  * @param creationAddition       | When the new data entry is created, not all linked ids might be in the data. This adds those. Think sphereId etc.
  * @param clientSource           | This is the parent of the category from the request. So if the field is hubs, the clientSource is a sphere sync request (thats where the fieldname comes from)
  * @param replySource            | This is the parent of where we're going to put the reply.
+ * @param creationMap            | This is a lookup map for multiple linked new item id resolving.
  * @param cloud_items_in_sphere  | This is what the cloud has on this category in this sphere. So the hubs that belong to the sphere for example.
  * @param syncClientItemCallback | This callback is used to handle nested fields. It is difficult to read but this avoids a lot of code duplication. Used for abilityProperties
  * @param syncCloudItemCallback  | this callback is used to explore nested fields when the cloud is providing the user with new data. Used for abilityProperties
@@ -25,6 +26,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
   creationAddition: object,
   clientSource: any,
   replySource: any,
+  creationMap: creationMap,
   role: ACCESS_ROLE,
   writePermissions: RolePermissions,
   editPermissions: RolePermissions,
@@ -65,6 +67,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
           // @ts-ignore
           let newItem = await db.create({...clientItem.data, ...creationAddition});
           cloudId = newItem.id;
+          creationMap[itemId] = cloudId;
           eventCallback(newItem);
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
