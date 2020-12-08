@@ -21,6 +21,12 @@ export class Hub extends AddTimestamps(BaseEntity) {
   localIPAddress: string;
 
   @property({type: 'string'})
+  httpPort: number;
+
+  @property({type: 'string'})
+  httpsPort: number;
+
+  @property({type: 'string'})
   externalIPAddress: string;
 
   @property({type: 'string'})
