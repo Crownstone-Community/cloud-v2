@@ -10,7 +10,7 @@ export async function getShallowReply<T extends UpdatedAt>(requestObject: Update
     return { status:"NEW_DATA_AVAILABLE", data: await getter() };
   }
   else {
-    return getReplyBasedOnTime<T>(requestObject.updatedAt, cloudEntity.updatedAt, cloudEntity)
+    return getReplyBasedOnTime<T>(requestObject.updatedAt, cloudEntity.updatedAt, getter)
   }
 }
 
@@ -28,11 +28,11 @@ export async function getReply<T extends UpdatedAt>(requestObject: RequestItemCo
     return { status:"NEW_DATA_AVAILABLE", data: await getter() };
   }
   else {
-    return getReplyBasedOnTime<T>(requestObject.data.updatedAt, cloudEntity.updatedAt, cloudEntity)
+    return getReplyBasedOnTime<T>(requestObject.data.updatedAt, cloudEntity.updatedAt, getter)
   }
 }
 
-export function getReplyBasedOnTime<T extends UpdatedAt>(request : Date | number | string, cloud : Date | number | string, cloudEntity: T) : { status: SyncState, data?: DataObject<T>} {
+export async function getReplyBasedOnTime<T extends UpdatedAt>(request : Date | number | string, cloud : Date | number | string, getter: () => Promise<T>) : Promise<{ status: SyncState, data?: DataObject<T>}> {
   let requestT = getTimestamp(request);
   let cloudT   = getTimestamp(cloud);
 
@@ -40,7 +40,7 @@ export function getReplyBasedOnTime<T extends UpdatedAt>(request : Date | number
     return { status: "IN_SYNC"};
   }
   else if (requestT < cloudT) {
-    return { status: "NEW_DATA_AVAILABLE", data: cloudEntity };
+    return { status: "NEW_DATA_AVAILABLE", data: await getter() };
   }
   else {
     return { status: "REQUEST_DATA"};

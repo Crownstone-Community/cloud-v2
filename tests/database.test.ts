@@ -35,7 +35,6 @@ let token;
 
 async function populate() {
   // fill with a bit of data for sync
-  dbs = getRepositories();
   admin    = await createUser('test@test.com', 'test', 0);
   member   = await createUser('member@test.com', 'test', 0);
   guest    = await createUser('guest@test.com', 'test', 0);
@@ -54,7 +53,6 @@ async function populate() {
 }
 
 beforeEach(async () => {
-  mocked(SSEManager.emit).mockReset();
   await clearTestDatabase();
   resetUsers();
   resetMockRandom();
@@ -66,43 +64,15 @@ beforeAll(async () => {
 })
 afterAll(async () => { await app.stop(); })
 
-test("get encryption keys", async () => {
-  await populate();
-  let adminKeys = await getEncryptionKeys(admin.id);
-  let memberKeys = await getEncryptionKeys(member.id);
-  let guestKeys = await getEncryptionKeys(guest.id);
+test("Check updating a datafield", async () => {
+  dbs = getRepositories();
+  admin    = await createUser('test@test.com', 'test', 1000);
 
-  expect(adminKeys).toHaveLength(1)
-  expect(adminKeys[0].sphereKeys).toHaveLength(7)
-  expect(Object.keys(adminKeys[0].stoneKeys)).toHaveLength(3)
-  expect(memberKeys).toHaveLength(1)
-  expect(memberKeys[0].sphereKeys).toHaveLength(4)
-  expect(Object.keys(memberKeys[0].stoneKeys)).toHaveLength(0)
-  expect(guestKeys).toHaveLength(1)
-  expect(guestKeys[0].sphereKeys).toHaveLength(3)
-  expect(Object.keys(guestKeys[0].stoneKeys)).toHaveLength(0)
+  admin.updatedAt = 20000;
+  await dbs.user.update(admin, {acceptTimes: true})
+
+  let updatedUser = await dbs.user.find()
+
+  expect(updatedUser[0].updatedAt).toStrictEqual(new Date(20000))
 })
 
-
-test("Sync FULL", async () => {
-  await populate();
-  await client.post(auth("/user/sync"))
-    .expect(200)
-    .send({sync: {type: "FULL"}})
-    .expect(({body}) => {
-      expect(body).toMatchSnapshot();
-    })
-});
-
-test("Sync FULL with scope", async () => {
-  await populate();
-  let sphereId = sphere.id;
-
-  await client.post(auth("/user/sync"))
-    .send({sync: {type: "FULL", scope: ['hubs']}})
-    .expect(({body}) => {
-      expect(Object.keys(body)).toEqual(['spheres'])
-      let sphere = body.spheres[sphereId];
-      expect(Object.keys(sphere)).toEqual(['data', 'hubs'])
-    })
-})

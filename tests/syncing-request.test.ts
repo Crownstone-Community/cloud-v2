@@ -80,7 +80,8 @@ test("Sync REQUEST with no body", async () => {
 test("Sync REQUEST with no data", async () => {
   await populate();
   await client.post(auth("/user/sync")).send({sync: {type:"REQUEST"}})
-    .expect(({body}) => {expect(body).toMatchSnapshot();})
+    .expect(({body}) => {
+      expect(body).toMatchSnapshot();})
 })
 test("Sync REQUEST with sphere and hub scope and no data", async () => {
   await populate();
@@ -450,6 +451,36 @@ test("Sync REQUEST with multiple linked new files", async () => {
   expect(result.spheres[sphere.id].stones['newStone'].data.data.locationId).toBe('dbId:LocationRepository:1')
   expect(result.spheres[sphere.id].locations['newLocation'].data.data.id).toBe('dbId:LocationRepository:1')
 });
+
+
+test("Sync REQUEST after something updated an existing item", async () => {
+  await populate();
+  let request = {
+    sync: {type: 'REQUEST',scope:['hubs']},
+    spheres: {
+      [sphere.id]: {
+        hubs: {
+          [hub.id]: {data: {updatedAt: 0}}
+        },
+      }
+    }
+  }
+
+  hub.name = 'UpdatedHub';
+  hub.updatedAt = new Date(10000000);
+
+  await dbs.hub.update(hub, {acceptTimes: true});
+
+
+  await client.post(auth("/user/sync")).send(request)
+    .expect(({body}) => {
+
+      expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("NEW_DATA_AVAILABLE")
+      expect(body.spheres[sphere.id].hubs[hub.id].data.data.name).toBe("UpdatedHub")
+    })
+
+});
+
 
 
 
