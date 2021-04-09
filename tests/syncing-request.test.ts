@@ -474,7 +474,6 @@ test("Sync REQUEST after something updated an existing item", async () => {
 
   await client.post(auth("/user/sync")).send(request)
     .expect(({body}) => {
-
       expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("NEW_DATA_AVAILABLE")
       expect(body.spheres[sphere.id].hubs[hub.id].data.data.name).toBe("UpdatedHub")
     })

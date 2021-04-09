@@ -84,7 +84,7 @@ export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
    * @param cloudItem
    * @param cloudId
    */
-  async syncCloudItemCallback(replyAtPoint: any, cloudItem: any, cloudId: string) {
+  async syncCloudItemCallback(replyAtPoint: any, cloudItem: T, cloudId: string) {
     // OVERRIDE BY CHILD CLASSES
   }
 

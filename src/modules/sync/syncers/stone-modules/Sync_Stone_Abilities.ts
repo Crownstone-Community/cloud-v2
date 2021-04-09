@@ -3,10 +3,10 @@ import {Sync_Base} from "../Sync_Base";
 import {Dbs} from "../../../containers/RepoContainer";
 import {StoneAbilityProperty} from "../../../../models/stoneSubModels/stone-ability-property.model";
 import {EventHandler} from "../../../sse/EventHandler";
-import {processSyncCollection} from "../../helpers/SyncHelpers";
 import {getReply} from "../../helpers/ReplyHelpers";
+import {Sync_Stone_AbilityProperties} from "./Sync_Stone_AbilityProperties";
 
-export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, RequestItemCoreType> {
+export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, SyncRequestAbilityData> {
 
   fieldName : SyncCategory = "abilities";
   db = Dbs.stoneAbility;
@@ -41,38 +41,37 @@ export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, RequestItemCor
     EventHandler.dataChange.sendAbilityChangeEventByParentIds(this.sphereId, this.stoneId, newAbility);
   }
 
-  async syncClientItemCallback(abilityReply : any, clientAbility: any, abilityId: string, abilityCloudId: string) {
-    if (abilityReply[abilityId].data.status === "NOT_AVAILABLE") {
-      return;
-    }
 
-    await processSyncCollection(
-      'properties',
-      Dbs.stoneAbilityProperty,
-      {stoneId: this.stoneId, sphereId: this.sphereId, abilityId: abilityCloudId},
-      clientAbility,
-      abilityReply[abilityId], this.creationMap,
-      this.accessRole,
-      {admin: true, member: true, hub: true},
-      {admin: true, member: true, hub: true},
-      this.cloud_abilityProperties[abilityId],
-      (clientAbility: RequestItemCoreType, abilityProperty: StoneAbilityProperty) => {
-        if (this.stoneIsNew || clientAbility.new) { return; }
+  /**
+   *
+   * @param abilityReply   | the branch in the reply belonging to this ability ( sphereReply.stones[stoneId].abilities[abilityId] )
+   * @param clientAbility
+   * @param abilityId
+   * @param abilityCloudId
+   */
+  async syncClientItemCallback(abilityReply : any, clientAbility: SyncRequestAbilityData, abilityId: string, abilityCloudId: string) {
+    if (abilityReply.data.status === "NOT_AVAILABLE") { return; }
 
-        // TODO: create ability property create event
-        EventHandler.dataChange.sendAbilityChangeEventByIds(this.sphereId, this.stoneId, abilityId);
-      },
-    )
+    let propertySyncer = new Sync_Stone_AbilityProperties(
+      this.sphereId, this.stoneId, abilityCloudId, this.accessRole, clientAbility, abilityReply, this.creationMap
+    );
+    await propertySyncer.sync(this.cloud_abilityProperties[abilityId]);
   }
 
-  async syncCloudItemCallback(abilityReply: any, cloudAbilityProperties: StoneAbility, abilityId : string) : Promise<void> {
-    let properties = this.cloud_abilityProperties[abilityId];
+
+  /**
+   * When we generate a summary of the ability for abilities that the user does not know about,
+   * this method will fill out the data for the child models of the ability.
+   * @param abilityReply  | the branch in the reply belonging to this ability ( sphereReply.stones[stoneId].abilities[abilityId] )
+   * @param cloudAbility
+   * @param abilityId
+   */
+  async syncCloudItemCallback(abilityReply: any, cloudAbility: StoneAbility, cloudAbilityId : string) : Promise<void> {
+    let properties = this.cloud_abilityProperties[cloudAbilityId];
+    abilityReply.properties = {};
 
     if (properties) {
-      abilityReply.properties = {};
-      let abilityPropertyIds = Object.keys(properties || {});
-      for (let l = 0; l < abilityPropertyIds.length; l++) {
-        let abilityPropertyId = abilityPropertyIds[l];
+      for (let abilityPropertyId of Object.keys(properties || {})) {
         abilityReply.properties[abilityPropertyId] = {
           data:
             await getReply(
@@ -85,24 +84,10 @@ export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, RequestItemCor
     }
   }
 
-  markChildrenAsNew(clientStone: SyncRequestStoneData) {
-    if (clientStone.behaviours) {
-      let behaviourIds = Object.keys(clientStone.behaviours);
-      for (let k = 0; k < behaviourIds.length; k++) {
-        clientStone.behaviours[behaviourIds[k]].new = true;
-      }
-    }
-    if (clientStone.abilities) {
-      let abilityIds = Object.keys(clientStone.abilities);
-      for (let k = 0; k < abilityIds.length; k++) {
-        let abilityId = abilityIds[k];
-        clientStone.abilities[abilityId].new = true;
-        if (clientStone.abilities[abilityId].properties) {
-          let abilityPropertyIds = Object.keys(clientStone.abilities[abilityId].properties);
-          for (let l = 0; l < abilityPropertyIds.length; l++) {
-            clientStone.abilities[abilityId].properties[abilityPropertyIds[l]].new = true;
-          }
-        }
+  markChildrenAsNew(clientAbility: SyncRequestAbilityData) {
+    if (clientAbility.properties) {
+      for (let propertyId of Object.keys(clientAbility.properties)) {
+        clientAbility.properties[propertyId].new = true;
       }
     }
   }

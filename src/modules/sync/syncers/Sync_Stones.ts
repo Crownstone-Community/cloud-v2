@@ -33,46 +33,52 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
     EventHandler.dataChange.sendStoneCreatedEventBySphereId(this.sphereId, cloudStone);
   }
 
-  async syncClientItemCallback(replyAtPoint: any, clientItem: SyncRequestStoneData, clientId: string, cloudId: string) {
+
+  /**
+   * After syncing the stone's data, this will allow us the sync the model's children.
+   * @param replyAtPoint | the branch in the reply belonging to this stone ( sphereReply.stones[stoneId] )
+   * @param clientItem
+   * @param clientId
+   * @param cloudId
+   */
+  async syncClientItemCallback(stoneReply: any, clientItem: SyncRequestStoneData, stoneId: string, stoneCloudId: string) {
+    if (stoneReply.data.status === "NOT_AVAILABLE") { return; }
+
     let behaviourSyncer = new Sync_Stone_Behaviours(
-      this.sphereId,
-      cloudId,
-      this.accessRole,
-      clientItem,
-      replyAtPoint[clientId],
-      this.creationMap
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap
     );
-    await behaviourSyncer.sync(this.cloud_behaviours[clientId])
+    await behaviourSyncer.sync(this.cloud_behaviours[stoneId])
 
     let abilitySyncer = new Sync_Stone_Abilities(
-      this.sphereId,
-      cloudId,
-      this.accessRole,
-      clientItem,
-      replyAtPoint[clientId],
-      this.creationMap,
-      this.cloud_abilityProperties
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
     );
-    await abilitySyncer.sync(this.cloud_abilities[clientId])
+    await abilitySyncer.sync(this.cloud_abilities[stoneId])
   }
 
 
-  async syncCloudItemCallback(stoneReply: any, cloudStone: any, cloudStoneId: string) {
+  /**
+   * When we generate a summary of the stone for stones that the user does not know about,
+   * this method will fill out the data for the child models of the stone.
+   *
+   * @param stoneReply    | the branch in the reply belonging to this stone ( sphereReply.stones[stoneId] )
+   * @param cloudStone    | the model of the stone that's stored in the cloud
+   * @param cloudStoneId
+   */
+  async syncCloudItemCallback(stoneReply: any, cloudStone: Stone, cloudStoneId: string) {
     stoneReply.behaviours = {};
     stoneReply.abilities  = {};
+
+
     if (this.cloud_behaviours[cloudStoneId]) {
-      let behaviourIds = Object.keys(this.cloud_behaviours[cloudStoneId]);
-      for (let k = 0; k < behaviourIds.length; k++) {
-        let behaviourId = behaviourIds[k];
+      for (let behaviourId of Object.keys(this.cloud_behaviours[cloudStoneId])) {
         stoneReply.behaviours[behaviourId] = {data: await getReply(null, this.cloud_behaviours[cloudStoneId][behaviourId], () => { return Dbs.stoneBehaviour.findById(behaviourId); })}
       }
     }
-    if (this.cloud_abilities[cloudStoneId]) {
-      let abilityIds = Object.keys(this.cloud_abilities[cloudStoneId]);
-      for (let k = 0; k < abilityIds.length; k++) {
-        let abilityId = abilityIds[k];
-        stoneReply.abilities[abilityId] = {data: await getReply(null, this.cloud_abilities[cloudStoneId][abilityId], () => { return Dbs.stoneAbility.findById(abilityId); })}
 
+
+    if (this.cloud_abilities[cloudStoneId]) {
+      for (let abilityId of Object.keys(this.cloud_abilities[cloudStoneId])) {
+        stoneReply.abilities[abilityId] = {data: await getReply(null, this.cloud_abilities[cloudStoneId][abilityId], () => { return Dbs.stoneAbility.findById(abilityId); })}
         stoneReply.abilities[abilityId].properties = {};
         if (this.cloud_abilityProperties[abilityId]) {
           let abilityPropertyIds = Object.keys(this.cloud_abilityProperties[abilityId]);
@@ -85,22 +91,24 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
     }
   }
 
+
+  /**
+   * If the stone is new, mark the behaviours, abilities and abilityProperties as new as well.
+   * @param clientStone
+   */
   markChildrenAsNew(clientStone: SyncRequestStoneData) {
     if (clientStone.behaviours) {
-      let behaviourIds = Object.keys(clientStone.behaviours);
-      for (let k = 0; k < behaviourIds.length; k++) {
-        clientStone.behaviours[behaviourIds[k]].new = true;
+      for (let behaviourId of Object.keys(clientStone.behaviours)) {
+        clientStone.behaviours[behaviourId].new = true;
       }
     }
+
     if (clientStone.abilities) {
-      let abilityIds = Object.keys(clientStone.abilities);
-      for (let k = 0; k < abilityIds.length; k++) {
-        let abilityId = abilityIds[k];
+      for (let abilityId of Object.keys(clientStone.abilities)) {
         clientStone.abilities[abilityId].new = true;
         if (clientStone.abilities[abilityId].properties) {
-          let abilityPropertyIds = Object.keys(clientStone.abilities[abilityId].properties);
-          for (let l = 0; l < abilityPropertyIds.length; l++) {
-            clientStone.abilities[abilityId].properties[abilityPropertyIds[l]].new = true;
+          for (let abilityPropertyId of Object.keys(clientStone.abilities[abilityId].properties)) {
+            clientStone.abilities[abilityId].properties[abilityPropertyId].new = true;
           }
         }
       }

@@ -80,19 +80,20 @@ interface SyncRequestStoneData {
   new?: boolean,
   data: UpdatedAt,
   abilities?:  {
-    [abilityId:string]: {
-      new?: boolean,
-      data: UpdatedAt
-      properties?: {
-        [propertyId:string]: RequestItemCoreType
-      }
-    }
+    [abilityId:string]: SyncRequestAbilityData
   },
   behaviours?: {
     [behaviourId: string]: RequestItemCoreType
   }
 }
 
+interface SyncRequestAbilityData {
+  new?: boolean,
+  data: UpdatedAt,
+  properties?: {
+    [propertyId:string]: RequestItemCoreType
+  }
+}
 interface RequestItemCoreType {
   new?: boolean,
   data: UpdatedAt

@@ -94,11 +94,11 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
       }
 
       if (syncClientItemCallback) {
-        await syncClientItemCallback(replySource[fieldname], clientItem, itemId, cloudId);
+        await syncClientItemCallback(replySource[fieldname][itemId], clientItem, itemId, cloudId);
       }
     }
 
-    // now we will iterate over all hubs in the cloud
+    // now we will iterate over all items in the cloud
     // this handles:
     //  - cloud has item that the user does not know.
     for (let j = 0; j < cloudItemIds.length; j++) {

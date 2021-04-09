@@ -32,5 +32,4 @@ export class Sync_SphereComponents {
     this.hubs            = new Sync_Hubs(           sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.stones          = new Sync_Stones(         sphereId, accessRole, requestSphere, replySphere, creationMap);
   }
-
 }
