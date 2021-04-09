@@ -3,6 +3,11 @@ import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Sphere} from "./sphere.model";
 
+/**
+ * Features are meant for paid extra features. These could include energy storage etc.
+ * This is currently not used.
+ */
+
 @model()
 export class SphereFeature extends AddTimestamps(BaseEntity) {
 

@@ -30,6 +30,8 @@ import {Toon} from "../../models/toon.model";
 import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
 import {EventLocationCache, EventSphereCache, EventStoneCache} from "../sse/events/EventConstructor";
 import {Stone} from "../../models/stone.model";
+import {Sync_Scenes} from "./syncers/Sync_Scenes";
+import {Sync_SphereComponents} from "./syncers/Sync_Constructor";
 
 
 const admin  = true;
@@ -291,9 +293,9 @@ class Syncer {
     let featureData         = ignore.features ? [] : await Dbs.sphereFeature.find(filter);
     let locationData        = ignore.features ? [] : await Dbs.location.find(filter);
 
-    let messageData         = ignore.features ? [] : await Dbs.message.find(filter);
-    let messageStateData    = ignore.features ? [] : await Dbs.messageState.find(filter);
-    let messageUserData     = ignore.features ? [] : await Dbs.messageUser.find( filter);
+    let messageData         = ignore.messages ? [] : await Dbs.message.find(filter);
+    let messageStateData    = ignore.messages ? [] : await Dbs.messageState.find(filter);
+    let messageUserData     = ignore.messages ? [] : await Dbs.messageUser.find( filter);
 
     let hubData             = ignore.hubs     ? [] : await Dbs.hub.find(filter);
     let sceneData           = ignore.scenes   ? [] : await Dbs.scene.find(filter);
@@ -362,195 +364,206 @@ class Syncer {
 
         let accessRole = accessMap[sphereId];
 
+        let SphereSyncer = new Sync_SphereComponents(sphereId, accessRole, creationMap, requestSphere, replySphere);
+
         if (!ignore.locations) {
-          await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,{admin, member},{admin, member},  cloud_locations[sphereId],
-            (location: Location) => {
-            EventHandler.dataChange.sendLocationCreatedEventBySphereId(sphereId, location);
-          });
+          await SphereSyncer.locations.sync(cloud_locations[sphereId]);
+          // await processSyncCollection('locations', Dbs.location,     {sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,{admin, member},{admin, member},  cloud_locations[sphereId],
+          //   (location: Location) => {
+          //   EventHandler.dataChange.sendLocationCreatedEventBySphereId(sphereId, location);
+          // });
         }
         if (!ignore.features) {
-          await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,{},{}, cloud_features[sphereId],
-            (feature: SphereFeature) => { /** do nothing, this is not allowed to be set with sync **/ });
+          await SphereSyncer.features.sync(cloud_features[sphereId]);
+          // await processSyncCollection('features',  Dbs.sphereFeature,{sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,{},{}, cloud_features[sphereId],
+          //   (feature: SphereFeature) => { /** do nothing, this is not allowed to be set with sync **/ });
         }
         if (!ignore.scenes) {
-          await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId],
-            (scene: Scene) => {
-            // TODO: create scene event
-            });
+          await SphereSyncer.scenes.sync(cloud_scenes[sphereId]);
+          // await processSyncCollection('scenes',    Dbs.scene,        {sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,{admin, member},{admin, member}, cloud_scenes[sphereId],
+          //   (scene: Scene) => {
+          //   // TODO: create scene event
+          //   });
         }
         if (!ignore.toons) {
-          await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,{admin},{admin, member}, cloud_toons[sphereId],
-            (toon: Toon) => { });
+          await SphereSyncer.toons.sync(cloud_toons[sphereId]);
+          // await processSyncCollection('toons',     Dbs.toon,         {sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,{admin},{admin, member}, cloud_toons[sphereId],
+          //   (toon: Toon) => { });
         }
         if (!ignore.trackingNumbers) {
-          await processSyncCollection(
-            'trackingNumbers',
-            Dbs.sphereTrackingNumber,
-            {sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,
-            {admin, member, guest},
-             {admin, member, guest},
-            cloud_trackingNumbers[sphereId],
-            (trackingNumber: SphereTrackingNumber) => {
-              // TODO: create trackingNumber event
-            }
-          );
+          await SphereSyncer.trackingNumbers.sync(cloud_trackingNumbers[sphereId]);
+          // await processSyncCollection(
+          //   'trackingNumbers',
+          //   Dbs.sphereTrackingNumber,
+          //   {sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,
+          //   {admin, member, guest},
+          //    {admin, member, guest},
+          //   cloud_trackingNumbers[sphereId],
+          //   (trackingNumber: SphereTrackingNumber) => {
+          //     // TODO: create trackingNumber event
+          //   }
+          // );
         }
 
 
         if (!ignore.stones) {
-          // if there is no item in the cloud, cloud_hubs can be undefined.
-          let cloud_stones_in_sphere = cloud_stones[sphereId] || {};
-          let cloudStoneIds = Object.keys(cloud_stones_in_sphere);
-          replySphere.stones = {};
-          if (requestSphere.stones) {
-            // we will first iterate over all hubs in the user request.
-            // this handles:
-            //  - user has one more than cloud (new)
-            //  - user has synced data, or user has data that has been deleted.
-            let clientStoneIds = Object.keys(requestSphere.stones);
-            for (let j = 0; j < clientStoneIds.length; j++) {
-              let stoneId = clientStoneIds[j];
-              let stoneCloudId = clientStoneIds[j];
-              let clientStone = requestSphere.stones[stoneId];
-              if (clientStone.new) {
-                if (accessRole !== "admin") {
-                  replySphere.stones[stoneId] = { data: { status: "ACCESS_DENIED" } };
-                  continue;
-                }
-                // propegate new to behaviour and to abilities in case the user forgot to mark all children as new too.
-                markStoneChildrenAsNew(clientStone);
+          SphereSyncer.stones.loadChildData(cloud_behaviours, cloud_abilities, cloud_abilityProperties);
+          await SphereSyncer.stones.sync(cloud_stones[sphereId]);
 
-                // create stone in cloud.
-                try {
-                  let updatedData = processCreationMap(creationMap, clientStone.data);
-                  let newStone = await Dbs.stone.create({...updatedData, sphereId: sphereId});
-                  stoneCloudId = newStone.id;
-                  EventHandler.dataChange.sendStoneCreatedEventBySphereId(sphereId, newStone);
-                  creationMap[stoneId] = stoneCloudId;
-                  replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newStone }}
-                }
-                catch (e) {
-                  replySphere.stones[stoneId] = { data: { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} }}
-                }
-              }
-              else {
-                replySphere.stones[stoneId] = { data: await getReply(clientStone, cloud_stones_in_sphere[stoneId], () => { return Dbs.stone.findById(stoneCloudId) }) }
-                if (replySphere.stones[stoneId].data.status === "NOT_AVAILABLE") {
-                  continue;
-                }
-                else if (replySphere.stones[stoneId].data.status === "REQUEST_DATA" && accessRole === 'guest') {
-                  replySphere.stones[stoneId].data.status = "IN_SYNC";
-                }
-              }
-
-              await processSyncCollection(
-                'behaviours',
-                Dbs.stoneBehaviour,
-                {stoneId: stoneCloudId, sphereId},
-                clientStone,
-                replySphere.stones[stoneId], creationMap,
-                accessRole,
-                {admin, member, hub},
-                {admin, member, hub},
-                cloud_behaviours[stoneId],
-                (behaviour: StoneBehaviour) => {
-                  if (clientStone.new) { return; }
-                  // TODO: create behaviour create event
-                },
-              );
-
-              async function syncClientAbilityProperties(abilityReply : any, clientAbility: any, abilityId: string, abilityCloudId: string) : Promise<void> {
-                if (abilityReply[abilityId].data.status === "NOT_AVAILABLE") {
-                  return;
-                }
-                await processSyncCollection(
-                  'properties',
-                  Dbs.stoneAbilityProperty,
-                  {stoneId: stoneCloudId, sphereId, abilityId: abilityCloudId},
-                  clientAbility,
-                  abilityReply[abilityId], creationMap,
-                  accessRole,
-                  {admin, member, hub},
-                  {admin, member, hub},
-                  cloud_abilityProperties[abilityId],
-                  (abilityProperty: StoneAbilityProperty) => {
-                    if (clientStone.new || clientAbility.new) { return; }
-                    // TODO: create ability property create event
-                    EventHandler.dataChange.sendAbilityChangeEventByIds(sphereId, stoneId, clientAbility);
-                  },
-                )
-              }
-
-              async function syncCloudAbilityProperties(abilityReply: any, cloudAbilityProperties: StoneAbility, abilityId : string) : Promise<void> {
-                let properties = cloud_abilityProperties[abilityId];
-
-                if (properties) {
-                  abilityReply.properties = {};
-                  let abilityPropertyIds = Object.keys(properties || {});
-                  for (let l = 0; l < abilityPropertyIds.length; l++) {
-                    let abilityPropertyId = abilityPropertyIds[l];
-                    abilityReply.properties[abilityPropertyId] = {data: await getReply(null, properties[abilityPropertyId], () => { return Dbs.stoneAbilityProperty.findById(abilityPropertyId); })}
-                  }
-                }
-              }
-
-              await processSyncCollection(
-                'abilities',
-                Dbs.stoneAbility,
-                {stoneId: stoneCloudId, sphereId},
-                clientStone,
-                replySphere.stones[stoneId], creationMap,
-                accessRole,
-                {admin, member},
-                {admin, member},
-                cloud_abilities[stoneId],
-                (ability: StoneAbility) => {
-                  if (clientStone.new) { return; }
-                  EventHandler.dataChange.sendAbilityChangeEventByParentIds(sphereId, stoneId, ability);
-                },
-                syncClientAbilityProperties,
-                syncCloudAbilityProperties,
-                (ability) => {
-                  if (ability.properties) {
-                    let propertyIds = Object.keys(ability.properties);
-                    for ( let k = 0; k < propertyIds.length; k++) { ability.properties[propertyIds[k]].new = true; }
-                  }
-                }
-              );
-            }
-
-            // now we will iterate over all stones in the cloud
-            // this handles:
-            //  - cloud has stone that the user does not know.
-            for (let j = 0; j < cloudStoneIds.length; j++) {
-              let cloudStoneId = cloudStoneIds[j];
-              if (requestSphere.stones && requestSphere.stones[cloudStoneId] === undefined) {
-                let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
-                await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
-              }
-            }
-          }
-          else {
-            // there are no stones for the user, give the user all the stones.
-            for (let j = 0; j < cloudStoneIds.length; j++) {
-              let cloudStoneId = cloudStoneIds[j];
-              let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
-              await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
-            }
-          }
+          // // if there is no item in the cloud, cloud_hubs can be undefined.
+          // let cloud_stones_in_sphere = cloud_stones[sphereId] || {};
+          // let cloudStoneIds = Object.keys(cloud_stones_in_sphere);
+          // replySphere.stones = {};
+          // if (requestSphere.stones) {
+          //   // we will first iterate over all hubs in the user request.
+          //   // this handles:
+          //   //  - user has one more than cloud (new)
+          //   //  - user has synced data, or user has data that has been deleted.
+          //   let clientStoneIds = Object.keys(requestSphere.stones);
+          //   for (let j = 0; j < clientStoneIds.length; j++) {
+          //     let stoneId = clientStoneIds[j];
+          //     let stoneCloudId = clientStoneIds[j];
+          //     let clientStone = requestSphere.stones[stoneId];
+          //     if (clientStone.new) {
+          //       if (accessRole !== "admin") {
+          //         replySphere.stones[stoneId] = { data: { status: "ACCESS_DENIED" } };
+          //         continue;
+          //       }
+          //       // propegate new to behaviour and to abilities in case the user forgot to mark all children as new too.
+          //       markStoneChildrenAsNew(clientStone);
+          //
+          //       // create stone in cloud.
+          //       try {
+          //         let updatedData = processCreationMap(creationMap, clientStone.data);
+          //         let newStone = await Dbs.stone.create({...updatedData, sphereId: sphereId});
+          //         stoneCloudId = newStone.id;
+          //         EventHandler.dataChange.sendStoneCreatedEventBySphereId(sphereId, newStone);
+          //         creationMap[stoneId] = stoneCloudId;
+          //         replySphere.stones[stoneId] = { data: { status: "CREATED_IN_CLOUD", data: newStone }}
+          //       }
+          //       catch (e) {
+          //         replySphere.stones[stoneId] = { data: { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} }}
+          //       }
+          //     }
+          //     else {
+          //       replySphere.stones[stoneId] = { data: await getReply(clientStone, cloud_stones_in_sphere[stoneId], () => { return Dbs.stone.findById(stoneCloudId) }) }
+          //       if (replySphere.stones[stoneId].data.status === "NOT_AVAILABLE") {
+          //         continue;
+          //       }
+          //       else if (replySphere.stones[stoneId].data.status === "REQUEST_DATA" && accessRole === 'guest') {
+          //         replySphere.stones[stoneId].data.status = "IN_SYNC";
+          //       }
+          //     }
+          //
+          //     await processSyncCollection(
+          //       'behaviours',
+          //       Dbs.stoneBehaviour,
+          //       {stoneId: stoneCloudId, sphereId},
+          //       clientStone,
+          //       replySphere.stones[stoneId], creationMap,
+          //       accessRole,
+          //       {admin, member, hub},
+          //       {admin, member, hub},
+          //       cloud_behaviours[stoneId],
+          //       (x, behaviour: StoneBehaviour) => {
+          //         if (clientStone.new) { return; }
+          //         // TODO: create behaviour create event
+          //       },
+          //     );
+          //
+          //     async function syncClientAbilityProperties(abilityReply : any, clientAbility: any, abilityId: string, abilityCloudId: string) : Promise<void> {
+          //       if (abilityReply[abilityId].data.status === "NOT_AVAILABLE") {
+          //         return;
+          //       }
+          //       await processSyncCollection(
+          //         'properties',
+          //         Dbs.stoneAbilityProperty,
+          //         {stoneId: stoneCloudId, sphereId, abilityId: abilityCloudId},
+          //         clientAbility,
+          //         abilityReply[abilityId], creationMap,
+          //         accessRole,
+          //         {admin, member, hub},
+          //         {admin, member, hub},
+          //         cloud_abilityProperties[abilityId],
+          //         (x, abilityProperty: StoneAbilityProperty) => {
+          //           if (clientStone.new || clientAbility.new) { return; }
+          //           // TODO: create ability property create event
+          //           EventHandler.dataChange.sendAbilityChangeEventByIds(sphereId, stoneId, clientAbility);
+          //         },
+          //       )
+          //     }
+          //
+          //     async function syncCloudAbilityProperties(abilityReply: any, cloudAbilityProperties: StoneAbility, abilityId : string) : Promise<void> {
+          //       let properties = cloud_abilityProperties[abilityId];
+          //
+          //       if (properties) {
+          //         abilityReply.properties = {};
+          //         let abilityPropertyIds = Object.keys(properties || {});
+          //         for (let l = 0; l < abilityPropertyIds.length; l++) {
+          //           let abilityPropertyId = abilityPropertyIds[l];
+          //           abilityReply.properties[abilityPropertyId] = {data: await getReply(null, properties[abilityPropertyId], () => { return Dbs.stoneAbilityProperty.findById(abilityPropertyId); })}
+          //         }
+          //       }
+          //     }
+          //
+          //     await processSyncCollection(
+          //       'abilities',
+          //       Dbs.stoneAbility,
+          //       {stoneId: stoneCloudId, sphereId},
+          //       clientStone,
+          //       replySphere.stones[stoneId], creationMap,
+          //       accessRole,
+          //       {admin, member},
+          //       {admin, member},
+          //       cloud_abilities[stoneId],
+          //       (x, ability: StoneAbility) => {
+          //         if (clientStone.new) { return; }
+          //         EventHandler.dataChange.sendAbilityChangeEventByParentIds(sphereId, stoneId, ability);
+          //       },
+          //       syncClientAbilityProperties,
+          //       syncCloudAbilityProperties,
+          //       (ability) => {
+          //         if (ability.properties) {
+          //           let propertyIds = Object.keys(ability.properties);
+          //           for ( let k = 0; k < propertyIds.length; k++) { ability.properties[propertyIds[k]].new = true; }
+          //         }
+          //       }
+          //     );
+          //   }
+          //
+          //   // now we will iterate over all stones in the cloud
+          //   // this handles:
+          //   //  - cloud has stone that the user does not know.
+          //   for (let j = 0; j < cloudStoneIds.length; j++) {
+          //     let cloudStoneId = cloudStoneIds[j];
+          //     if (requestSphere.stones && requestSphere.stones[cloudStoneId] === undefined) {
+          //       let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
+          //       await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
+          //     }
+          //   }
+          // }
+          // else {
+          //   // there are no stones for the user, give the user all the stones.
+          //   for (let j = 0; j < cloudStoneIds.length; j++) {
+          //     let cloudStoneId = cloudStoneIds[j];
+          //     let stoneReply = reply.spheres[sphereId].stones[cloudStoneId] = {};
+          //     await fillSyncStoneData(stoneReply, cloudStoneId, cloud_stones_in_sphere[cloudStoneId], cloud_behaviours, cloud_abilities, cloud_abilityProperties);
+          //   }
+          // }
         }
 
         if (!ignore.hubs) {
-          await processSyncCollection('hubs',      Dbs.hub,{sphereId}, requestSphere, replySphere, creationMap,
-            accessRole,{admin}, {admin}, cloud_hubs[sphereId],
-            (hub: Hub) => {
-              // TODO: create hub event
-            });
+          await SphereSyncer.hubs.sync(cloud_hubs[sphereId]);
+          // await processSyncCollection('hubs',      Dbs.hub,{sphereId}, requestSphere, replySphere, creationMap,
+          //   accessRole,{admin}, {admin}, cloud_hubs[sphereId],
+          //   (hub: Hub) => {
+          //     // TODO: create hub event
+          //   });
         }
       }
 

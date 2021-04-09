@@ -1,6 +1,7 @@
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
 import {getReply} from "./ReplyHelpers";
 import {EventHandler} from "../../sse/EventHandler";
+import {processCreationMap} from "./SyncUtil";
 
 
 /**
@@ -17,11 +18,12 @@ import {EventHandler} from "../../sse/EventHandler";
  * @param replySource            | This is the parent of where we're going to put the reply.
  * @param creationMap            | This is a lookup map for multiple linked new item id resolving.
  * @param cloud_items_in_sphere  | This is what the cloud has on this category in this sphere. So the hubs that belong to the sphere for example.
+ * @param eventCallback          | This callback allows the syncing model to emit an SSE event when a new item is created in the cloud db.
  * @param syncClientItemCallback | This callback is used to handle nested fields. It is difficult to read but this avoids a lot of code duplication. Used for abilityProperties
- * @param syncCloudItemCallback  | this callback is used to explore nested fields when the cloud is providing the user with new data. Used for abilityProperties
- * @param markChildrenAsNew      | this callback is used to mark any nested fields as new if the parent is new.
+ * @param syncCloudItemCallback  | This callback is used to explore nested fields when the cloud is providing the user with new data. Used for abilityProperties
+ * @param markChildrenAsNew      | This callback is used to mark any nested fields as new if the parent is new.
  */
-export async function processSyncCollection<T extends UpdatedAt>(
+export async function processSyncCollection<T extends UpdatedAt, U extends RequestItemCoreType>(
   fieldname: SyncCategory, db: TimestampedCrudRepository<any, any>,
   creationAddition: object,
   clientSource: any,
@@ -31,7 +33,7 @@ export async function processSyncCollection<T extends UpdatedAt>(
   writePermissions: RolePermissions,
   editPermissions: RolePermissions,
   cloud_items_in_sphere : idMap<T> = {},
-  eventCallback: (item: T) => void,
+  eventCallback: (clientItem: U, item: T) => void,
   syncClientItemCallback?: (replyAtPoint: any, clientItem: any, id: string, cloudId: string) => Promise<void>,
   syncCloudItemCallback?: (replyAtPoint: any, cloudItem: T, cloudId: string) => Promise<void>,
   markChildrenAsNew?: (clientItem: any) => void
@@ -64,11 +66,16 @@ export async function processSyncCollection<T extends UpdatedAt>(
 
         // create item in cloud.
         try {
+          // this will search for any ids that are in this model which might refer to local ids of previously created models.
+          // example: locationId inside of the stone data. This method will change the local locationId to the new cloudId
+          // if that location was made in this sync session.
+          let updatedData = processCreationMap(creationMap, clientItem.data);
+
           // @ts-ignore
-          let newItem = await db.create({...clientItem.data, ...creationAddition});
+          let newItem = await db.create({...updatedData, ...creationAddition});
           cloudId = newItem.id;
           creationMap[itemId] = cloudId;
-          eventCallback(newItem);
+          eventCallback(clientItem, newItem);
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
         catch (e) {
