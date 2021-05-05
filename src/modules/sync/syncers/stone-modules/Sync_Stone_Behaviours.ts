@@ -29,8 +29,11 @@ export class Sync_Stone_Behaviours extends Sync_Base<StoneBehaviour, RequestItem
     this.creationAdditions = { stoneId: this.stoneId, sphereId: this.sphereId };
   }
 
-  eventCallback(clientBehaviour: RequestItemCoreType, cloudBehaviour: StoneBehaviour) {
+  createEventCallback(clientBehaviour: RequestItemCoreType, cloudBehaviour: StoneBehaviour) {
     if (this.stoneIsNew || clientBehaviour.new) { return; }
     // TODO: create behaviour create event
+  }
+  updateEventCallback(behaviourId: string, cloudBehaviour: StoneBehaviour) {
+    // TODO: create behaviour update event
   }
 }

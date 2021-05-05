@@ -9,4 +9,12 @@ export class Sync_Hubs extends Sync_Base<Hub, RequestItemCoreType> {
   writePermissions = {admin: true}
   editPermissions  = {admin: true}
 
+  createEventCallback(clientHub: RequestItemCoreType, cloudHub: Hub) {
+    // TODO: create hub event
+  }
+
+  updateEventCallback(hubId: string, cloudHub: Hub) {
+    // TODO: create hub event
+  }
+
 }

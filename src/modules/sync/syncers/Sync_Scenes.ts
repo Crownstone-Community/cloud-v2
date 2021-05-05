@@ -9,7 +9,11 @@ export class Sync_Scenes extends Sync_Base<Scene, RequestItemCoreType> {
   writePermissions = {admin: true, member: true}
   editPermissions  = {admin: true, member: true}
 
-  eventCallback(clientScene: RequestItemCoreType, cloudScene: Scene) {
+  createEventCallback(clientScene: RequestItemCoreType, cloudScene: Scene) {
     // TODO: create scene event
+  }
+
+  updateEventCallback(sceneId: string, cloudScene: Scene) {
+    // TODO: create hub event
   }
 }

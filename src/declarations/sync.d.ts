@@ -9,6 +9,7 @@ type SyncCategory = 'abilities'       |
                     'messages'        |
                     'properties'      |
                     'spheres'         |
+                    'sphereUsers'     |
                     'scenes'          |
                     'stones'          |
                     'trackingNumbers' |
@@ -27,6 +28,7 @@ interface SyncIgnoreMap {
   properties:      boolean,
   scenes:          boolean,
   spheres:         boolean,
+  sphereUsers:     boolean,
   stones:          boolean,
   trackingNumbers: boolean,
   toons:           boolean,
@@ -72,9 +74,21 @@ interface SyncRequestSphereData {
     toons?: {
       [toonId: string]: RequestItemCoreType
     }
+    users?: SphereUsers
   }
 }
 
+interface SphereUsers {
+  admin:  SphereUserContent,
+  member: SphereUserContent,
+  basic:  SphereUserContent,
+}
+interface SphereUserContent {
+  [userId: string]: {
+    data: UpdatedAt,
+    invitePending?: boolean,
+  }
+}
 
 interface SyncRequestStoneData {
   new?: boolean,
@@ -123,3 +137,17 @@ interface SyncError {
   msg: string
 }
 
+interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
+
+type sphereId          = string;
+type locationId        = string;
+type stoneId           = string;
+type sceneId           = string;
+type userId            = string;
+type behaviourId       = string;
+type abilityId         = string;
+type abilityPropertyId = string;
+type toonId            = string;
+type trackingNumberId  = string;
+type hubId             = string;
+type featureId         = string;

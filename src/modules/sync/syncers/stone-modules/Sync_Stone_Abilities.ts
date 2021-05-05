@@ -5,6 +5,8 @@ import {StoneAbilityProperty} from "../../../../models/stoneSubModels/stone-abil
 import {EventHandler} from "../../../sse/EventHandler";
 import {getReply} from "../../helpers/ReplyHelpers";
 import {Sync_Stone_AbilityProperties} from "./Sync_Stone_AbilityProperties";
+import {StoneBehaviour} from "../../../../models/stoneSubModels/stone-behaviour.model";
+import {processSyncReply} from "../../helpers/SyncReplyHelper";
 
 export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, SyncRequestAbilityData> {
 
@@ -36,11 +38,21 @@ export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, SyncRequestAbi
     this.creationAdditions = { stoneId: this.stoneId, sphereId: this.sphereId };
   }
 
-  eventCallback(clientAbility: RequestItemCoreType, newAbility: StoneAbility) {
+  createEventCallback(clientAbility: RequestItemCoreType, newAbility: StoneAbility) {
     if (this.stoneIsNew || clientAbility.new) { return; }
     EventHandler.dataChange.sendAbilityChangeEventByParentIds(this.sphereId, this.stoneId, newAbility);
   }
 
+  updateEventCallback(abilityId: string, cloudAbility: StoneAbility) {
+    EventHandler.dataChange.sendAbilityChangeEventByIds(this.sphereId, this.stoneId, abilityId);
+  }
+
+  async syncClientItemReplyCallback(abilityReply: any, clientAbility: SyncRequestAbilityData, abilityCloudId: string) {
+    let propertySyncer = new Sync_Stone_AbilityProperties(
+      this.sphereId, this.stoneId, abilityCloudId, this.accessRole, clientAbility, abilityReply, this.creationMap
+    );
+    await propertySyncer.processReply()
+  }
 
   /**
    *
@@ -55,7 +67,7 @@ export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, SyncRequestAbi
     let propertySyncer = new Sync_Stone_AbilityProperties(
       this.sphereId, this.stoneId, abilityCloudId, this.accessRole, clientAbility, abilityReply, this.creationMap
     );
-    await propertySyncer.sync(this.cloud_abilityProperties[abilityId]);
+    await propertySyncer.processRequest(this.cloud_abilityProperties[abilityId]);
   }
 
 

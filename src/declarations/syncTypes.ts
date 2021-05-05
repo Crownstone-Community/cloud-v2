@@ -66,6 +66,7 @@ export interface SyncRequestResponse_Sphere {
       data: SyncResponseItemCore<Toon>
     }
   },
+  users?: SphereUsers
 }
 
 interface SyncResponseItemCore<T extends Entity> {

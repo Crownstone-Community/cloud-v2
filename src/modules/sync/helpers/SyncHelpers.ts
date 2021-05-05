@@ -17,6 +17,9 @@ import {processCreationMap} from "./SyncUtil";
  * @param clientSource           | This is the parent of the category from the request. So if the field is hubs, the clientSource is a sphere sync request (thats where the fieldname comes from)
  * @param replySource            | This is the parent of where we're going to put the reply.
  * @param creationMap            | This is a lookup map for multiple linked new item id resolving.
+ * @param role                   | The access role of the authenticated user in this sphere.
+ * @param writePermissions       | This is a map of which access roles have the permission to write.
+ * @param editPermissions        | This is a map of which access roles have the permission to edit.
  * @param cloud_items_in_sphere  | This is what the cloud has on this category in this sphere. So the hubs that belong to the sphere for example.
  * @param eventCallback          | This callback allows the syncing model to emit an SSE event when a new item is created in the cloud db.
  * @param syncClientItemCallback | This callback is used to handle nested fields. It is difficult to read but this avoids a lot of code duplication. Used for abilityProperties

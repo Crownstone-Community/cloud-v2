@@ -29,7 +29,6 @@ export class SphereFeature extends AddTimestamps(BaseEntity) {
   @property({type:'boolean', required: true})
   enabled: string
 
-
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
 }

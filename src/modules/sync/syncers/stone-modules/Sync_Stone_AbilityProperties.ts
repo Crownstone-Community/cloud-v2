@@ -2,6 +2,7 @@ import {Sync_Base} from "../Sync_Base";
 import {Dbs} from "../../../containers/RepoContainer";
 import {EventHandler} from "../../../sse/EventHandler";
 import {StoneAbilityProperty} from "../../../../models/stoneSubModels/stone-ability-property.model";
+import {StoneAbility} from "../../../../models/stoneSubModels/stone-ability.model";
 
 export class Sync_Stone_AbilityProperties extends Sync_Base<StoneAbilityProperty, RequestItemCoreType> {
 
@@ -33,8 +34,13 @@ export class Sync_Stone_AbilityProperties extends Sync_Base<StoneAbilityProperty
     this.creationAdditions = { stoneId: this.stoneId, sphereId: this.sphereId, abilityId: this.abilityId };
   }
 
-  eventCallback(clientAbility: RequestItemCoreType, abilityProperty: StoneAbilityProperty) {
+  createEventCallback(clientAbility: RequestItemCoreType, abilityProperty: StoneAbilityProperty) {
     if (this.abilityIsNew || clientAbility.new) { return; }
     EventHandler.dataChange.sendAbilityChangeEventByIds(this.sphereId, this.stoneId, this.abilityId);
   }
+
+  updateEventCallback(abilityPropertyId: string, cloudAbilityProperty: StoneAbilityProperty) {
+    EventHandler.dataChange.sendAbilityChangeEventByIds(this.sphereId, this.stoneId, this.abilityId);
+  }
+
 }

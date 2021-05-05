@@ -11,8 +11,14 @@ const SPHERE_FIELDS   = {id:true, name: true, uid: true};
 const LOCATION_FIELDS = {id:true, name: true};
 const ABILITY_FIELDS  = {type:true, enabled: true, syncedToCrownstone: true};
 
-
+/**
+ * This cache is used for the SSE events. It allows us to lookup some data for events and reuse that if it is queried soon after.
+ * This is done when we have already obtained the item for a certain ID and it would be a waste of a request to the db to get it again.
+ * The merge function is then used before the call that generates an event to update the cached item-id combination.
+ */
 class ShortLivedCache<T> {
+
+  lifetimeSeconds = 5;
   ids : {[id:string]: { data: T, timeout: Timeout }} = {};
 
   bumpTimeout(id: string) {
@@ -20,7 +26,7 @@ class ShortLivedCache<T> {
       clearTimeout(this.ids[id].timeout);
       this.ids[id].timeout = setTimeout(() => {
         delete this.ids[id];
-      }, 5000);
+      }, 1000 * this.lifetimeSeconds);
     }
   }
 

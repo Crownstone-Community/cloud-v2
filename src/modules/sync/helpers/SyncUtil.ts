@@ -94,11 +94,12 @@ function getSyncCategories(value: boolean) : SyncIgnoreMap {
     properties:      value,
     scenes:          value,
     spheres:         value,
+    sphereUsers:     value,
     stones:          value,
     trackingNumbers: value,
     toons:           value,
     user:            value,
-  }
+  };
 }
 
 export function filterForAppVersion<T extends {minimumAppVersion: string}>(data: T[], appVersion : string | null) : T[] {

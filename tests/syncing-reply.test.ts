@@ -150,3 +150,33 @@ test("Test request data phase with value removal", async () => {
   expect(stoneRef.locationId).toBe(null);
   expect(new Date(stoneRef.updatedAt).valueOf()).toBe(2000);
 });
+
+
+test("Test request data location update", async () => {
+  await populate();
+
+  let replyPhaseRequest = {
+    sync: { type: 'REPLY' as SyncType },
+    spheres: {
+      [sphere.id]: {
+        locations: {
+          [location.id]: {data: {name:"Fred", updatedAt: 2000}}
+        }
+      }
+    }
+  }
+
+  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+    .expect(({body}) => {
+      expect(body.spheres[sphere.id].locations[location.id].data.status).toBe("UPDATED_IN_CLOUD");
+    })
+
+  // check for the update event.
+  expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(1);
+
+  let locationRef = await dbs.location.findById(location.id);
+  expect(locationRef.name).toBe('Fred');
+  expect(new Date(locationRef.updatedAt).valueOf()).toBe(2000);
+
+
+});

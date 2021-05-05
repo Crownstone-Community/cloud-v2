@@ -8,6 +8,7 @@ import {StoneAbilityProperty} from "../../../models/stoneSubModels/stone-ability
 import {Sync_Stone_Behaviours} from "./stone-modules/Sync_Stone_Behaviours";
 import {getReply} from "../helpers/ReplyHelpers";
 import {Sync_Stone_Abilities} from "./stone-modules/Sync_Stone_Abilities";
+import {EventStoneCache} from "../../sse/events/EventConstructor";
 
 export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
 
@@ -29,8 +30,26 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
     this.cloud_abilityProperties = cloud_abilityProperties;
   }
 
-  eventCallback(clientStone: SyncRequestStoneData, cloudStone: Stone) {
+  createEventCallback(clientStone: SyncRequestStoneData, cloudStone: Stone) {
     EventHandler.dataChange.sendStoneCreatedEventBySphereId(this.sphereId, cloudStone);
+  }
+
+
+  updateEventCallback(stoneId: string, cloudStone: Stone) {
+    EventStoneCache.merge(stoneId, cloudStone);
+    EventHandler.dataChange.sendStoneUpdatedEventByIds(this.sphereId, stoneId);
+  }
+
+  async syncClientItemReplyCallback(stoneReply: any, clientItem: SyncRequestStoneData, stoneCloudId: string) {
+    let behaviourSyncer = new Sync_Stone_Behaviours(
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap
+    );
+    await behaviourSyncer.processReply();
+
+    let abilitySyncer = new Sync_Stone_Abilities(
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
+    );
+    await abilitySyncer.processReply();
   }
 
 
@@ -47,12 +66,12 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
     let behaviourSyncer = new Sync_Stone_Behaviours(
       this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap
     );
-    await behaviourSyncer.sync(this.cloud_behaviours[stoneId])
+    await behaviourSyncer.processRequest(this.cloud_behaviours[stoneId])
 
     let abilitySyncer = new Sync_Stone_Abilities(
       this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
     );
-    await abilitySyncer.sync(this.cloud_abilities[stoneId])
+    await abilitySyncer.processRequest(this.cloud_abilities[stoneId])
   }
 
 

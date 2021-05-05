@@ -6,7 +6,6 @@ import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Location} from "./location.model";
 import {Sphere} from "./sphere.model";
-import {StoneKey} from "./stoneSubModels/stone-key.model";
 
 @model()
 export class Stone extends AddTimestamps(BaseEntity) {

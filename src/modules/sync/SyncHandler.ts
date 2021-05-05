@@ -11,27 +11,17 @@ import {
   getIds,
   getNestedIdMap,
   getSyncIgnoreList,
-  getUniqueIdMap, processCreationMap, sortByHardwareVersion
+  getUniqueIdMap, sortByHardwareVersion
 } from "./helpers/SyncUtil";
 import {User} from "../../models/user.model";
 import { hardwareVersions } from '../../constants/hardwareVersions';
 import {Bootloader } from "../../models/bootloader.model";
 import {Firmware} from "../../models/firmware.model";
 import {getEncryptionKeys} from "./helpers/KeyUtil";
-import {processSyncReply} from "./helpers/SyncReplyHelper";
 import {EventHandler} from "../sse/EventHandler";
-import {StoneBehaviour} from "../../models/stoneSubModels/stone-behaviour.model";
-import {StoneAbilityProperty} from "../../models/stoneSubModels/stone-ability-property.model";
-import {Hub} from "../../models/hub.model";
-import {SphereFeature} from "../../models/sphere-feature.model";
-import {Scene} from "../../models/scene.model";
-import {Location} from "../../models/location.model";
-import {Toon} from "../../models/toon.model";
-import {SphereTrackingNumber} from "../../models/sphere-tracking-number.model";
-import {EventLocationCache, EventSphereCache, EventStoneCache} from "../sse/events/EventConstructor";
-import {Stone} from "../../models/stone.model";
-import {Sync_Scenes} from "./syncers/Sync_Scenes";
 import {Sync_SphereComponents} from "./syncers/Sync_Constructor";
+import {EventSphereCache} from "../sse/events/EventConstructor";
+import {SphereAccessUtil} from "../../util/SphereAccessUtil";
 
 
 const admin  = true;
@@ -95,6 +85,12 @@ class Syncer {
 
     let sphereData = await Dbs.sphere.findById(sphereId,{include: includeArray});
 
+    /**
+     * This function is a helper to insert the children of a sphere into a sphere.
+     * @param sphere
+     * @param key
+     * @param sphereItem
+     */
     function injectSphereSimpleItem(sphere: Sphere, key: SyncCategory, sphereItem: any) {
       // @ts-ignore
       if (sphere[key] !== undefined) {
@@ -108,76 +104,75 @@ class Syncer {
       }
     }
 
-    function parseSphere(sphere: Sphere) : SyncRequestResponse_Sphere {
-      let sphereItem : SyncRequestResponse_Sphere = {};
-      if (!ignore.spheres) {
-        sphereItem = { data: { status: status, data: {}}};
+    let sphereItem : SyncRequestResponse_Sphere = {};
+    if (!ignore.spheres) {
+      sphereItem = { data: { status: status, data: {}}};
+    }
+
+    let sphereKeys = Object.keys(sphereData);
+    for (let i = 0; i < sphereKeys.length; i++) {
+      let key = sphereKeys[i];
+      if (!ignore.spheres && sphereRelationsMap[key] === undefined) {
+        // @ts-ignore
+        sphereItem.data.data[key] = sphereData[key];
       }
+    }
+    injectSphereSimpleItem(sphereData, 'hubs',            sphereItem);
+    injectSphereSimpleItem(sphereData, 'features',        sphereItem);
+    injectSphereSimpleItem(sphereData, 'messages',        sphereItem);
+    injectSphereSimpleItem(sphereData, 'locations',       sphereItem);
+    injectSphereSimpleItem(sphereData, 'scenes',          sphereItem);
+    injectSphereSimpleItem(sphereData, 'trackingNumbers', sphereItem);
+    injectSphereSimpleItem(sphereData, 'toons',           sphereItem);
 
-      let sphereKeys = Object.keys(sphere);
-      for (let i = 0; i < sphereKeys.length; i++) {
-        let key = sphereKeys[i];
-        if (!ignore.spheres && sphereRelationsMap[key] === undefined) {
-          // @ts-ignore
-          sphereItem.data.data[key] = sphere[key];
-        }
-      }
-      injectSphereSimpleItem(sphere, 'hubs',            sphereItem);
-      injectSphereSimpleItem(sphere, 'features',        sphereItem);
-      injectSphereSimpleItem(sphere, 'messages',        sphereItem);
-      injectSphereSimpleItem(sphere, 'locations',       sphereItem);
-      injectSphereSimpleItem(sphere, 'scenes',          sphereItem);
-      injectSphereSimpleItem(sphere, 'trackingNumbers', sphereItem);
-      injectSphereSimpleItem(sphere, 'toons',           sphereItem);
+    if (!ignore.sphereUsers) {
+      sphereItem.users = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
+    }
 
+    if (sphereData.stones !== undefined) {
+      sphereItem.stones = {};
+      for (let i = 0; i < sphereData.stones.length; i++) {
+        let stone = {...sphereData.stones[i]};
+        let stoneData = {...stone};
+        delete stoneData['abilities'];
+        delete stoneData['behaviours'];
 
-      if (sphere.stones !== undefined) {
-        sphereItem.stones = {};
-        for (let i = 0; i < sphere.stones.length; i++) {
-          let stone = {...sphere.stones[i]};
-          let stoneData = {...stone};
-          delete stoneData['abilities'];
-          delete stoneData['behaviours'];
+        sphereItem.stones[stone.id] = {
+          data: {status: status, data: stoneData},
+        };
+        let stoneReply = sphereItem.stones[stone.id];
 
-          sphereItem.stones[stone.id] = {
-            data: {status: status, data: stoneData},
-          };
-          let stoneReply = sphereItem.stones[stone.id];
-
-          if (stone.behaviours) {
-            stoneReply.behaviours = {};
-            for (let j = 0; j < stone.behaviours.length; j++) {
-              let behaviour = stone.behaviours[j];
-              stoneReply.behaviours[behaviour.id] = { data: {status: status, data: behaviour }}
-            }
+        if (stone.behaviours) {
+          stoneReply.behaviours = {};
+          for (let j = 0; j < stone.behaviours.length; j++) {
+            let behaviour = stone.behaviours[j];
+            stoneReply.behaviours[behaviour.id] = { data: {status: status, data: behaviour }}
           }
+        }
 
-          if (stone.abilities) {
-            stoneReply.abilities = {};
-            for (let j = 0; j < stone.abilities.length; j++) {
-              let ability = stone.abilities[j];
-              let abilityData = {...ability};
-              delete abilityData.properties;
-              stoneReply.abilities[ability.id] = { data: { status: status, data: abilityData }};
+        if (stone.abilities) {
+          stoneReply.abilities = {};
+          for (let j = 0; j < stone.abilities.length; j++) {
+            let ability = stone.abilities[j];
+            let abilityData = {...ability};
+            delete abilityData.properties;
+            stoneReply.abilities[ability.id] = { data: { status: status, data: abilityData }};
 
-              if (ability.properties) {
+            if (ability.properties) {
+              // @ts-ignore
+              stoneReply.abilities[ability.id].properties = {};
+              for (let k = 0; k < ability.properties.length; k++) {
+                let property = ability.properties[k];
                 // @ts-ignore
-                stoneReply.abilities[ability.id].properties = {};
-                for (let k = 0; k < ability.properties.length; k++) {
-                  let property = ability.properties[k];
-                  // @ts-ignore
-                  stoneReply.abilities[ability.id].properties[property.id] = { status: status, data: property };
-                }
+                stoneReply.abilities[ability.id].properties[property.id] = { status: status, data: property };
               }
             }
           }
         }
       }
-
-      return sphereItem;
     }
 
-    return parseSphere(sphereData);
+    return sphereItem;
   }
 
 
@@ -232,7 +227,6 @@ class Syncer {
     let reply : SyncRequestResponse = {
       spheres: {},
     };
-
 
     let user : User;
     if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
@@ -290,20 +284,20 @@ class Syncer {
     sphereIds = getIds(sphereData);
     let filter = {where: {sphereId: {inq: sphereIds }},fields: filterFields};
 
-    let featureData         = ignore.features ? [] : await Dbs.sphereFeature.find(filter);
-    let locationData        = ignore.features ? [] : await Dbs.location.find(filter);
+    let featureData         = ignore.features  ? [] : await Dbs.sphereFeature.find(filter);
+    let locationData        = ignore.locations ? [] : await Dbs.location.find(filter);
 
-    let messageData         = ignore.messages ? [] : await Dbs.message.find(filter);
-    let messageStateData    = ignore.messages ? [] : await Dbs.messageState.find(filter);
-    let messageUserData     = ignore.messages ? [] : await Dbs.messageUser.find( filter);
+    let messageData         = ignore.messages  ? [] : await Dbs.message.find(filter);
+    let messageStateData    = ignore.messages  ? [] : await Dbs.messageState.find(filter);
+    let messageUserData     = ignore.messages  ? [] : await Dbs.messageUser.find( filter);
 
-    let hubData             = ignore.hubs     ? [] : await Dbs.hub.find(filter);
-    let sceneData           = ignore.scenes   ? [] : await Dbs.scene.find(filter);
+    let hubData             = ignore.hubs      ? [] : await Dbs.hub.find(filter);
+    let sceneData           = ignore.scenes    ? [] : await Dbs.scene.find(filter);
 
-    let stoneData           = ignore.stones   ? [] : await Dbs.stone.find(filter);
-    let behaviourData       = ignore.stones   ? [] : await Dbs.stoneBehaviour.find(filter)
-    let abilityData         = ignore.stones   ? [] : await Dbs.stoneAbility.find(filter)
-    let abilityPropertyData = ignore.stones   ? [] : await Dbs.stoneAbilityProperty.find(filter)
+    let stoneData           = ignore.stones    ? [] : await Dbs.stone.find(filter);
+    let behaviourData       = ignore.stones    ? [] : await Dbs.stoneBehaviour.find(filter)
+    let abilityData         = ignore.stones    ? [] : await Dbs.stoneAbility.find(filter)
+    let abilityPropertyData = ignore.stones    ? [] : await Dbs.stoneAbilityProperty.find(filter)
 
     let trackingNumberData  = ignore.trackingNumbers ? [] : await Dbs.sphereTrackingNumber.find(filter);
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
@@ -336,7 +330,6 @@ class Syncer {
       user       = await Dbs.user.findById(userId, {fields: filterFields});
       reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
     }
-
 
     let creationMap : creationMap = {};
     if (request.spheres) {
@@ -372,33 +365,33 @@ class Syncer {
         // so that we can replace the localIds with the cloudIds when storing a new stone.
 
         if (!ignore.locations) {
-          await SphereSyncer.locations.sync(cloud_locations[sphereId]);
+          await SphereSyncer.locations.processRequest(cloud_locations[sphereId]);
         }
 
         if (!ignore.features) {
-          await SphereSyncer.features.sync(cloud_features[sphereId]);
+          await SphereSyncer.features.processRequest(cloud_features[sphereId]);
         }
 
         if (!ignore.scenes) {
-          await SphereSyncer.scenes.sync(cloud_scenes[sphereId]);
+          await SphereSyncer.scenes.processRequest(cloud_scenes[sphereId]);
         }
 
         if (!ignore.toons) {
-          await SphereSyncer.toons.sync(cloud_toons[sphereId]);
+          await SphereSyncer.toons.processRequest(cloud_toons[sphereId]);
         }
 
         if (!ignore.trackingNumbers) {
-          await SphereSyncer.trackingNumbers.sync(cloud_trackingNumbers[sphereId]);
+          await SphereSyncer.trackingNumbers.processRequest(cloud_trackingNumbers[sphereId]);
         }
 
 
         if (!ignore.stones) {
           SphereSyncer.stones.loadChildData(cloud_behaviours, cloud_abilities, cloud_abilityProperties);
-          await SphereSyncer.stones.sync(cloud_stones[sphereId]);
+          await SphereSyncer.stones.processRequest(cloud_stones[sphereId]);
         }
 
         if (!ignore.hubs) {
-          await SphereSyncer.hubs.sync(cloud_hubs[sphereId]);
+          await SphereSyncer.hubs.processRequest(cloud_hubs[sphereId]);
         }
       }
 
@@ -429,6 +422,11 @@ class Syncer {
   }
 
 
+  /**
+   * This method handles the TYPE=REPLY from the users. This is the second step in the syncing phase.
+   * @param userId
+   * @param request
+   */
   async handleReplySync(userId: string, request: SyncRequest) {
     let ignore = getSyncIgnoreList(request.sync.scope);
 
@@ -460,69 +458,38 @@ class Syncer {
         let accessRole = accessMap[sphereId];
         let requestSphere = request.spheres[sphereId];
         reply.spheres[sphereId] = {};
-        let sphereReply = reply.spheres[sphereId];
+        let replySphere = reply.spheres[sphereId];
 
         if (requestSphere.data) {
           // update model in cloud.
           if (accessRole !== 'admin' && accessRole !== 'member') {
-            sphereReply.data = {status: "ACCESS_DENIED"};
+            replySphere.data = {status: "ACCESS_DENIED"};
           }
           else {
             try {
               await Dbs.sphere.updateById(sphereId, requestSphere.data, {acceptTimes: true});
-              sphereReply.data = {status: "UPDATED_IN_CLOUD"};
+              replySphere.data = {status: "UPDATED_IN_CLOUD"};
               EventSphereCache.merge(sphereId, requestSphere.data);
               EventHandler.dataChange.sendSphereUpdatedEventBySphereId(sphereId);
             }
             catch (e) {
-              sphereReply.data = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
+              replySphere.data = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
             }
           }
         }
 
-        await processSyncReply('hubs', Dbs.hub, requestSphere.hubs, sphereReply, accessRole, {admin},
-       (hubId: string, hubData: Hub) => {
-          // TODO: create update hub event
-        });
-        await processSyncReply('locations', Dbs.location, requestSphere.locations, sphereReply, accessRole, {admin, member},
-          (locationId: string, locationData: Location) => {
-            EventLocationCache.merge(locationId, locationData);
-            EventHandler.dataChange.sendLocationUpdatedEventByIds(sphereId, locationId);
-        });
-        await processSyncReply('scenes', Dbs.scene, requestSphere.scenes, sphereReply, accessRole, {admin, member},
-          (sceneId: string, sceneData: Scene) => {
-            // TODO: create update scene event
-        });
-        await processSyncReply('toons', Dbs.toon, requestSphere.toons, sphereReply, accessRole, {admin},
-          (toonId: string, toonData: Toon) => {
-            // TODO: create update toon event
-        });
-        await processSyncReply('trackingNumbers', Dbs.sphereTrackingNumber, requestSphere.trackingNumbers, sphereReply, accessRole, {admin, member, guest},
-          (trackingNumberId: string, trackingNumberData: SphereTrackingNumber) => {
-            // TODO: create update trackingNumber event
-        });
+        let SphereSyncer = new Sync_SphereComponents(sphereId, accessRole, {}, requestSphere, replySphere);
+        await SphereSyncer.hubs.processReply();
 
-        const checkStones = async (stoneReply: any, stone: any, stoneId: string) => {
-          const checkToUpdateAbilities = async (abilityReply: any, ability: any) => {
-            await processSyncReply('properties', Dbs.stoneAbilityProperty, ability.properties, abilityReply, accessRole,{admin, member},
-              (abilityPropertyId: string, abilityPropertyData: StoneAbilityProperty) => {
-                // TODO: create update abilityProperty event
-              });
-          }
-          await processSyncReply('abilities',  Dbs.stoneAbility,   stone.abilities, stoneReply, accessRole, {admin, member},
-            (abilityId: string, abilityData: StoneAbility) => {
-              EventHandler.dataChange.sendAbilityChangeEventByIds(sphereId, stoneId, abilityId);
-            }, checkToUpdateAbilities);
-          await processSyncReply('behaviours', Dbs.stoneBehaviour, stone.behaviour, stoneReply, accessRole, {admin, member},
-            (behaviourId: string, behaviourData: StoneBehaviour) => {
-              // TODO: create update behaviours event
-            });
-        }
-        await processSyncReply('stones', Dbs.stone, requestSphere.stones, sphereReply, accessRole, {admin},
-          (stoneId: string, stoneData: Stone) => {
-            EventStoneCache.merge(stoneId, stoneData);
-            EventHandler.dataChange.sendStoneUpdatedEventByIds(sphereId, stoneId);
-          }, checkStones);
+        await SphereSyncer.locations.processReply();
+
+        await SphereSyncer.scenes.processReply();
+
+        await SphereSyncer.toons.processReply();
+
+        await SphereSyncer.trackingNumbers.processReply();
+
+        await SphereSyncer.stones.processReply();
       }
     }
 

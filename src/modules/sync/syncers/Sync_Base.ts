@@ -1,5 +1,7 @@
 import {processSyncCollection} from "../helpers/SyncHelpers";
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
+import {processSyncReply} from "../helpers/SyncReplyHelper";
+import {CrudRepository} from "@loopback/repository";
 
 interface idMap {[ids: string]:string}
 interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
@@ -12,7 +14,6 @@ export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
 
   writePermissions : accessMap;
   editPermissions  : accessMap;
-  cloud_data : any;
   accessRole: ACCESS_ROLE;
   sphereId: string;
 
@@ -39,7 +40,7 @@ export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
     this.creationAdditions = {sphereId: this.sphereId}
   }
 
-  async sync(cloud_data : any = {}, creationAdditions? : idMap) {
+  async processRequest(cloud_data : any = {}, creationAdditions? : idMap) {
     this.setCreationAdditions();
     await processSyncCollection<T,U>(
       this.fieldName,
@@ -52,7 +53,7 @@ export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
       this.writePermissions,
       this.editPermissions,
       cloud_data,
-      this.eventCallback.bind(this),
+      this.createEventCallback.bind(this),
       this.syncClientItemCallback.bind(this),
       this.syncCloudItemCallback.bind(this),
       this.markChildrenAsNew.bind(this)
@@ -60,10 +61,42 @@ export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
   }
 
   /**
+   * This handles the reply phase of the syncing process.
+   */
+  async processReply() {
+    await processSyncReply(
+      this.fieldName,
+      this.db,
+      this.requestSphere,
+      this.replySphere,
+      this.accessRole,
+      this.editPermissions,
+      this.updateEventCallback.bind(this),
+      this.syncClientItemReplyCallback.bind(this),
+    );
+  }
+
+  /**
    * This callback allows the syncing model to emit an SSE event when a new item is created in the cloud db.
    * @param item  | This is the instance of the newly created datamodel.
    */
-  eventCallback(clientItem: U, cloudItem: T) {
+  createEventCallback(clientItem: U, cloudItem: T) {
+    // OVERRIDE BY CHILD CLASSES
+  }
+
+  /**
+   * This callback allows the syncing model to emit an SSE event when an item in the cloud db has been updated.
+   * @param item  | This is the instance of the newly created datamodel.
+   */
+  updateEventCallback(itemId: string, updatedItem: T) {
+    // OVERRIDE BY CHILD CLASSES
+  }
+
+  /**
+   * This callback is used to handle nested fields. It is difficult to read but this avoids a lot of code duplication. Used for abilityProperties
+   * @param item  | This is the instance of the newly created datamodel.
+   */
+  async syncClientItemReplyCallback(replyAtPoint: any, clientItem: U, cloudId: string) {
     // OVERRIDE BY CHILD CLASSES
   }
 

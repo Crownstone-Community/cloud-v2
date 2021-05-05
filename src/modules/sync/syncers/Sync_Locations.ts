@@ -2,6 +2,7 @@ import {Dbs} from "../../containers/RepoContainer";
 import {Sync_Base} from "./Sync_Base";
 import {Location} from "../../../models/location.model";
 import {EventHandler} from "../../sse/EventHandler";
+import {EventLocationCache} from "../../sse/events/EventConstructor";
 
 export class Sync_Locations extends Sync_Base<Location, RequestItemCoreType> {
 
@@ -10,7 +11,14 @@ export class Sync_Locations extends Sync_Base<Location, RequestItemCoreType> {
   writePermissions = {admin: true, member: true}
   editPermissions  = {admin: true, member: true}
 
-  eventCallback(clientLocation: RequestItemCoreType, cloudLocation: Location) {
+  createEventCallback(clientLocation: RequestItemCoreType, cloudLocation: Location) {
     EventHandler.dataChange.sendLocationCreatedEventBySphereId(this.sphereId, cloudLocation);
   }
+
+  updateEventCallback(locationId: string, cloudLocation: Location) {
+    EventLocationCache.merge(locationId, cloudLocation);
+    EventHandler.dataChange.sendLocationUpdatedEventByIds(this.sphereId, locationId);
+  }
+
+
 }
