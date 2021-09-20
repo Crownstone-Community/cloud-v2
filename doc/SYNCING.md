@@ -5,12 +5,12 @@
 The app has a local snapshot of this data and it can be out of sync. There are multiple users in a sphere that can change data like names of crownstones etc.
 
 
-Syncing 
+## Syncing 
 The old syncing mechanism is RESTful, each sphere GETS sphere, GETS their stones, each stone GETS their behaviours etc. This results in about 80 calls per user per sync if they have a lot of crownstones. (probably about 200 calls for Peet).
 
 Every call has overhead, introduces delays in the app and this causes the sync to take sometimes minutes!
 
-The new approach
+## The new approach
 I want to have 1 sync endpoint on a user. This endpoint will be called a maximum of 2 times per sync.
 
 The app (or anything else that wishes to keep their local crownstone state in sync) will do a first request.
@@ -21,20 +21,20 @@ Full data model of the request here:
 I want to focus on the top of the request payload:
 ```
 sync: {
-    appVersion?: string,
-    type: SyncType,
-    lastTime?: Date,
-    scope?: SyncCategory[]
-  },
+  appVersion?: string,
+  type:        SyncType,
+  lastTime?:   Date,
+  scope?:      SyncCategory[]
+}
 ```
 
 With SyncType:
-"FULL"      	
-will just get your spheres and user.
-"REQUEST"  	
- initial phase of sync
-“REPLY” 
-Wrap up phase of sync where the user will give the cloud any data that the cloud has requested with REQUEST_DATA(optional)
+- "FULL"      	
+  - will just get your spheres and user.
+- "REQUEST"  	
+  - initial phase of sync
+- "REPLY"
+  - Wrap up phase of sync where the user will give the cloud any data that the cloud has requested with REQUEST_DATA(optional)
 
 FULL is used for login etc.
 
@@ -50,32 +50,32 @@ Each field has a status, and optionally data.
 
 The status is one of these options:
 - "NOT_AVAILABLE" 
-this entity is not on the cloud or not available to you
+    - this entity is not on the cloud or not available to you
 - "IN_SYNC" 
-same updatedAt time
+  - same updatedAt time
 - "NEWER_DATA_AVAILABLE" 
-cloud has newer data (HAS DATA)
+  - cloud has newer data (HAS DATA)
 - "REQUEST_DATA" 
-you have newer data, please give to cloud.
+    - you have newer data, please give to cloud. (HAS DATA)
 - “VIEW"	
-you have requested data, here it is. No syncing information.  (HAS DATA)
+    - you have requested data, here it is. No syncing information.  (HAS DATA)
 - "CREATED_IN_CLOUD"
- the cloud has an additional id other than what you requested.
+    - the cloud has an additional id other than what you requested.
 - "UPDATED_IN_CLOUD"
- the cloud has been updated with your model.
+    - the cloud has been updated with your model.
 - "ERROR"
- Something went wrong with this part of the query.  (HAS ERROR)
- - "ACCESS_DENIED"
- You tried to create a new field but you dont have access.
+    - Something went wrong with this part of the query.  (HAS ERROR)
+- "ACCESS_DENIED"
+    - You tried to create a new field but you dont have access.
  
 
 The user has sent a list of ids and updated at times. This should be the full set of what the user has and the cloud will query all ids that the user has access to including their updated at times.
 
 There are 2 edge cases:
-The user has an extra id: an entity has been created and not synced to the cloud yet.
-SOLUTION: It will be marked with new: true. The user knows that this is new since the user does not have a cloudId
- The cloud has an id less: another user has deleted an entity from the cloud and this user doesnt know it yet.
-the cloud marks this id as DELETED
+- The user has an extra id: an entity has been created and not synced to the cloud yet.
+  - SOLUTION: It will be marked with new: true. The user knows that this is new since the user does not have a cloudId 
+- The cloud has an id less: another user has deleted an entity from the cloud and this user doesnt know it yet.
+  - SOLUTION: The cloud marks this id as DELETED
 
 
 ## Future optimizations
@@ -84,13 +84,17 @@ This is the first step to ensure that these queries are fast.
 
 #### Only query newer data 
 Requires adding DELETED events
-This process is expensive in that it has to query all ids belonging to the user in order to check their times. If we want to only query items that are newer, we would not be able to differentiate between deleted and updated. To allow for this optimization, we could keep a deleted event.
+The syncing process is expensive in that it has to query all ids belonging to the user in order to check their times. 
+If we want to only query items that are newer, we would not be able to differentiate between deleted and updated. 
+To allow for this optimization, we could keep a deleted event.
 
 #### Shorten the keywords
-We can change updatedAt to t, etc. This will greatly shrink the payload size towards the cloud.
+We can change updatedAt to t, etc. This will greatly shrink the payload size from and towards the cloud. A stand alone module could be created for this
+so we can do this with the same module to, and from the cloud. We could use it in the app as well.
 
 #### Store change times per branch
-We can have the sphere have changedTimes per branch (locations, stones etc) of the tree. That way we only have to query those to see if there is a change. We would introduce a branchInSync field to each branch. This avoids us going down that branch.
+We can have the sphere have changedTimes per branch (locations, stones etc) of the tree. That way we only have to query those to see if there is a change. 
+We would introduce a branchInSync field to each branch. This avoids us going down that branch.
 
 #### Use the lastTime in the sync payload
 If we have the times per branch, we can compare this with the last sync time and not even go into the request data model. (minor optimization)
@@ -104,5 +108,5 @@ We could store change events to improve the probe step, except these may stack u
 #### Cache the bootloader and firmware database in memory
 This is a small bit of data and saves a few DB calls. We could update this every 30 minutes, and on invocation of change calls or something.
 
-#### Keep a 2 second cache of sync data to be able to safer handle reply phases (actually check the times again on update)
+#### Keep a 2 second cache of sync data to be able to quickly handle reply phases (actually check the times in the db again on an update)
 

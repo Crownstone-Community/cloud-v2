@@ -77,12 +77,14 @@ test("Sync REQUEST with no body", async () => {
   await populate();
   await client.post(auth("/user/sync")).expect(400).expect(({body}) => { expect(body.error.code).toBe("MISSING_REQUIRED_PARAMETER")})
 })
+
 test("Sync REQUEST with no data", async () => {
   await populate();
   await client.post(auth("/user/sync")).send({sync: {type:"REQUEST"}})
     .expect(({body}) => {
       expect(body).toMatchSnapshot();})
 })
+
 test("Sync REQUEST with sphere and hub scope and no data", async () => {
   await populate();
   let sphereId = sphere.id;
@@ -159,6 +161,7 @@ test("Sync REQUEST with request body", async () => {
   await client.post(auth("/user/sync")).send(request)
     .expect(({body}) => {
       expect(body).toMatchSnapshot();
+      console.log(JSON.stringify(body,null,2))
       expect(body.spheres[sphere.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].locations[location.id].data.status).toBe("IN_SYNC")

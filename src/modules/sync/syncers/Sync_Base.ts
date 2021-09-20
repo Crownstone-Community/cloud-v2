@@ -1,7 +1,6 @@
 import {processSyncCollection} from "../helpers/SyncHelpers";
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
 import {processSyncReply} from "../helpers/SyncReplyHelper";
-import {CrudRepository} from "@loopback/repository";
 
 interface idMap {[ids: string]:string}
 interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
@@ -9,7 +8,7 @@ interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
 
 export class Sync_Base<T extends UpdatedAt, U extends RequestItemCoreType> {
 
-  fieldName : SyncCategory;
+  fieldName : DataCategory;
   db : TimestampedCrudRepository<any, any>
 
   writePermissions : accessMap;

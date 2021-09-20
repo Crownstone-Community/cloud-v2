@@ -81,6 +81,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     this.registerInclusionResolver('features',        this.sphereFeatures.inclusionResolver);
     this.registerInclusionResolver('trackingNumbers', this.trackingNumbers.inclusionResolver);
     this.registerInclusionResolver('toons',           this.toons.inclusionResolver);
+    this.registerInclusionResolver('users',           this.users.inclusionResolver);
   }
 
   async create(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {

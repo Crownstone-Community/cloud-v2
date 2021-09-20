@@ -4,7 +4,7 @@ import {Dbs} from "../../../containers/RepoContainer";
 
 export class Sync_Stone_Behaviours extends Sync_Base<StoneBehaviour, RequestItemCoreType> {
 
-  fieldName : SyncCategory = "behaviours";
+  fieldName : DataCategory = "behaviours";
   db = Dbs.stoneBehaviour;
   writePermissions = {admin: true, member: true, hub: true}
   editPermissions  = {admin: true, member: true, hub: true}

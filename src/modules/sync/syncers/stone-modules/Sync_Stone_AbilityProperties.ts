@@ -2,11 +2,10 @@ import {Sync_Base} from "../Sync_Base";
 import {Dbs} from "../../../containers/RepoContainer";
 import {EventHandler} from "../../../sse/EventHandler";
 import {StoneAbilityProperty} from "../../../../models/stoneSubModels/stone-ability-property.model";
-import {StoneAbility} from "../../../../models/stoneSubModels/stone-ability.model";
 
 export class Sync_Stone_AbilityProperties extends Sync_Base<StoneAbilityProperty, RequestItemCoreType> {
 
-  fieldName : SyncCategory = "properties";
+  fieldName : DataCategory = "properties";
   db = Dbs.stoneAbilityProperty;
   writePermissions = {admin: true, member: true, hub: true}
   editPermissions  = {admin: true, member: true, hub: true}

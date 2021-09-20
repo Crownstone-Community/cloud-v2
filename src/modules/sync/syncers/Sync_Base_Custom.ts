@@ -1,9 +1,9 @@
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
 import {CrudRepository} from "@loopback/repository";
 
-export class Sync_Base_Custom<T extends UpdatedAt, U extends RequestItemCoreType> {
+export class Sync_Base_Custom {
 
-  fieldName : SyncCategory;
+  fieldName : DataCategory;
   db : TimestampedCrudRepository<any, any> | CrudRepository<any>
 
   writePermissions : accessMap;

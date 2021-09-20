@@ -1,11 +1,8 @@
 import {Dbs} from "../containers/RepoContainer";
-import {HttpErrors, param} from "@loopback/rest";
+import {HttpErrors} from "@loopback/rest";
 import {SyncRequestResponse, SyncRequestResponse_Sphere} from "../../declarations/syncTypes";
 import {Sphere} from "../../models/sphere.model";
-import {StoneAbility} from "../../models/stoneSubModels/stone-ability.model";
-import {fillSyncStoneData, markStoneChildrenAsNew} from "./helpers/StoneSyncHelpers";
-import {processSyncCollection} from "./helpers/SyncHelpers";
-import {getReply, getShallowReply} from "./helpers/ReplyHelpers";
+import {getShallowReply} from "./helpers/ReplyHelpers";
 import {
   filterForAppVersion, getHighestVersionPerHardwareVersion,
   getIds,
@@ -302,6 +299,8 @@ class Syncer {
     let trackingNumberData  = ignore.trackingNumbers ? [] : await Dbs.sphereTrackingNumber.find(filter);
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
 
+    let sphereUsers         = ignore.sphereUsers     ? {} : await SphereAccessUtil.getSphereUsers(sphereIds);
+
 
     // this is cheap to do with empty arrays do we dont check for ignore here.
     let cloud_spheres         = getUniqueIdMap(sphereData);
@@ -384,7 +383,6 @@ class Syncer {
           await SphereSyncer.trackingNumbers.processRequest(cloud_trackingNumbers[sphereId]);
         }
 
-
         if (!ignore.stones) {
           SphereSyncer.stones.loadChildData(cloud_behaviours, cloud_abilities, cloud_abilityProperties);
           await SphereSyncer.stones.processRequest(cloud_stones[sphereId]);
@@ -393,6 +391,11 @@ class Syncer {
         if (!ignore.hubs) {
           await SphereSyncer.hubs.processRequest(cloud_hubs[sphereId]);
         }
+
+        if (!ignore.sphereUsers) {
+          await SphereSyncer.users.processRequest(sphereUsers[sphereId]);
+        }
+
       }
 
 
@@ -446,8 +449,8 @@ class Syncer {
         await Dbs.user.updateById(userId, request.user, {acceptTimes: true});
         reply.user = {status: "UPDATED_IN_CLOUD"};
       }
-      catch (e) {
-        reply.user = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
+      catch (err : any) {
+        reply.user = {status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err}};
       }
     }
 
@@ -472,8 +475,8 @@ class Syncer {
               EventSphereCache.merge(sphereId, requestSphere.data);
               EventHandler.dataChange.sendSphereUpdatedEventBySphereId(sphereId);
             }
-            catch (e) {
-              replySphere.data = {status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e}};
+            catch (err : any) {
+              replySphere.data = {status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err}};
             }
           }
         }

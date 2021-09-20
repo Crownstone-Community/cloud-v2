@@ -871,6 +871,68 @@ Object {
       },
       "toons": Object {},
       "trackingNumbers": Object {},
+      "users": Object {
+        "admin": Object {
+          "dbId:UserRepository:1": Object {
+            "data": Object {
+              "data": Object {
+                "accountCreationPending": false,
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "email": "test@test.com",
+                "emailVerified": false,
+                "id": "dbId:UserRepository:1",
+                "language": "en_us",
+                "new": true,
+                "updatedAt": "1970-01-01T00:00:00.000Z",
+                "uploadDeviceDetails": true,
+                "uploadLocation": true,
+                "uploadSwitchState": true,
+              },
+              "status": "NEW_DATA_AVAILABLE",
+            },
+          },
+        },
+        "basic": Object {
+          "dbId:UserRepository:3": Object {
+            "data": Object {
+              "data": Object {
+                "accountCreationPending": false,
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "email": "guest@test.com",
+                "emailVerified": false,
+                "id": "dbId:UserRepository:3",
+                "language": "en_us",
+                "new": true,
+                "updatedAt": "1970-01-01T00:00:00.000Z",
+                "uploadDeviceDetails": true,
+                "uploadLocation": true,
+                "uploadSwitchState": true,
+              },
+              "status": "NEW_DATA_AVAILABLE",
+            },
+          },
+        },
+        "member": Object {
+          "dbId:UserRepository:2": Object {
+            "data": Object {
+              "data": Object {
+                "accountCreationPending": false,
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "email": "member@test.com",
+                "emailVerified": false,
+                "id": "dbId:UserRepository:2",
+                "language": "en_us",
+                "new": true,
+                "updatedAt": "1970-01-01T00:00:00.000Z",
+                "uploadDeviceDetails": true,
+                "uploadLocation": true,
+                "uploadSwitchState": true,
+              },
+              "status": "NEW_DATA_AVAILABLE",
+            },
+          },
+        },
+      },
     },
   },
   "user": Object {

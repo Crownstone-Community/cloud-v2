@@ -17,6 +17,7 @@ import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
 import {getEncryptionKeys} from "../src/modules/sync/helpers/KeyUtil";
 import {CloudUtil} from "../src/util/CloudUtil";
 import { mocked } from 'ts-jest/utils'
+import {SyncHandler} from "../src/modules/sync/SyncHandler";
 
 let app    : CrownstoneCloud;
 let client : Client;
@@ -68,19 +69,19 @@ afterAll(async () => { await app.stop(); })
 
 test("get encryption keys", async () => {
   await populate();
-  let adminKeys = await getEncryptionKeys(admin.id);
+  let adminKeys  = await getEncryptionKeys(admin.id);
   let memberKeys = await getEncryptionKeys(member.id);
-  let guestKeys = await getEncryptionKeys(guest.id);
+  let guestKeys  = await getEncryptionKeys(guest.id);
 
-  expect(adminKeys).toHaveLength(1)
-  expect(adminKeys[0].sphereKeys).toHaveLength(7)
-  expect(Object.keys(adminKeys[0].stoneKeys)).toHaveLength(3)
-  expect(memberKeys).toHaveLength(1)
-  expect(memberKeys[0].sphereKeys).toHaveLength(4)
-  expect(Object.keys(memberKeys[0].stoneKeys)).toHaveLength(0)
-  expect(guestKeys).toHaveLength(1)
-  expect(guestKeys[0].sphereKeys).toHaveLength(3)
-  expect(Object.keys(guestKeys[0].stoneKeys)).toHaveLength(0)
+  expect(adminKeys).toHaveLength(1);
+  expect(adminKeys[0].sphereKeys).toHaveLength(7);
+  expect(Object.keys(adminKeys[0].stoneKeys)).toHaveLength(3);
+  expect(memberKeys).toHaveLength(1);
+  expect(memberKeys[0].sphereKeys).toHaveLength(4);
+  expect(Object.keys(memberKeys[0].stoneKeys)).toHaveLength(0);
+  expect(guestKeys).toHaveLength(1);
+  expect(guestKeys[0].sphereKeys).toHaveLength(3);
+  expect(Object.keys(guestKeys[0].stoneKeys)).toHaveLength(0);
 })
 
 
@@ -98,11 +99,25 @@ test("Sync FULL with scope", async () => {
   await populate();
   let sphereId = sphere.id;
 
+
   await client.post(auth("/user/sync"))
-    .send({sync: {type: "FULL", scope: ['hubs']}})
+    .send({sync: {type: "FULL", scope: ['spheres', 'hubs']}})
     .expect(({body}) => {
       expect(Object.keys(body)).toEqual(['spheres'])
       let sphere = body.spheres[sphereId];
       expect(Object.keys(sphere)).toEqual(['data', 'hubs'])
     })
+})
+
+test("Download users from sphere", async () => {
+  await populate();
+  let result = await SyncHandler.handleSync(admin.id, {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {users:{member:{}, basic: {}, admin:{
+    [admin.id]: {data: { updatedAt: admin.updatedAt},invitePending: false},
+    ['hello']:  {data: { updatedAt: admin.updatedAt},invitePending: false},
+  }}}}})
+
+  expect(result.spheres[sphere.id].users.admin).toBeDefined()
+  expect(result.spheres[sphere.id].users.admin[admin.id].data.status).toBe("IN_SYNC")
+  expect(result.spheres[sphere.id].users.admin['hello'].data.status).toBe("NOT_AVAILABLE")
+  expect(result.spheres[sphere.id].users.member[member.id].data.status).toBe("NEW_DATA_AVAILABLE")
 })

@@ -4,7 +4,7 @@ import {Toon} from "../../../models/toon.model";
 
 export class Sync_Toons extends Sync_Base<Toon, RequestItemCoreType> {
 
-  fieldName : SyncCategory = "toons";
+  fieldName : DataCategory = "toons";
   db = Dbs.toon;
   writePermissions = {admin: true, member: true}
   editPermissions  = {admin: true, member: true}

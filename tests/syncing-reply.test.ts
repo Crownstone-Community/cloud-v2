@@ -81,6 +81,7 @@ test("Test request data phase", async () => {
   await client.post(auth("/user/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("REQUEST_DATA");
+      expect(body.spheres[sphere.id].stones[stone.id].data.data).toBeDefined();
     })
 
   let initialStoneRef = await dbs.stone.findById(stone.id);

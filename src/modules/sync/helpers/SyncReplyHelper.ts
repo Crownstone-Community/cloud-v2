@@ -19,7 +19,7 @@ import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped
  * @param updateClientItemCallback  | This callback is used to handle nested fields. It is difficult to read but this avoids a lot of code duplication. Used for abilityProperties
  */
 export async function processSyncReply<T extends UpdatedAt>(
-  fieldname: SyncCategory,
+  fieldname: DataCategory,
   db: TimestampedCrudRepository<any, any>,
   requestItems: any,
   replySource: any,
@@ -45,8 +45,8 @@ export async function processSyncReply<T extends UpdatedAt>(
         replySource[fieldname][itemId].data = {status: "UPDATED_IN_CLOUD"};
         updateEventCallback(itemId, item)
       }
-      catch (e) {
-        replySource[fieldname][itemId].data = { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} };
+      catch (err : any) {
+        replySource[fieldname][itemId].data = { status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err} };
       }
 
       if (updateClientItemCallback) {

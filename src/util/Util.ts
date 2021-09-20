@@ -326,13 +326,13 @@ export const Util = {
 
   promiseBatchPerformer: function(arr : any[], method : PromiseCallback) {
     if (arr.length === 0) {
-      return new Promise((resolve, reject) => { resolve() });
+      return new Promise<void>((resolve, reject) => { resolve() });
     }
     return Util._promiseBatchPerformer(arr, 0, method);
   },
 
   _promiseBatchPerformer: function(arr : any[], index : number, method : PromiseCallback) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if (index < arr.length) {
         method(arr[index])
           .then(() => {

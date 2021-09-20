@@ -5,12 +5,10 @@ import {StoneAbilityProperty} from "../../../../models/stoneSubModels/stone-abil
 import {EventHandler} from "../../../sse/EventHandler";
 import {getReply} from "../../helpers/ReplyHelpers";
 import {Sync_Stone_AbilityProperties} from "./Sync_Stone_AbilityProperties";
-import {StoneBehaviour} from "../../../../models/stoneSubModels/stone-behaviour.model";
-import {processSyncReply} from "../../helpers/SyncReplyHelper";
 
 export class Sync_Stone_Abilities extends Sync_Base<StoneAbility, SyncRequestAbilityData> {
 
-  fieldName : SyncCategory = "abilities";
+  fieldName : DataCategory = "abilities";
   db = Dbs.stoneAbility;
   writePermissions = {admin: true, member: true}
   editPermissions  = {admin: true, member: true}

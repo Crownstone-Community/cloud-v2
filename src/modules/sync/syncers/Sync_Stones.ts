@@ -14,8 +14,8 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
 
   fieldName : SyncCategory = "stones";
   db = Dbs.stone;
-  writePermissions = {admin: true}
-  editPermissions  = {admin: true, member: true}
+  writePermissions = { admin: true }
+  editPermissions  = { admin: true, member: true }
 
   cloud_behaviours : nestedIdMap<StoneBehaviour>
   cloud_abilities  : nestedIdMap<StoneAbility>

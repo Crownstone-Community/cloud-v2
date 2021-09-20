@@ -43,6 +43,6 @@ export async function getReplyBasedOnTime<T extends UpdatedAt>(request : Date | 
     return { status: "NEW_DATA_AVAILABLE", data: await getter() };
   }
   else {
-    return { status: "REQUEST_DATA"};
+    return { status: "REQUEST_DATA", data: await getter() };
   }
 }

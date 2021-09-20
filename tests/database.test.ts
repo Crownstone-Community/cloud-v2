@@ -66,7 +66,7 @@ afterAll(async () => { await app.stop(); })
 
 test("Check updating a datafield", async () => {
   dbs = getRepositories();
-  admin    = await createUser('test@test.com', 'test', 1000);
+  admin = await createUser('test@test.com', 'test', 1000);
 
   admin.updatedAt = 20000;
   await dbs.user.update(admin, {acceptTimes: true})

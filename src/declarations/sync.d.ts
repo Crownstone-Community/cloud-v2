@@ -1,19 +1,18 @@
-type SyncCategory = 'abilities'       |
-                    'behaviours'      |
-                    'bootloader'      |
+type SyncCategory = 'bootloader'      |
                     'features'        |
                     'firmware'        |
                     'hubs'            |
                     'keys'            |
                     'locations'       |
                     'messages'        |
-                    'properties'      |
                     'spheres'         |
                     'sphereUsers'     |
                     'scenes'          |
                     'stones'          |
                     'trackingNumbers' |
                     'toons'
+
+type DataCategory = SyncCategory | 'abilities' | 'properties' | 'behaviours' | 'users'
 
 interface SyncIgnoreMap {
   abilities:       boolean,
@@ -83,6 +82,12 @@ interface SphereUsers {
   member: SphereUserContent,
   basic:  SphereUserContent,
 }
+interface SphereUsersOptional {
+  admin?:  SphereUserContent,
+  member?: SphereUserContent,
+  basic?:  SphereUserContent,
+}
+
 interface SphereUserContent {
   [userId: string]: {
     data: UpdatedAt,

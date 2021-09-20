@@ -27,7 +27,8 @@ import {processCreationMap} from "./SyncUtil";
  * @param markChildrenAsNew      | This callback is used to mark any nested fields as new if the parent is new.
  */
 export async function processSyncCollection<T extends UpdatedAt, U extends RequestItemCoreType>(
-  fieldname: SyncCategory, db: TimestampedCrudRepository<any, any>,
+  fieldname: DataCategory,
+  db: TimestampedCrudRepository<any, any>,
   creationAddition: object,
   clientSource: any,
   replySource: any,
@@ -81,8 +82,8 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
           eventCallback(clientItem, newItem);
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
-        catch (e) {
-          replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code: e?.statusCode ?? 0, msg: e} }}
+        catch (err : any) {
+          replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err} }}
         }
       }
       else {
