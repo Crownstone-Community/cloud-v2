@@ -77,22 +77,14 @@ interface SyncRequestSphereData {
   }
 }
 
-interface SphereUsers {
-  admin:  SphereUserContent,
-  member: SphereUserContent,
-  basic:  SphereUserContent,
-}
-interface SphereUsersOptional {
-  admin?:  SphereUserContent,
-  member?: SphereUserContent,
-  basic?:  SphereUserContent,
+interface SphereUserRequestContent {
+  [userId: string]: {
+    data: SphereUserData
+  }
 }
 
 interface SphereUserContent {
-  [userId: string]: {
-    data: UpdatedAt,
-    invitePending?: boolean,
-  }
+  [userId: string]: SphereUserData
 }
 
 interface SyncRequestStoneData {
@@ -117,6 +109,22 @@ interface RequestItemCoreType {
   new?: boolean,
   data: UpdatedAt
 }
+
+interface SphereUsers {
+  [userId: string] : SphereUserData
+}
+
+interface SphereUserData {
+  id:             string,
+  firstName:      string,
+  lastName:       string,
+  email:          string,
+  profilePicId:   string,
+  invitePending?: boolean,
+  accessLevel?:   ACCESS_ROLE
+  updatedAt:      Date,
+}
+
 interface UpdatedAt {
   updatedAt: Date
 }

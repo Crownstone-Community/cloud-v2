@@ -66,10 +66,20 @@ export interface SyncRequestResponse_Sphere {
       data: SyncResponseItemCore<Toon>
     }
   },
-  users?: SphereUsers
+  users?: {
+    [userId: string]: {
+      data: SyncResponseCustomItemCore<SphereUserData>
+    }
+  }
 }
 
 interface SyncResponseItemCore<T extends Entity> {
+  status: SyncState,
+  data?: DataObject<T>,
+  error?: SyncError
+}
+
+interface SyncResponseCustomItemCore<T extends object> {
   status: SyncState,
   data?: DataObject<T>,
   error?: SyncError
@@ -92,6 +102,12 @@ export interface SyncResponseStone {
       data: SyncResponseItemCore<StoneBehaviour>
     }
   },
+}
+
+export interface SyncResponseSphereUser {
+  admin:  SyncResponseItemCore<User>,
+  member: SyncResponseItemCore<User>,
+  basic:  SyncResponseItemCore<User>,
 }
 
 

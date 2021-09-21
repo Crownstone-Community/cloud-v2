@@ -1,9 +1,11 @@
-import {Entity, model, property, belongsTo,} from '@loopback/repository';
+import {model, property, belongsTo,} from '@loopback/repository';
 import {Sphere} from "./sphere.model";
 import { User } from './user.model';
+import {AddTimestamps} from "./bases/timestamp-mixin";
+import {BaseEntity} from "./bases/base-entity";
 
 @model()
-export class SphereAccess extends Entity {
+export class SphereAccess extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

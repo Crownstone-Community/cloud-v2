@@ -110,3 +110,26 @@ This is a small bit of data and saves a few DB calls. We could update this every
 
 #### Keep a 2 second cache of sync data to be able to quickly handle reply phases (actually check the times in the db again on an update)
 
+## Nested Data
+
+Many of the syncing datamodels have a seemingly duplicate data field in the tree:
+```json
+{
+  "dbId:UserRepository:2": {
+    "data": {
+      "status": "NEW_DATA_AVAILABLE",
+      "data": {
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "id": "dbId:UserRepository:2",
+        "email": "member@test.com",
+        "invitePending": false,
+        "accessLevel": "member"
+      }
+    }
+  }
+}
+```
+
+This is because some models have child models. The stone has behaviour, abilities etc. 
+
+The data field is a reserved keyword here to differentiate the data of the root model from the child models.

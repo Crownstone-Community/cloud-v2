@@ -6,6 +6,7 @@ let DATABASE_LIST = {};
 let GLOBAL_TIME = 0;
 export function resetMockRandom() {
   RANDOM_COUNT = 2000;
+  GLOBAL_TIME = 0;
 }
 export function resetMockDatabaseIds() {
   DATABASE_LIST = {};

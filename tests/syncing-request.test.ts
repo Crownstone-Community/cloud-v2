@@ -161,7 +161,6 @@ test("Sync REQUEST with request body", async () => {
   await client.post(auth("/user/sync")).send(request)
     .expect(({body}) => {
       expect(body).toMatchSnapshot();
-      console.log(JSON.stringify(body,null,2))
       expect(body.spheres[sphere.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("IN_SYNC")
       expect(body.spheres[sphere.id].locations[location.id].data.status).toBe("IN_SYNC")

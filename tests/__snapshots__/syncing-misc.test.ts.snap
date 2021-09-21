@@ -417,31 +417,40 @@ Object {
         },
       },
       "users": Object {
-        "admin": Object {
-          "dbId:UserRepository:1": Object {
+        "dbId:UserRepository:1": Object {
+          "data": Object {
             "data": Object {
+              "accessLevel": "admin",
               "email": "test@test.com",
               "id": "dbId:UserRepository:1",
+              "invitePending": false,
+              "updatedAt": "1970-01-01T00:00:00.000Z",
             },
-            "invitePending": false,
+            "status": "VIEW",
           },
         },
-        "basic": Object {
-          "dbId:UserRepository:3": Object {
+        "dbId:UserRepository:2": Object {
+          "data": Object {
             "data": Object {
-              "email": "guest@test.com",
-              "id": "dbId:UserRepository:3",
-            },
-            "invitePending": false,
-          },
-        },
-        "member": Object {
-          "dbId:UserRepository:2": Object {
-            "data": Object {
+              "accessLevel": "member",
               "email": "member@test.com",
               "id": "dbId:UserRepository:2",
+              "invitePending": false,
+              "updatedAt": "1970-01-01T00:00:00.000Z",
             },
-            "invitePending": false,
+            "status": "VIEW",
+          },
+        },
+        "dbId:UserRepository:3": Object {
+          "data": Object {
+            "data": Object {
+              "accessLevel": "guest",
+              "email": "guest@test.com",
+              "id": "dbId:UserRepository:3",
+              "invitePending": false,
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
           },
         },
       },

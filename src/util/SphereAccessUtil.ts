@@ -2,34 +2,25 @@ import {Dbs} from "../modules/containers/RepoContainer";
 
 
 export const SphereAccessUtil = {
-  getSphereUsers: async function(sphereIds: string[]) : Promise<{ [sphereId: string]: SphereUsers }> {
-    let result : {[sphereId: string]: SphereUsers} = {};
+  getSphereUsers: async function(sphereIds: string[]) : Promise<{ [sphereId: string]: SphereUserContent }> {
+    let result : {[sphereId: string]: SphereUserContent} = {};
     for (let sphereId of sphereIds) {
       result[sphereId] = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
     }
     return result;
   },
 
-
-  getSphereUsersForSphere: async function(sphereId: string) : Promise<SphereUsers> {
-    let result = {
-      admin:  await SphereAccessUtil.getSphereUsersForSpherePerRole(sphereId, 'admin'),
-      member: await SphereAccessUtil.getSphereUsersForSpherePerRole(sphereId, 'member'),
-      basic:  await SphereAccessUtil.getSphereUsersForSpherePerRole(sphereId, 'guest'),
-    }
-    return result;
-  },
-
-
-  getSphereUsersForSpherePerRole: async function(sphereId: string, role: ACCESS_ROLE) : Promise<SphereUserContent> {
-    let entries = await Dbs.sphereAccess.find({where:{and:[{sphereId}, {role}]}});
+  getSphereUsersForSphere: async function(sphereId: string) : Promise<SphereUserContent> {
+    let entries = await Dbs.sphereAccess.find({where:{sphereId}}, {fields:{invitePending: true, sphereId: true, userId: true, role: true, updatedAt: true}});
     let userIds = [];
     for (let entry of entries) {
-      userIds.push(entry.userId);
+      if (entry.role !== "hub") {
+        userIds.push(entry.userId);
+      }
     }
     let users = await Dbs.user.find({
       where:  {id: {inq: userIds}},
-      fields: {id:true, firstName: true, lastName: true, email: true, profilePicId: true}
+      fields: {id:true, firstName: true, lastName: true, email: true, profilePicId: true, updatedAt: true}
     });
 
     let result : SphereUserContent = {};
@@ -44,7 +35,14 @@ export const SphereAccessUtil = {
     for (let entry of entries) {
       let userData = getUser(entry.userId);
       if (userData) {
-        result[entry.userId] = {data: userData, invitePending: entry.invitePending};
+        result[entry.userId] = {
+          ...userData,
+          invitePending: entry.invitePending,
+          accessLevel: entry.role as ACCESS_ROLE,
+          // pick the most recent update-at time between the sphere access model and the user model so that the sync
+          // can account for permission changes, user model changes, invitation changes etc.
+          updatedAt: new Date(Math.max(new Date(userData.updatedAt).valueOf(), new Date(entry.updatedAt).valueOf()))
+        };
       }
     }
 

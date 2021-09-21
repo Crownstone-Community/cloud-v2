@@ -6,18 +6,18 @@ import {mockSSEmanager} from "./mocks/SSE";
 mockSSEmanager();
 import {SSEManager} from "../src/modules/sse/SSEManager";
 
-import {makeUtilDeterministic, resetMockDatabaseIds, resetMockRandom} from "./mocks/CloudUtil.mock";
+import {makeUtilDeterministic, resetMockDatabaseIds, resetMockRandom, setDate} from "./mocks/CloudUtil.mock";
 makeUtilDeterministic();
 
 import {CrownstoneCloud} from "../src/application";
 import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
-import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
+import {auth, getToken} from "./rest-helpers/rest.helpers";
 import {getEncryptionKeys} from "../src/modules/sync/helpers/KeyUtil";
 import {CloudUtil} from "../src/util/CloudUtil";
 import { mocked } from 'ts-jest/utils'
-import {SyncHandler} from "../src/modules/sync/SyncHandler";
+import {Dbs} from "../src/modules/containers/RepoContainer";
 
 let app    : CrownstoneCloud;
 let client : Client;
@@ -41,7 +41,7 @@ async function populate() {
   member   = await createUser('member@test.com', 'test', 0);
   guest    = await createUser('guest@test.com', 'test', 0);
   sphere   = await createSphere(admin.id, 'mySphere', 0);
-  await dbs.sphereAccess.create({sphereId: sphere.id, userId: member.id, role:'member', sphereAuthorizationToken: CloudUtil.createToken()});
+  await dbs.sphereAccess.create({sphereId: sphere.id, userId: member.id, role:'member', sphereAuthorizationToken: CloudUtil.createToken(), invitePending: false});
   await dbs.sphereAccess.create({sphereId: sphere.id, userId: guest.id, role:'guest', sphereAuthorizationToken: CloudUtil.createToken()});
   hub      = await createHub(sphere.id, 'myHub', 0);
   ({stone, behaviour, ability, abilityProperty} = await createStone(sphere.id, 'stone1', 0));
@@ -109,15 +109,84 @@ test("Sync FULL with scope", async () => {
     })
 })
 
-test("Download users from sphere", async () => {
+test("Request sync users from sphere", async () => {
   await populate();
-  let result = await SyncHandler.handleSync(admin.id, {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {users:{member:{}, basic: {}, admin:{
-    [admin.id]: {data: { updatedAt: admin.updatedAt},invitePending: false},
-    ['hello']:  {data: { updatedAt: admin.updatedAt},invitePending: false},
-  }}}}})
+  let payload = {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {
+    users:{
+      [admin.id]:  {data: { updatedAt: admin.updatedAt}},
+      [member.id]: {data: { updatedAt: member.updatedAt}},
+      ['hello']:   {data: { updatedAt: admin.updatedAt}},
+    }
+  }}};
 
-  expect(result.spheres[sphere.id].users.admin).toBeDefined()
-  expect(result.spheres[sphere.id].users.admin[admin.id].data.status).toBe("IN_SYNC")
-  expect(result.spheres[sphere.id].users.admin['hello'].data.status).toBe("NOT_AVAILABLE")
-  expect(result.spheres[sphere.id].users.member[member.id].data.status).toBe("NEW_DATA_AVAILABLE")
+  await client.post(auth("/user/sync"))
+    .send(payload)
+    .expect(({body: result}) => {
+      let userInResponse = result.spheres[sphere.id].users;
+      expect(userInResponse).toBeDefined()
+      expect(userInResponse[admin.id].data.status).toBe("IN_SYNC")
+      expect(userInResponse[member.id].data.status).toBe("IN_SYNC")
+      expect(userInResponse['hello'].data.status).toBe("NOT_AVAILABLE")
+      expect(userInResponse[guest.id].data.status).toBe("NEW_DATA_AVAILABLE")
+      expect(userInResponse[guest.id].data.data.invitePending).toBeFalsy();
+      expect(userInResponse[guest.id].data.data.accessLevel).toBe('guest');
+    })
+
+  // move forward in time and change the member user
+  setDate(1e7)
+  member.firstName = "bob";
+  await Dbs.user.update(member);
+
+  await client.post(auth("/user/sync"))
+    .send(payload)
+    .expect(({body: result}) => {
+      let userInResponse = result.spheres[sphere.id].users;
+      expect(userInResponse[member.id].data.status).toBe("NEW_DATA_AVAILABLE")
+    })
+
+  let payload2 = {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {
+    users:{
+      [member.id]: {data: { updatedAt: new Date(1e7) }},
+    }
+  }}};
+
+  await client.post(auth("/user/sync"))
+    .send(payload2)
+    .expect(({body: result}) => {
+      let userInResponse = result.spheres[sphere.id].users;
+      expect(userInResponse[member.id].data.status).toBe("IN_SYNC");
+    })
+
+  // move forward in time and change the member user's role in the sphere to admin
+  setDate(2e7)
+  let accessData = await Dbs.sphereAccess.find({where: {userId: member.id}});
+  accessData[0].role = "admin"
+  await Dbs.sphereAccess.update(accessData[0])
+
+  await client.post(auth("/user/sync"))
+    .send(payload2)
+    .expect(({body: result}) => {
+      let userInResponse = result.spheres[sphere.id].users;
+      expect(userInResponse[member.id].data.status).toBe("NEW_DATA_AVAILABLE");
+    })
+
+
+  let payload3 = {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {
+    users:{
+      [member.id]: {data: { updatedAt: new Date(2e7) }},
+    }
+  }}};
+
+  // move forward in time and change the member user's invitation status
+  setDate(3e7)
+  accessData = await Dbs.sphereAccess.find({where: {userId: member.id}});
+  accessData[0].invitePending = true;
+  await Dbs.sphereAccess.update(accessData[0])
+
+  await client.post(auth("/user/sync"))
+    .send(payload3)
+    .expect(({body: result}) => {
+      let userInResponse = result.spheres[sphere.id].users;
+      expect(userInResponse[member.id].data.status).toBe("NEW_DATA_AVAILABLE");
+    })
 })

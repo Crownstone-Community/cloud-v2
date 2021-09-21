@@ -123,7 +123,11 @@ class Syncer {
     injectSphereSimpleItem(sphereData, 'toons',           sphereItem);
 
     if (!ignore.sphereUsers) {
-      sphereItem.users = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
+      let sphereUsers = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
+      sphereItem.users = {}
+      for (let userId in sphereUsers) {
+        sphereItem.users[userId] = {data: { status: status, data: sphereUsers[userId]}}
+      }
     }
 
     if (sphereData.stones !== undefined) {
