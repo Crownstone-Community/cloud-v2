@@ -83,10 +83,6 @@ interface SphereUserRequestContent {
   }
 }
 
-interface SphereUserContent {
-  [userId: string]: SphereUserData
-}
-
 interface SyncRequestStoneData {
   new?: boolean,
   data: UpdatedAt,
@@ -119,6 +115,7 @@ interface SphereUserData {
   firstName:      string,
   lastName:       string,
   email:          string,
+  language:       string,
   profilePicId:   string,
   invitePending?: boolean,
   accessLevel?:   ACCESS_ROLE
