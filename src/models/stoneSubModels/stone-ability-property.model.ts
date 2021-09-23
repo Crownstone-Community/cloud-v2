@@ -1,4 +1,4 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
 import {StoneAbility} from "./stone-ability.model";
 import {AddTimestamps} from "../bases/timestamp-mixin";
 import {BaseEntity} from "../bases/base-entity";
@@ -16,6 +16,9 @@ export class StoneAbilityProperty extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', required: true})
   value: string;
+
+  @property({type: 'boolean', default: true})
+  syncedToCrownstone: boolean;
 
   @belongsTo(() => StoneAbility)
   abilityId: string;

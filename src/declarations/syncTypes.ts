@@ -104,11 +104,6 @@ export interface SyncResponseStone {
   },
 }
 
-export interface SyncResponseSphereUser {
-  admin:  SyncResponseItemCore<User>,
-  member: SyncResponseItemCore<User>,
-  basic:  SyncResponseItemCore<User>,
-}
 
 
 export type UserKeySet = UserKeys[]
