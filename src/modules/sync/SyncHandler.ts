@@ -1,6 +1,6 @@
 import {Dbs} from "../containers/RepoContainer";
 import {HttpErrors} from "@loopback/rest";
-import {SyncRequestResponse, SyncRequestResponse_Sphere} from "../../declarations/syncTypes";
+import {SyncRequestResponse, SyncRequestResponse_Sphere, SyncResponseStone} from "../../declarations/syncTypes";
 import {Sphere} from "../../models/sphere.model";
 import {getShallowReply} from "./helpers/ReplyHelpers";
 import {
@@ -69,7 +69,6 @@ class Syncer {
             {relation: 'behaviours'},
             {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
             {relation: 'currentSwitchState'},
-            {relation: 'location',  scope: {fields: {id:true, name: true} }}
           ]}
       });
     }
@@ -121,7 +120,6 @@ class Syncer {
     injectSphereSimpleItem(sphereData, 'scenes',          sphereItem);
     injectSphereSimpleItem(sphereData, 'trackingNumbers', sphereItem);
     injectSphereSimpleItem(sphereData, 'toons',           sphereItem);
-
     if (!ignore.sphereUsers) {
       let sphereUsers = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
       sphereItem.users = {}
@@ -141,7 +139,7 @@ class Syncer {
         sphereItem.stones[stone.id] = {
           data: {status: status, data: stoneData},
         };
-        let stoneReply = sphereItem.stones[stone.id];
+        let stoneReply : SyncResponseStone = sphereItem.stones[stone.id];
 
         if (stone.behaviours) {
           stoneReply.behaviours = {};
@@ -165,7 +163,7 @@ class Syncer {
               for (let k = 0; k < ability.properties.length; k++) {
                 let property = ability.properties[k];
                 // @ts-ignore
-                stoneReply.abilities[ability.id].properties[property.id] = { status: status, data: property };
+                stoneReply.abilities[ability.id].properties[property.id] = { data: { status: status, data: property }};
               }
             }
           }

@@ -75,7 +75,7 @@ There are 2 edge cases:
 - The user has an extra id: an entity has been created and not synced to the cloud yet.
   - SOLUTION: It will be marked with new: true. The user knows that this is new since the user does not have a cloudId 
 - The cloud has an id less: another user has deleted an entity from the cloud and this user doesnt know it yet.
-  - SOLUTION: The cloud marks this id as DELETED
+  - SOLUTION: The cloud marks this id as NOT_AVAILABLE
 
 
 ## Future optimizations

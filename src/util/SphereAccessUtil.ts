@@ -26,12 +26,13 @@ export const SphereAccessUtil = {
     let result : SphereUsers = {};
     function getUser(userId: string) {
       for (let user of users) {
-        if (user.id === userId) {
+        if (user.id == userId) {
           return user;
         }
       }
       return null;
     }
+
     for (let entry of entries) {
       let userData = getUser(entry.userId);
       if (userData) {
@@ -41,11 +42,10 @@ export const SphereAccessUtil = {
           accessLevel: entry.role as ACCESS_ROLE,
           // pick the most recent update-at time between the sphere access model and the user model so that the sync
           // can account for permission changes, user model changes, invitation changes etc.
-          updatedAt: new Date(Math.max(new Date(userData.updatedAt).valueOf(), new Date(entry.updatedAt).valueOf()))
+          updatedAt: new Date(Math.max(new Date(userData.updatedAt ?? 0).valueOf(), new Date(entry.updatedAt ?? 0).valueOf()))
         };
       }
     }
-
     return result;
   },
 }
