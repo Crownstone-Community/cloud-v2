@@ -276,10 +276,6 @@ Object {
               "address": "RAN2016",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "id": "dbId:StoneRepository:1",
-              "location": Object {
-                "id": "dbId:LocationRepository:1",
-                "name": "location",
-              },
               "locationId": "dbId:LocationRepository:1",
               "major": 2017,
               "minor": 2018,

@@ -149,6 +149,9 @@ interface SyncError {
 
 interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
 
+interface idMap {[ids: string]:string}
+interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
+
 type sphereId          = string;
 type locationId        = string;
 type stoneId           = string;

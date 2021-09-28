@@ -516,11 +516,11 @@ class Syncer {
     }
 
     // Full is used on login and is essentially a partial dump for your user
-    if (dataStructure.sync.type === "FULL") {
+    if (dataStructure?.sync?.type === "FULL") {
       return this.downloadAll(userId, dataStructure);
     }
     // Request is the first part of a real sync operation.
-    else if (dataStructure.sync.type === "REQUEST") {
+    else if (dataStructure?.sync?.type === "REQUEST") {
       // the user has sent a list of ids and updated at times. This should be the full set of what the user has
       // the cloud will query all ids that the user has access to including their updated at times.
       // there are 2 edge cases:
@@ -532,18 +532,16 @@ class Syncer {
       // To allow for this optimization, we should keep a deleted event.
       return this.handleRequestSync(userId, dataStructure);
     }
-    else if (dataStructure.sync.type === "REPLY") {
+    else if (dataStructure?.sync?.type === "REPLY") {
       // this phase will provide the cloud with ids and data. The cloud has requested this, we update the models with the new data.
       // this returns a simple 200 {status: "OK"} or something
 
       return this.handleReplySync(userId, dataStructure);
     }
     else {
-      throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST REPLY or FULL")
+      throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST, REPLY or FULL")
     }
   }
-
-
 }
 
 

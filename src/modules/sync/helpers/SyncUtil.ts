@@ -155,12 +155,11 @@ export function getHighestVersionPerHardwareVersion<T extends { version: string 
 }
 
 export function processCreationMap(creationMap: creationMap, data: any) {
-  let dataItems = Object.keys(data);
-  for (let i = 0; i < dataItems.length; i++) {
-    let value = data[dataItems[i]];
+  for (let dataId in data) {
+    let value = data[dataId];
     if (creationMap[value] !== undefined) {
-      if (value.indexOf("Id") !== undefined) {
-        data[dataItems[i]] = creationMap[value];
+      if (dataId.indexOf("Id") !== -1) {
+        data[dataId] = String(creationMap[value]);
       }
     }
   }
