@@ -1,30 +1,28 @@
-type SyncCategory = 'bootloader'      |
+type SyncCategory = 'bootloaders'     |
                     'features'        |
-                    'firmware'        |
+                    'firmwares'       |
                     'hubs'            |
                     'keys'            |
                     'locations'       |
                     'messages'        |
+                    'scenes'          |
                     'spheres'         |
                     'sphereUsers'     |
-                    'scenes'          |
                     'stones'          |
                     'trackingNumbers' |
-                    'toons'
+                    'toons'           |
+                    'user'
 
 type DataCategory = SyncCategory | 'abilities' | 'properties' | 'behaviours' | 'users'
 
 interface SyncIgnoreMap {
-  abilities:       boolean,
-  behaviours:      boolean,
-  bootloader:      boolean,
+  bootloaders:     boolean,
   features:        boolean,
-  firmware:        boolean,
+  firmwares:       boolean,
   hubs:            boolean,
   keys:            boolean,
   locations:       boolean,
   messages:        boolean,
-  properties:      boolean,
   scenes:          boolean,
   spheres:         boolean,
   sphereUsers:     boolean,

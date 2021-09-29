@@ -84,16 +84,13 @@ export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
 
 function getSyncCategories(value: boolean) : SyncIgnoreMap {
   return {
-    abilities:       value,
-    behaviours:      value,
-    bootloader:      value,
+    bootloaders:     value,
     features:        value,
-    firmware:        value,
+    firmwares:       value,
     hubs:            value,
     keys:            value,
     locations:       value,
     messages:        value,
-    properties:      value,
     scenes:          value,
     spheres:         value,
     sphereUsers:     value,

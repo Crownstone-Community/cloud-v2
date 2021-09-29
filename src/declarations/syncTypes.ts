@@ -15,14 +15,19 @@ import {Stone} from "../models/stone.model";
 import {Entity} from "@loopback/repository";
 import {SphereKeys} from "../models/sphere-key.model";
 
+
+interface FirmwareBootloaderList {
+  [hardwareVersion: string] : string
+}
+
 export interface SyncRequestResponse {
   user?: SyncResponseItemCore<User>,
   spheres: {
     [sphereId: string]: SyncRequestResponse_Sphere
   },
-  firmwares?:   { status: SyncState, [hardwareVersion: string] : any },
-  bootloaders?: { status: SyncState, [hardwareVersion: string] : any },
-  keys?:        { },
+  firmwares?:   { status: SyncState, data: FirmwareBootloaderList },
+  bootloaders?: { status: SyncState, data: FirmwareBootloaderList },
+  keys?:        { status: SyncState, data: UserKeySet },
 }
 
 export interface SyncRequestResponse_Sphere {

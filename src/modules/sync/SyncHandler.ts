@@ -228,12 +228,11 @@ class Syncer {
     };
 
     let user : User;
-    if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
+    if (!ignore.user) {
       user = await Dbs.user.findById(userId);
       reply.user = { status: "VIEW", data: user };
     }
     let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
-
 
 
     for (let i = 0; i < access.length; i++) {
@@ -241,9 +240,24 @@ class Syncer {
       reply.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore);
     }
 
-    if (!ignore.firmware)   { reply.firmwares   = {status: "VIEW", ...await this.getFirmwares(  userId, request, user)}; }
-    if (!ignore.bootloader) { reply.bootloaders = {status: "VIEW", ...await this.getBootloaders(userId, request, user)}; }
-    if (!ignore.keys)       { reply.keys = await getEncryptionKeys(userId, null, null, access); }
+    if (!ignore.firmwares) {
+      reply.firmwares = {
+        status: "VIEW",
+        data: {...await this.getFirmwares(  userId, request, user)}
+      };
+    }
+    if (!ignore.bootloaders) {
+      reply.bootloaders = {
+        status: "VIEW",
+        data: {...await this.getBootloaders(userId, request, user)}
+      };
+    }
+    if (!ignore.keys) {
+      reply.keys = {
+        status: "VIEW",
+        data: await getEncryptionKeys(userId, null, null, access)
+      };
+    }
 
     return reply;
   }
@@ -327,7 +341,7 @@ class Syncer {
     let reply : SyncRequestResponse = {spheres:{}};
 
     let user : User;
-    if (!ignore.user && !ignore.firmware && !ignore.bootloader) {
+    if (!ignore.user) {
       user       = await Dbs.user.findById(userId, {fields: filterFields});
       reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
     }
@@ -419,9 +433,24 @@ class Syncer {
       }
     }
 
-    if (!ignore.firmware)   { reply.firmwares   = {status: "VIEW", ...await this.getFirmwares(  userId, request, user)}; }
-    if (!ignore.bootloader) { reply.bootloaders = {status: "VIEW", ...await this.getBootloaders(userId, request, user)}; }
-    if (!ignore.keys)       { reply.keys = await getEncryptionKeys(userId, null, null, access); }
+    if (!ignore.firmwares) {
+      reply.firmwares = {
+        status: "VIEW",
+        data: {...await this.getFirmwares(  userId, request, user)}
+      };
+    }
+    if (!ignore.bootloaders) {
+      reply.bootloaders = {
+        status: "VIEW",
+        data: {...await this.getBootloaders(userId, request, user)}
+      };
+    }
+    if (!ignore.keys) {
+      reply.keys = {
+        status: "VIEW",
+        data: await getEncryptionKeys(userId, null, null, access)
+      };
+    }
 
     return reply;
   }
