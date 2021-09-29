@@ -4,8 +4,12 @@ import {BaseEntity} from "../bases/base-entity";
 import {Sphere} from "../sphere.model";
 import {Stone} from "../stone.model";
 
-@model()
-export class StoneKey extends AddTimestamps(BaseEntity) {
+
+// this setting will ensure that queries will not automatically convert a stringID to an ObjectId for the sphereId and stoneID field.
+// These keys are explicitly not linked to the sphere by a inclusion relation to avoid mistakes in relation security
+// to get access to a key from a sphere.
+@model({settings: {strictObjectIDCoercion: true}})
+export class StoneKeys extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

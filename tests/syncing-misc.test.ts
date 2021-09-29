@@ -75,13 +75,10 @@ test("get encryption keys", async () => {
 
   expect(adminKeys).toHaveLength(1);
   expect(adminKeys[0].sphereKeys).toHaveLength(7);
-  expect(Object.keys(adminKeys[0].stoneKeys)).toHaveLength(3);
   expect(memberKeys).toHaveLength(1);
   expect(memberKeys[0].sphereKeys).toHaveLength(4);
-  expect(Object.keys(memberKeys[0].stoneKeys)).toHaveLength(0);
   expect(guestKeys).toHaveLength(1);
   expect(guestKeys[0].sphereKeys).toHaveLength(3);
-  expect(Object.keys(guestKeys[0].stoneKeys)).toHaveLength(0);
 })
 
 
@@ -94,6 +91,7 @@ test("Sync FULL", async () => {
       expect(body).toMatchSnapshot();
     })
 });
+
 
 test("Sync FULL with scope", async () => {
   await populate();
@@ -108,6 +106,7 @@ test("Sync FULL with scope", async () => {
       expect(Object.keys(sphere)).toEqual(['data', 'hubs'])
     })
 })
+
 
 test("Request sync users from sphere", async () => {
   await populate();

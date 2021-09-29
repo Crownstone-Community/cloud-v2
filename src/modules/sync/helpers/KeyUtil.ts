@@ -37,11 +37,9 @@ export async function getEncryptionKeys(userId: string, sphereId?: string, stone
   }
 
   let sphereKeys = await Dbs.sphereKeys.find({where: {sphereId: { inq:sphereIds }}} );
-  let stoneKeys  = await Dbs.stoneKeys.find( {where: {sphereId: { inq:sphereIds }}} );
 
   let access_map     = getNestedIdArray(userAccess, 'sphereId');
   let sphereKeys_map = getNestedIdArray(sphereKeys, 'sphereId');
-  let stoneKeys_map  = getNestedIdArray(stoneKeys,  'sphereId');
 
   for (let i = 0; i < sphereIds.length; i++) {
     let sphereId = sphereIds[i];
@@ -50,14 +48,11 @@ export async function getEncryptionKeys(userId: string, sphereId?: string, stone
       sphereId: sphereId,
       sphereAuthorizationToken: sphereAccess.sphereAuthorizationToken,
       sphereKeys: [],
-      stoneKeys:  {},
     };
     switch (sphereAccess.role) {
       case "admin":
-        // gets netkey, appkey, servicedatakey, adminkey, memberkey, basickey and all stone keys.
+        // gets netkey, appkey, servicedatakey, adminkey, memberkey, basickey
         sphereResult.sphereKeys = sphereKeys_map[sphereId];
-        let stoneKeys_map_inSphere = getNestedIdArray(stoneKeys_map[sphereId], 'stoneId');
-        sphereResult.stoneKeys = stoneKeys_map_inSphere;
         break;
       case "member":
         for (let j = 0; j < sphereKeys_map[sphereId].length; j++) {

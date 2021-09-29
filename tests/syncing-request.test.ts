@@ -490,3 +490,16 @@ test("Sync REQUEST after something updated an existing item", async () => {
 
 
 
+test("Sync REQUEST keys", async () => {
+  await populate();
+  let request = {sync: {type: 'REQUEST',scope:['keys']}, spheres: {}}
+
+  await client.post(auth("/user/sync")).send(request)
+    .expect(({body}) => {
+      console.log(JSON.stringify(body,null,2))
+    })
+
+});
+
+
+

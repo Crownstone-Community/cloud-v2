@@ -65,6 +65,7 @@ export function getTimestamp(a : Date | number | string) : number {
   return at;
 }
 
+
 export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
   if (scope === undefined) { return getSyncCategories(false); }
 
@@ -79,6 +80,7 @@ export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
   }
   return categories;
 }
+
 
 function getSyncCategories(value: boolean) : SyncIgnoreMap {
   return {
@@ -102,6 +104,7 @@ function getSyncCategories(value: boolean) : SyncIgnoreMap {
   };
 }
 
+
 export function filterForAppVersion<T extends {minimumAppVersion: string}>(data: T[], appVersion : string | null) : T[] {
   if (appVersion) {
     let filteredResults = [];
@@ -115,6 +118,7 @@ export function filterForAppVersion<T extends {minimumAppVersion: string}>(data:
   }
   return data;
 }
+
 
 export function sortByHardwareVersion<T>(hardwareVersions: string[], data: T[]) : {[hwVersion:string]: T[]} {
   let result : {[hwVersion:string]: T[] } = {};
@@ -133,8 +137,8 @@ export function sortByHardwareVersion<T>(hardwareVersions: string[], data: T[]) 
 }
 
 
-export function getHighestVersionPerHardwareVersion<T extends { version: string }>(hardwareVersions: string[], data: {[hwVersion:string]: T[]}) : {[hwVersion:string]: string} {
-  let result : { [hardwareVersion: string]: string } = {};
+export function getHighestVersionPerHardwareVersion<T extends { version: string }>(hardwareVersions: string[], data: {[hwVersion:string]: T[]}) : {[hwVersion:string]: string | null} {
+  let result : { [hardwareVersion: string]: string | null } = {};
   for (let i = 0; i < hardwareVersions.length; i++) {
     let hwVersion = hardwareVersions[i];
     let latestVersion = '0.0.0';
@@ -153,6 +157,7 @@ export function getHighestVersionPerHardwareVersion<T extends { version: string 
   }
   return result;
 }
+
 
 export function processCreationMap(creationMap: creationMap, data: any) {
   for (let dataId in data) {

@@ -13,8 +13,7 @@ import {Location} from "../models/location.model";
 import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
 import {Entity} from "@loopback/repository";
-import {SphereKey} from "../models/sphere-key.model";
-import {StoneKey} from "../models/stoneSubModels/stone-key.model";
+import {SphereKeys} from "../models/sphere-key.model";
 
 export interface SyncRequestResponse {
   user?: SyncResponseItemCore<User>,
@@ -110,6 +109,5 @@ export type UserKeySet = UserKeys[]
 export interface UserKeys {
   sphereId: string,
   sphereAuthorizationToken: string,
-  sphereKeys: SphereKey[]
-  stoneKeys: {[stoneId: string] : StoneKey[]}
+  sphereKeys: SphereKeys[]
 }

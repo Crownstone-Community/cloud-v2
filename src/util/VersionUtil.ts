@@ -68,7 +68,7 @@ export const VersionUtil = {
     return highest;
   },
 
-  isHigher: function(version: string, compareWithVersion: string) {
+  isHigher: function(version: string | null, compareWithVersion: string | null) {
     if (!compareWithVersion) {
       return true;
     }
@@ -134,7 +134,7 @@ export const VersionUtil = {
   },
 };
 
-function getRC(version: string)  {
+function getRC(version: string) : [string, string | null]  {
   let lowerCaseVersion = version.toLowerCase()
   let lowerCaseRC_split = lowerCaseVersion.split("-rc");
   let RC = null
@@ -146,7 +146,7 @@ function getRC(version: string)  {
 }
 
 
-let checkSemVer = (str : string) => {
+let checkSemVer = (str : string | null) => {
   if (!str) { return false; }
 
   // a git commit hash is longer than 12, we pick 12 so 123.122.1234 is the max semver length.
