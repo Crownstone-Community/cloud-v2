@@ -75,12 +75,12 @@ afterAll(async () => { await app.stop(); })
 
 test("Sync REQUEST with no body", async () => {
   await populate();
-  await client.post(auth("/user/sync")).expect(400).expect(({body}) => { expect(body.error.code).toBe("MISSING_REQUIRED_PARAMETER")})
+  await client.post(auth("/sync")).expect(400).expect(({body}) => { expect(body.error.code).toBe("MISSING_REQUIRED_PARAMETER")})
 })
 
 test("Sync REQUEST with no data", async () => {
   await populate();
-  await client.post(auth("/user/sync")).send({sync: {type:"REQUEST"}})
+  await client.post(auth("/sync")).send({sync: {type:"REQUEST"}})
     .expect(({body}) => {
       expect(body).toMatchSnapshot();})
 })
@@ -88,7 +88,7 @@ test("Sync REQUEST with no data", async () => {
 test("Sync REQUEST with sphere and hub scope and no data", async () => {
   await populate();
   let sphereId = sphere.id;
-  await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['spheres','hubs']}})
+  await client.post(auth("/sync")).send({sync: {type: "REQUEST", scope: ['spheres','hubs']}})
     .expect(({body}) => {
       let sphere = body.spheres[sphereId];
       expect(Object.keys(sphere)).toEqual(['data','hubs'])
@@ -100,7 +100,7 @@ test("Sync REQUEST with sphere and hub scope and no data", async () => {
 test("Sync REQUEST with just hub scope and no data", async () => {
   await populate();
   let sphereId = sphere.id;
-  await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}})
+  await client.post(auth("/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}})
     .expect(({body}) => {
       let sphere = body.spheres[sphereId];
       expect(Object.keys(sphere)).toEqual(['hubs'])
@@ -112,7 +112,7 @@ test("Sync REQUEST with just hub scope and no data", async () => {
 test("Sync REQUEST with just hub scope and empty data", async () => {
   await populate();
   let sphereId = sphere.id;
-  await client.post(auth("/user/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}, spheres: {[sphere.id]: {hubs:{}}}})
+  await client.post(auth("/sync")).send({sync: {type: "REQUEST", scope: ['hubs']}, spheres: {[sphere.id]: {hubs:{}}}})
     .expect(({body}) => {
       let sphere = body.spheres[sphereId];
       expect(Object.keys(sphere)).toEqual(['hubs'])
@@ -158,7 +158,7 @@ test("Sync REQUEST with request body", async () => {
       }
     }
   }
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body).toMatchSnapshot();
       expect(body.spheres[sphere.id].data.status).toBe("IN_SYNC")
@@ -196,7 +196,7 @@ test("Sync REQUEST with request body and new items created in the cloud", async 
   }
 
   let newProp = await dbs.stoneAbilityProperty.create({stoneId: stone.id, abilityId: ability.id, sphereId: sphere.id, type:"test", value:"hello"})
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id]).toMatchSnapshot();
       expect(body.spheres[sphere.id].stones[stone.id].abilities[ability.id].properties[newProp.id].data.status).toBe("NEW_DATA_AVAILABLE")
@@ -204,7 +204,7 @@ test("Sync REQUEST with request body and new items created in the cloud", async 
 
   let newAbility = await dbs.stoneAbility.create({stoneId: stone.id, sphereId: sphere.id, type:"test", enabled: true, syncedToCrownstone: true})
   let newProp2   = await dbs.stoneAbilityProperty.create({stoneId: stone.id, abilityId: newAbility.id, sphereId: sphere.id, type:"test", value:"hello"})
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id]).toMatchSnapshot();
       expect(body.spheres[sphere.id].stones[stone.id].abilities[newAbility.id].data.status).toBe("NEW_DATA_AVAILABLE")
@@ -235,7 +235,7 @@ test("Sync REQUEST with request body and new items without permission", async ()
       }
     }
   }
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones['hello'].data.status).toBe('ACCESS_DENIED');
       expect(body.spheres[sphere.id].stones['hello'].abilities).toBeUndefined();
@@ -265,7 +265,7 @@ test("Sync REQUEST with request body and new items from app, propagate new", asy
     }
   }
 
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones['hello']).toMatchSnapshot();
       expect(body.spheres[sphere.id].stones['hello'].data.status).toBe('CREATED_IN_CLOUD');
@@ -304,7 +304,7 @@ test("Sync REQUEST with request and creation", async () => {
       }
     }
   }
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].scenes["my-new-scene-id"].data.status).toBe("CREATED_IN_CLOUD")
     })
@@ -329,7 +329,7 @@ test("Sync REQUEST with request and creation outside of scope", async () => {
     }
   }
   expect(mocked(SSEManager.emit)).toHaveBeenCalledTimes(0);
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].scenes).toBeUndefined()
     })
@@ -351,7 +351,7 @@ test("Sync REQUEST with request and creation with invalid payload", async () => 
       }
     }
   }
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones['my-new-stone-id'].data.status).toBe("ERROR");
       expect(body.spheres[sphere.id].stones['my-new-stone-id'].data.error.code).toBe(422);
@@ -474,17 +474,12 @@ test("Sync REQUEST after something updated an existing item", async () => {
   await dbs.hub.update(hub, {acceptTimes: true});
 
 
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].hubs[hub.id].data.status).toBe("NEW_DATA_AVAILABLE")
       expect(body.spheres[sphere.id].hubs[hub.id].data.data.name).toBe("UpdatedHub")
     })
-
 });
-
-
-
-
 
 
 
@@ -494,9 +489,27 @@ test("Sync REQUEST keys", async () => {
   await populate();
   let request = {sync: {type: 'REQUEST',scope:['keys']}, spheres: {}}
 
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
-      console.log(JSON.stringify(body,null,2))
+      expect(body.keys).toBeDefined()
+      expect(body.keys.data.length).toBe(1)
+      expect(body.keys.data[0].sphereKeys.length).toBe(7)
+    })
+
+  token  = await getToken(client, member);
+  await client.post(auth("/sync")).send(request)
+    .expect(({body}) => {
+      expect(body.keys).toBeDefined()
+      expect(body.keys.data.length).toBe(1)
+      expect(body.keys.data[0].sphereKeys.length).toBe(4)
+    })
+
+  token  = await getToken(client, guest);
+  await client.post(auth("/sync")).send(request)
+    .expect(({body}) => {
+      expect(body.keys).toBeDefined()
+      expect(body.keys.data.length).toBe(1)
+      expect(body.keys.data[0].sphereKeys.length).toBe(3)
     })
 
 });

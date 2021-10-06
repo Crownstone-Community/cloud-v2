@@ -162,3 +162,10 @@ type toonId            = string;
 type trackingNumberId  = string;
 type hubId             = string;
 type featureId         = string;
+
+type SyncDomain = SyncDomainOptions | null;
+
+interface SyncDomainOptions {
+  spheres?: string[],
+  stones?:  string[]
+}

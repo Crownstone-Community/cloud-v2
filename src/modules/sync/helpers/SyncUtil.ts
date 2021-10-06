@@ -66,8 +66,8 @@ export function getTimestamp(a : Date | number | string) : number {
 }
 
 
-export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
-  if (scope === undefined) { return getSyncCategories(false); }
+export function getSyncIgnoreList(scope? : SyncCategory[], domain?: SyncDomain) : SyncIgnoreMap {
+  if (scope === undefined) { return getSyncCategories(false, domain); }
 
   let categories = getSyncCategories(true);
   for (let i = 0; i < scope.length; i++) {
@@ -82,23 +82,61 @@ export function getSyncIgnoreList(scope? : SyncCategory[]) : SyncIgnoreMap {
 }
 
 
-function getSyncCategories(value: boolean) : SyncIgnoreMap {
-  return {
-    bootloaders:     value,
-    features:        value,
-    firmwares:       value,
-    hubs:            value,
-    keys:            value,
-    locations:       value,
-    messages:        value,
-    scenes:          value,
-    spheres:         value,
-    sphereUsers:     value,
-    stones:          value,
-    trackingNumbers: value,
-    toons:           value,
-    user:            value,
-  };
+function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap {
+  if (!domain) {
+    return {
+      bootloaders:     value,
+      features:        value,
+      firmwares:       value,
+      hubs:            value,
+      keys:            value,
+      locations:       value,
+      messages:        value,
+      scenes:          value,
+      spheres:         value,
+      sphereUsers:     value,
+      stones:          value,
+      trackingNumbers: value,
+      toons:           value,
+      user:            value,
+    };
+  }
+  else if (domain?.spheres) {
+    return {
+      bootloaders:     false,
+      features:        value,
+      firmwares:       false,
+      hubs:            value,
+      keys:            false,
+      locations:       value,
+      messages:        value,
+      scenes:          value,
+      spheres:         value,
+      sphereUsers:     value,
+      stones:          value,
+      trackingNumbers: value,
+      toons:           value,
+      user:            false,
+    };
+  }
+  else if (domain?.stones) {
+    return {
+      bootloaders:     false,
+      features:        false,
+      firmwares:       false,
+      hubs:            false,
+      keys:            false,
+      locations:       false,
+      messages:        false,
+      scenes:          false,
+      spheres:         false,
+      sphereUsers:     false,
+      stones:          value,
+      trackingNumbers: false,
+      toons:           false,
+      user:            false,
+    };
+  }
 }
 
 

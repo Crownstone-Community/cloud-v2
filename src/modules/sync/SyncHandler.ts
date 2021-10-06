@@ -45,7 +45,7 @@ class Syncer {
    * @param sphereId
    * @param status
    */
-  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap) : Promise<SyncRequestResponse_Sphere> {
+  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap, domain : SyncDomain) : Promise<SyncRequestResponse_Sphere> {
     let includeArray = [];
 
     if (!ignore.features) {
@@ -64,7 +64,12 @@ class Syncer {
       includeArray.push({relation:'scenes'});
     }
     if (!ignore.stones) {
+      let query = {};
+      if (domain?.stones && domain.stones.length > 0) {
+        query = {where: {id: {inq: domain.stones }}};
+      }
       includeArray.push({relation:'stones', scope: {
+          ...query,
           include: [
             {relation: 'behaviours'},
             {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
@@ -220,8 +225,8 @@ class Syncer {
    * This does a full grab of all syncable data the user has access to.
    * @param userId
    */
-  async downloadAll(userId: string, request: SyncRequest) {
-    let ignore = getSyncIgnoreList(request.sync.scope);
+  async downloadAll(userId: string, request: SyncRequest, domain : SyncDomain) {
+    let ignore = getSyncIgnoreList(request.sync.scope, domain);
 
     let reply : SyncRequestResponse = {
       spheres: {},
@@ -232,12 +237,26 @@ class Syncer {
       user = await Dbs.user.findById(userId);
       reply.user = { status: "VIEW", data: user };
     }
-    let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
 
+    let access = await Dbs.sphereAccess.find({where: {userId: userId}, fields: {sphereId:true, userId: true, role:true}});
 
     for (let i = 0; i < access.length; i++) {
       let sphereId = access[i].sphereId;
-      reply.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore);
+      if (
+        !domain || !domain.spheres ||
+         domain.spheres &&
+        (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
+        reply.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore, domain);
+      }
+
+      if (domain?.stones && domain.stones.length > 0) {
+        // we only require certain stones, if these are not in the sphere, remove the sphere from the reply
+        for (let sphereId in reply.spheres) {
+          if (Object.keys(reply.spheres[sphereId]).length === 0) {
+            delete reply.spheres[sphereId];
+          }
+        }
+      }
     }
 
     if (!ignore.firmwares) {
@@ -263,8 +282,8 @@ class Syncer {
   }
 
 
-  async handleRequestSync(userId: string, request: SyncRequest) : Promise<SyncRequestResponse> {
-    let ignore = getSyncIgnoreList(request.sync.scope);
+  async handleRequestSync(userId: string, request: SyncRequest, domain : SyncDomain) : Promise<SyncRequestResponse> {
+    let ignore = getSyncIgnoreList(request.sync.scope, domain);
 
     // this has the list of all required connection ids as wel as it's own ID and the updatedAt field.
     let filterFields = {
@@ -283,8 +302,14 @@ class Syncer {
     let accessMap : {[sphereId: string]: ACCESS_ROLE} = {};
 
     for (let i = 0; i < access.length; i++) {
-      sphereIds.push(access[i].sphereId);
-      accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
+      let sphereId = access[i].sphereId;
+      if (
+        !domain ||
+        domain.spheres &&
+        (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
+        sphereIds.push(access[i].sphereId);
+        accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
+      }
     }
 
     let sphereData = await Dbs.sphere.find({where: {id: {inq: sphereIds}},fields: filterFields})
@@ -421,7 +446,7 @@ class Syncer {
       for (let i = 0; i < sphereIds.length; i++) {
         let cloudSphereId = sphereIds[i];
         if (request.spheres[cloudSphereId] === undefined) {
-          reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore);
+          reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
         }
       }
     }
@@ -429,7 +454,7 @@ class Syncer {
       // there are no spheres for the user, give the user all the spheres.
       for (let i = 0; i < sphereIds.length; i++) {
         let cloudSphereId = sphereIds[i];
-        reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore);
+        reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
       }
     }
 
@@ -461,8 +486,8 @@ class Syncer {
    * @param userId
    * @param request
    */
-  async handleReplySync(userId: string, request: SyncRequest) {
-    let ignore = getSyncIgnoreList(request.sync.scope);
+  async handleReplySync(userId: string, request: SyncRequest, domain : SyncDomain) {
+    let ignore = getSyncIgnoreList(request.sync.scope, domain);
 
     let access = await Dbs.sphereAccess.find({where: {userId: userId, invitePending: {neq: true}}});
     let sphereIds = [];
@@ -538,7 +563,7 @@ class Syncer {
    * @param userId
    * @param dataStructure
    */
-  async handleSync(userId: string, dataStructure: SyncRequest) : Promise<any | SyncRequestResponse> {
+  async handleSync(userId: string, dataStructure: SyncRequest, domain : SyncDomain = null) : Promise<any | SyncRequestResponse> {
 
     if (!dataStructure || Object.keys(dataStructure).length === 0) {
       throw new HttpErrors.BadRequest("No sync information provided.");
@@ -546,7 +571,7 @@ class Syncer {
 
     // Full is used on login and is essentially a partial dump for your user
     if (dataStructure?.sync?.type === "FULL") {
-      return this.downloadAll(userId, dataStructure);
+      return this.downloadAll(userId, dataStructure, domain);
     }
     // Request is the first part of a real sync operation.
     else if (dataStructure?.sync?.type === "REQUEST") {
@@ -559,13 +584,13 @@ class Syncer {
       //            SOLUTION: the cloud marks this id as NOT_AVAILABLE
       // If we want to only query items that are newer, we would not be able to differentiate between deleted and updated.
       // To allow for this optimization, we should keep a deleted event.
-      return this.handleRequestSync(userId, dataStructure);
+      return this.handleRequestSync(userId, dataStructure, domain);
     }
     else if (dataStructure?.sync?.type === "REPLY") {
       // this phase will provide the cloud with ids and data. The cloud has requested this, we update the models with the new data.
       // this returns a simple 200 {status: "OK"} or something
 
-      return this.handleReplySync(userId, dataStructure);
+      return this.handleReplySync(userId, dataStructure, domain);
     }
     else {
       throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST, REPLY or FULL")
