@@ -142,9 +142,14 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
 
 export function filterForAppVersion<T extends {minimumAppVersion: string}>(data: T[], appVersion : string | null) : T[] {
   if (appVersion) {
+    let appVersionArray = appVersion.split(".");
+    if (appVersionArray.length > 3) {
+      appVersion = `${appVersionArray[0]}.${appVersionArray[1]}.${appVersionArray[2]}`;
+    }
     let filteredResults = [];
     for (let i = 0; i < data.length; i++) {
       let item = data[i];
+
       if (!item.minimumAppVersion || VersionUtil.isHigherOrEqual(appVersion, item.minimumAppVersion)) {
         filteredResults.push(item);
       }

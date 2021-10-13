@@ -209,7 +209,7 @@ class Syncer {
     let appVersion = request?.sync?.appVersion ?? null;
     let hwVersions = hardwareVersions.util.getAllVersions();
     let accessLevel = user.earlyAccessLevel;
-    let results = await Dbs.firmware.find({where: {releaseLevel: {lte: accessLevel }}})
+    let results = await Dbs.firmware.find({where: {releaseLevel: {lte: accessLevel }}});
     let filteredResults : Firmware[] = filterForAppVersion(results, appVersion);
 
     // generate a map of all bootloaders per hardware version.
