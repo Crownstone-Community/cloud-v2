@@ -2,6 +2,7 @@ import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped
 import {getReply} from "./ReplyHelpers";
 import {EventHandler} from "../../sse/EventHandler";
 import {processCreationMap} from "./SyncUtil";
+import {ValidationErrorCode} from "../../../util/errors/ValidationError";
 
 
 /**
@@ -83,7 +84,14 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
         }
         catch (err : any) {
-          replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err} }}
+          if (err?.message === ValidationErrorCode && err.alternative !== null) {
+            cloudId = err.alternative.id;
+            creationMap[itemId] = cloudId;
+            replySource[fieldname][itemId] = { data: { status: "ALREADY_IN_CLOUD", data: err.alternative }}
+          }
+          else {
+            replySource[fieldname][itemId] = { data: { status: "ERROR", error: {code: err?.statusCode ?? 0, msg: err?.message ?? err} }}
+          }
         }
       }
       else {

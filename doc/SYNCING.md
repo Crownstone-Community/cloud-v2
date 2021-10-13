@@ -67,7 +67,9 @@ The status is one of these options:
     - Something went wrong with this part of the query.  (HAS ERROR)
 - "ACCESS_DENIED"
     - You tried to create a new field but you dont have access.
- 
+- "ALREADY_IN_CLOUD"
+  - This item may be new to the device performing the sync, but it was already in the cloud. (HAS DATA)
+  - This is given instead of CREATED_IN_CLOUD when a validation check has thrown an error and provided the alternative datapoint.
 
 The user has sent a list of ids and updated at times. This should be the full set of what the user has and the cloud will query all ids that the user has access to including their updated at times.
 
