@@ -14,6 +14,6 @@ export class Sync_Scenes extends Sync_Base<Scene, RequestItemCoreType> {
   }
 
   updateEventCallback(sceneId: string, cloudScene: Scene) {
-    // TODO: create hub event
+    // TODO: update scene event
   }
 }
