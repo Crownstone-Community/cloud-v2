@@ -19,6 +19,7 @@ import {EventHandler} from "../sse/EventHandler";
 import {Sync_SphereComponents} from "./syncers/Sync_Constructor";
 import {EventSphereCache} from "../sse/events/EventConstructor";
 import {SphereAccessUtil} from "../../util/SphereAccessUtil";
+import {Util} from "../../util/Util";
 
 
 const admin  = true;
@@ -305,9 +306,10 @@ class Syncer {
       let sphereId = access[i].sphereId;
       if (
         !domain ||
-        domain.spheres &&
-        (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
+        !domain.spheres ||
+        domain.spheres && (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
         sphereIds.push(access[i].sphereId);
+
         accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
       }
     }
@@ -320,7 +322,16 @@ class Syncer {
     // this list *should* be the same as the one we got from the access, but since this is a cheap check, we make sure we only query the
     // rest of the database for the spheres that we actually got back.
     sphereIds = getIds(sphereData);
-    let filter = {where: {sphereId: {inq: sphereIds }},fields: filterFields};
+    let filter : any = {where: {and: [{sphereId: {inq: sphereIds }}]}, fields: filterFields};
+    // we make a copy
+    let stoneFilter = Util.deepCopy(filter);
+
+    // Set the filter requirements for stone domain filters.
+    if (domain && domain.stones) {
+      stoneFilter.where.and.push({id: {inq: domain.stones}});
+      filter.where.and.push({stoneId: {inq: domain.stones}});
+    }
+
 
     let featureData         = ignore.features  ? [] : await Dbs.sphereFeature.find(filter);
     let locationData        = ignore.locations ? [] : await Dbs.location.find(filter);
@@ -332,7 +343,7 @@ class Syncer {
     let hubData             = ignore.hubs      ? [] : await Dbs.hub.find(filter);
     let sceneData           = ignore.scenes    ? [] : await Dbs.scene.find(filter);
 
-    let stoneData           = ignore.stones    ? [] : await Dbs.stone.find(filter);
+    let stoneData           = ignore.stones    ? [] : await Dbs.stone.find(stoneFilter);
     let behaviourData       = ignore.stones    ? [] : await Dbs.stoneBehaviour.find(filter)
     let abilityData         = ignore.stones    ? [] : await Dbs.stoneAbility.find(filter)
     let abilityPropertyData = ignore.stones    ? [] : await Dbs.stoneAbilityProperty.find(filter)
@@ -341,7 +352,6 @@ class Syncer {
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
 
     let sphereUsers         = ignore.sphereUsers     ? {} : await SphereAccessUtil.getSphereUsers(sphereIds);
-
 
     // this is cheap to do with empty arrays do we dont check for ignore here.
     let cloud_spheres         = getUniqueIdMap(sphereData);
@@ -476,6 +486,18 @@ class Syncer {
         data: await getEncryptionKeys(userId, null, null, access)
       };
     }
+
+
+    // Set the filter requirements for stone domain filters.
+    if (domain && domain.stones) {
+      for (let sphereId in reply.spheres) {
+        if (reply.spheres[sphereId].stones === undefined) {
+          delete reply.spheres[sphereId];
+        }
+      }
+    }
+
+
 
     return reply;
   }
