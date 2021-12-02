@@ -6,6 +6,7 @@ import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Location} from "./location.model";
 import {Sphere} from "./sphere.model";
+import {UicrData} from "./subModels/uicr.model";
 
 @model()
 export class Stone extends AddTimestamps(BaseEntity) {
@@ -45,6 +46,9 @@ export class Stone extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string'})
   hardwareVersion: string;
+
+  @property()
+  uicr: UicrData
 
   @property({type: 'boolean'})
   locked: boolean;
