@@ -307,7 +307,7 @@ class Syncer {
       if (
         !domain ||
         !domain.spheres ||
-        domain.spheres && (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
+        domain.spheres && (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(String(sphereId)) !== -1))) {
         sphereIds.push(access[i].sphereId);
 
         accessMap[access[i].sphereId] = access[i].role as ACCESS_ROLE;
