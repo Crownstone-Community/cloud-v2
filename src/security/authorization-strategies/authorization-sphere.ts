@@ -62,10 +62,12 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
 async function getAccessLevel(userId: string, itemId: string, modelName: string) : Promise<string | null> {
   let item : any = null;
   try {
-
     switch (modelName) {
       case "Stone":
         item = await Dbs.stone.findById(itemId, {fields: {sphereId: true}});
+        break;
+      case "Sphere":
+        item = {sphereId: itemId};
         break;
       default:
         return null;
@@ -82,7 +84,6 @@ async function getAccessLevel(userId: string, itemId: string, modelName: string)
     return null;
   }
   catch (err) {
-
     return null;
   }
 }

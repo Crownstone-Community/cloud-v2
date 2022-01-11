@@ -10,7 +10,7 @@ import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
 import {authorize} from "@loopback/authorization";
-import {SphereItem} from "./SphereItem";
+import {SphereItem} from "./support/SphereItem";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 
 

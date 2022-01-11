@@ -11,17 +11,22 @@ import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
 import {repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
+import {SphereItem} from "./support/SphereItem";
 
 
 
 /**
  * This controller will echo the state of the hub.
  */
-export class SphereController {
+export class SphereController extends SphereItem {
+  modelName = "Sphere";
+
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
     @repository(SphereRepository) protected sphereRepo: SphereRepository,
-  ) {}
+  ) {
+    super();
+  }
 
   // Perform a sync operation within a sphere
   @post('/spheres/{id}/sync')
