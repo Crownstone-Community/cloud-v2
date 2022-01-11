@@ -375,12 +375,6 @@ class Syncer {
 
     let reply : SyncRequestResponse = {spheres:{}};
 
-    let user : User;
-    if (!ignore.user) {
-      user       = await Dbs.user.findById(userId, {fields: filterFields});
-      reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
-    }
-
     let creationMap : creationMap = {};
     if (request.spheres) {
       let requestSphereIds = Object.keys(request.spheres);
@@ -468,19 +462,25 @@ class Syncer {
       }
     }
 
-    if (!ignore.firmwares) {
+    let user : User;
+    if (!ignore.user && !domain) {
+      user       = await Dbs.user.findById(userId, {fields: filterFields});
+      reply.user = await getShallowReply(request.user, user, () => { return Dbs.user.findById(userId)})
+    }
+
+    if (!ignore.firmwares && !domain) {
       reply.firmwares = {
         status: "VIEW",
         data: {...await this.getFirmwares(  userId, request, user)}
       };
     }
-    if (!ignore.bootloaders) {
+    if (!ignore.bootloaders && !domain) {
       reply.bootloaders = {
         status: "VIEW",
         data: {...await this.getBootloaders(userId, request, user)}
       };
     }
-    if (!ignore.keys) {
+    if (!ignore.keys && !domain) {
       reply.keys = {
         status: "VIEW",
         data: await getEncryptionKeys(userId, null, null, access)
@@ -496,7 +496,6 @@ class Syncer {
         }
       }
     }
-
 
 
     return reply;

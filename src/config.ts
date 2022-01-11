@@ -16,3 +16,4 @@ export const CONFIG = {
 export const SecurityTypes = {
   accessToken: 'AccessToken',
 }
+

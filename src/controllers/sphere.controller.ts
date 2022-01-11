@@ -9,6 +9,8 @@ import {UserProfileDescription} from "../security/authentication-strategies/acce
 import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
+import {repository} from "@loopback/repository";
+import {SphereRepository} from "../repositories/data/sphere.repository";
 
 
 
@@ -18,6 +20,7 @@ import {SyncRequestResponse} from "../declarations/syncTypes";
 export class SphereController {
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
+    @repository(SphereRepository) protected sphereRepo: SphereRepository,
   ) {}
 
   // Perform a sync operation within a sphere

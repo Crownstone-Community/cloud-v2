@@ -9,20 +9,28 @@ import {UserProfileDescription} from "../security/authentication-strategies/acce
 import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
+import {authorize} from "@loopback/authorization";
+import {SphereItem} from "./SphereItem";
+import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 
 
 
 /**
  * This controller will echo the state of the hub.
  */
-export class StoneController {
+export class StoneController extends SphereItem {
+  modelName = "Stone";
+
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
-  ) {}
+  ) {
+    super();
+  }
 
   // Perform a sync operation within a sphere
   @post('/stones/{id}/sync')
   @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereAccess())
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') id: string,

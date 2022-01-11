@@ -1,5 +1,5 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig, CoreTags} from '@loopback/core';
+import {ApplicationConfig} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -13,10 +13,13 @@ import {
   AuthenticationComponent,
   registerAuthenticationStrategy
 } from '@loopback/authentication';
-import {AuthorizationComponent} from '@loopback/authorization';
+import {
+  AuthorizationComponent,
+} from '@loopback/authorization';
 import {UserService} from './services';
 import {AccessTokenStrategy} from "./security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "./config";
+import {SphereAuthorizationComponent} from "./security/authorization-strategies/authorization";
 
 export interface PackageInfo {
   name: string;
@@ -61,6 +64,8 @@ export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(Rest
     // Bind authentication component related elements
     this.component(AuthenticationComponent);
     this.component(AuthorizationComponent);
+    this.component(SphereAuthorizationComponent);
+
 
     // authentication
     registerAuthenticationStrategy(this, AccessTokenStrategy);
