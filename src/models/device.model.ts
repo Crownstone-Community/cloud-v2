@@ -1,10 +1,12 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {DevicePreferences} from "./device-preferences.model";
 import {AppInstallation} from "./app-installation.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {FingerprintLinker} from "./fingerprint-linker.model";
 import {User} from "./user.model";
+import {DeviceLocationMap} from "./device-location-map.model";
+import {DeviceSphereMap} from "./device-sphere-map.model";
 
 @model()
 export class Device extends AddTimestamps(BaseEntity) {
@@ -47,5 +49,11 @@ export class Device extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => DevicePreferences, {keyTo: 'deviceId'})
   preferences: DevicePreferences[];
+
+  @hasOne(() => DeviceLocationMap, {keyTo: 'deviceId'})
+  locationMap: DeviceLocationMap[];
+
+  @hasOne(() => DeviceSphereMap, {keyTo: 'deviceId'})
+  sphereMap: DeviceSphereMap[];
 
 }

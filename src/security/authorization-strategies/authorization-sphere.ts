@@ -3,17 +3,32 @@ import {
   AuthorizationContext,
   AuthorizationDecision,
   AuthorizationMetadata,
-  authorize,
   Authorizer
 } from "@loopback/authorization";
 import {Dbs} from "../../modules/containers/RepoContainer";
 import {securityId} from "@loopback/security";
+import {AccessLevels} from "../../models/sphere-access.model";
 
 export const Authorization = {
-  sphereAccess: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['guest','basic','hub','member','admin']}},
-  sphereMember: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['hub','member','admin']}},
-  sphereAdmin:  (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['admin']}},
-  sphereHub:    (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['hub','admin']}},
+  sphereAccess: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
+    AccessLevels.admin,
+    AccessLevels.member,
+    AccessLevels.guest,
+    AccessLevels.basic,
+    AccessLevels.hub,
+  ]}},
+  sphereMember: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
+      AccessLevels.admin,
+      AccessLevels.member,
+      AccessLevels.hub,
+    ]}},
+  sphereAdmin:  (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
+      AccessLevels.admin,
+    ]}},
+  sphereHub:    (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
+      AccessLevels.admin,
+      AccessLevels.hub,
+    ]}},
 }
 
 export class MyAuthorizationProvider implements Provider<Authorizer> {

@@ -4,7 +4,12 @@ import {BaseEntity} from "../bases/base-entity";
 import {Sphere} from "../sphere.model";
 import {Stone} from "../stone.model";
 
-@model()
+@model({
+  settings: {
+    mongodb: {
+      collection: 'SwitchState',
+    }
+  }})
 export class StoneSwitchState extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})

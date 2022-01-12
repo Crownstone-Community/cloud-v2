@@ -29,6 +29,8 @@ import {BootloaderRepository}           from "../../repositories/data/bootloader
 import {OauthTokenRepository}           from "../../repositories/users/oauth-token.repository";
 import {DeviceLocationMapRepository}    from "../../repositories/data/device-location-map.repository";
 import {DeviceSphereMapRepository}      from "../../repositories/data/device-sphere-map.repository";
+import {FsChunksRepository}             from "../../repositories/files/fs.chunks.repository";
+import {FsFilesRepository}              from "../../repositories/files/fs.files.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
@@ -42,6 +44,8 @@ export interface RepositoryContainer {
   fingerprintLinker:    FingerprintLinkerRepository,
   fingerprint:          FingerprintRepository,
   firmware:             FirmwareRepository,
+  fsChunks:             FsChunksRepository,
+  fsFiles:              FsFilesRepository,
   hub:                  HubRepository,
   location:             LocationRepository,
   message:              MessageRepository,
@@ -73,6 +77,8 @@ export let Dbs : RepositoryContainer = {
   deviceSphereMap:      null,
   devicePreferences:    null,
   device:               null,
+  fsChunks:             null,
+  fsFiles:              null,
   fingerprintLinker:    null,
   fingerprint:          null,
   firmware:             null,
@@ -109,6 +115,8 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.fingerprintLinker    = await app.getRepository( FingerprintLinkerRepository );
   Dbs.fingerprint          = await app.getRepository( FingerprintRepository );
   Dbs.firmware             = await app.getRepository( FirmwareRepository );
+  Dbs.fsChunks             = await app.getRepository( FsChunksRepository );
+  Dbs.fsFiles              = await app.getRepository( FsFilesRepository );
   Dbs.hub                  = await app.getRepository( HubRepository );
   Dbs.location             = await app.getRepository( LocationRepository );
   Dbs.message              = await app.getRepository( MessageRepository );

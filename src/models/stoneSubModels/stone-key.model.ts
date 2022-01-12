@@ -9,7 +9,7 @@ import {Stone} from "../stone.model";
 // These keys are explicitly not linked to the sphere by a inclusion relation to avoid mistakes in relation security
 // to get access to a key from a sphere.
 @model({settings: {strictObjectIDCoercion: true}})
-export class StoneKeys extends AddTimestamps(BaseEntity) {
+export class StoneKey extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
   id: string;

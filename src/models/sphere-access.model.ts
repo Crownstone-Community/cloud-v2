@@ -26,3 +26,12 @@ export class SphereAccess extends AddTimestamps(BaseEntity) {
   userId: string;
 
 }
+
+
+export const AccessLevels = {
+  admin: 'admin',
+  member: 'member',
+  guest: 'guest',
+  basic: 'basic',
+  hub: 'hub',
+}

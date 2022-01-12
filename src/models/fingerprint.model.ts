@@ -26,7 +26,6 @@ export class Fingerprint extends AddTimestamps(BaseEntity) {
   @belongsTo(() => User, {name:'owner'})
   ownerId: string;
 
-
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
 }

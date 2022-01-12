@@ -18,8 +18,10 @@ const GUEST_ACCESS = {
 };
 
 export async function getEncryptionKeys(userId: string, sphereId?: string, stoneId?: string, userAccess?: SphereAccess[]) : Promise<UserKeySet> {
+  // if no access data is provided, get it here.
   if (!userAccess) {
     let queryArray : any[] = [{userId: userId}, {invitePending: {neq: true}}];
+    // if a sphereId is provided, limit the search to this sphere
     if (sphereId) {
       queryArray.push({sphereId: sphereId})
     }
@@ -29,6 +31,7 @@ export async function getEncryptionKeys(userId: string, sphereId?: string, stone
   let result : UserKeySet = [];
 
   let sphereIds = [];
+  // extract the sphereId from the access.
   for (let i = 0; i < userAccess.length; i++) {
     let sphereAccess = userAccess[i];
     if (sphereAccess && sphereAccess.role) {

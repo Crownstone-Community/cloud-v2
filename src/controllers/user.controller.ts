@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {get, post, requestBody, SchemaObject} from '@loopback/rest';
+import {get, HttpErrors, oas, post, requestBody, RestBindings, SchemaObject} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -14,6 +14,8 @@ import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
+import {DataDownloader} from "../modules/gdpr/DataDownloader";
+import {Response} from "express";
 
 
 const CredentialsSchema: SchemaObject = {
@@ -74,6 +76,25 @@ export class UserController {
   ): Promise<SyncRequestResponse> {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData)
     return result;
+  }
+
+  @get('/user/allUserData')
+  @authenticate(SecurityTypes.accessToken)
+  @oas.response.file()
+  async downloadAllData(
+    @inject(SecurityBindings.USER)      userProfile : UserProfileDescription,
+    @inject(RestBindings.Http.RESPONSE) response:     Response,
+  ) : Promise<any> {
+    try {
+      let fileBuffer = await new DataDownloader(userProfile[securityId]).download();
+      response.header('Content-Disposition', `attachment; filename=Crownstone_user_data.zip`)
+      response.header('Content-Type',        `application/zip`)
+      response.end(fileBuffer)
+    }
+    catch (err) {
+      console.error("Error downloading user data", err)
+      return new HttpErrors.InternalServerError()
+    }
   }
 
 }

@@ -12,16 +12,16 @@ export class DeviceLocationMap extends AddTimestamps(BaseEntity) {
   @property({type: 'string', id: true})
   id: string;
 
-  @belongsTo(() => Location)
+  @belongsTo(() => Location, {name:'location'})
   locationId: string;
 
-  @belongsTo(() => Sphere)
+  @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;
 
-  @belongsTo(() => Device)
+  @belongsTo(() => Device, {name:'device'})
   deviceId: string;
 
-  @belongsTo(() => User)
+  @belongsTo(() => User, {name:'owner'})
   userId: string;
 
 }

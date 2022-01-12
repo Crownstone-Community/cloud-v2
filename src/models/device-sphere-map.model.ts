@@ -11,13 +11,14 @@ export class DeviceSphereMap extends AddTimestamps(BaseEntity) {
   @property({type: 'string', id: true})
   id: string;
 
-  @belongsTo(() => Sphere)
+  @belongsTo(() => Sphere, {name: 'sphere'})
   sphereId: string;
 
-  @belongsTo(() => Device)
+  @belongsTo(() => Device, {name: 'device'})
   deviceId: string;
 
-  @belongsTo(() => User)
+  @belongsTo(() => User, {name: 'owner'})
   userId: string;
 
 }
+
