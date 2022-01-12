@@ -27,6 +27,8 @@ import {CrownstoneCloud}                from "../../application";
 import {FirmwareRepository}             from "../../repositories/data/firmware.repository";
 import {BootloaderRepository}           from "../../repositories/data/bootloader.repository";
 import {OauthTokenRepository}           from "../../repositories/users/oauth-token.repository";
+import {DeviceLocationMapRepository}    from "../../repositories/data/device-location-map.repository";
+import {DeviceSphereMapRepository}      from "../../repositories/data/device-sphere-map.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
@@ -34,6 +36,8 @@ export interface RepositoryContainer {
   oauthToken:           OauthTokenRepository,
   crownstoneToken:      CrownstoneTokenRepository,
   devicePreferences:    DevicePreferencesRepository,
+  deviceLocationMap:    DeviceLocationMapRepository,
+  deviceSphereMap:      DeviceSphereMapRepository,
   device:               DeviceRepository,
   fingerprintLinker:    FingerprintLinkerRepository,
   fingerprint:          FingerprintRepository,
@@ -65,6 +69,8 @@ export let Dbs : RepositoryContainer = {
   bootloader:           null,
   oauthToken:           null,
   crownstoneToken:      null,
+  deviceLocationMap:    null,
+  deviceSphereMap:      null,
   devicePreferences:    null,
   device:               null,
   fingerprintLinker:    null,
@@ -96,6 +102,8 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.bootloader           = await app.getRepository( BootloaderRepository );
   Dbs.oauthToken           = await app.getRepository( OauthTokenRepository );
   Dbs.crownstoneToken      = await app.getRepository( CrownstoneTokenRepository );
+  Dbs.deviceLocationMap    = await app.getRepository( DeviceLocationMapRepository );
+  Dbs.deviceSphereMap      = await app.getRepository( DeviceSphereMapRepository );
   Dbs.devicePreferences    = await app.getRepository( DevicePreferencesRepository );
   Dbs.device               = await app.getRepository( DeviceRepository );
   Dbs.fingerprintLinker    = await app.getRepository( FingerprintLinkerRepository );

@@ -30,12 +30,16 @@ import {FirmwareRepository}             from "../../src/repositories/data/firmwa
 import {OauthTokenRepository}           from "../../src/repositories/users/oauth-token.repository";
 
 import {RepositoryContainer}            from "../../src/modules/containers/RepoContainer";
+import {DeviceSphereMapRepository}      from "../../src/repositories/data/device-sphere-map.repository";
+import {DeviceLocationMapRepository}    from "../../src/repositories/data/device-location-map.repository";
 
 function initRepositories() : RepositoryContainer {
   let sphere:               SphereRepository;
   let bootloader:           BootloaderRepository;
   let oauthToken:           OauthTokenRepository;
   let appInstallation:      AppInstallationRepository;
+  let deviceLocationMap:    DeviceLocationMapRepository;
+  let deviceSphereMap:      DeviceSphereMapRepository;
   let devicePreferences:    DevicePreferencesRepository
   let device:               DeviceRepository;
   let fingerprintLinker:    FingerprintLinkerRepository;
@@ -84,6 +88,8 @@ function initRepositories() : RepositoryContainer {
   appInstallation      = new AppInstallationRepository(testdb, deviceGetter);
   devicePreferences    = new DevicePreferencesRepository(testdb, deviceGetter);
   fingerprintLinker    = new FingerprintLinkerRepository(testdb, sphereGetter, locationGetter, deviceGetter, fingerprintGetter);
+  deviceSphereMap      = new DeviceSphereMapRepository(testdb, userGetter, deviceGetter, sphereGetter);
+  deviceLocationMap    = new DeviceLocationMapRepository(testdb, userGetter, deviceGetter, sphereGetter, locationGetter);
   device               = new DeviceRepository(testdb, userGetter, appInstallation, fingerprintLinker, devicePreferences);
   fingerprint          = new FingerprintRepository(testdb, sphereGetter);
   location             = new LocationRepository(testdb, sphereGetter);
@@ -113,6 +119,8 @@ function initRepositories() : RepositoryContainer {
     oauthToken,
     appInstallation,
     devicePreferences,
+    deviceLocationMap,
+    deviceSphereMap,
     device,
     fingerprintLinker,
     fingerprint,
@@ -138,8 +146,6 @@ function initRepositories() : RepositoryContainer {
     crownstoneToken,
   }
 }
-
-
 
 
 /**
