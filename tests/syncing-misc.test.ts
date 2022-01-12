@@ -112,9 +112,9 @@ test("Request sync users from sphere", async () => {
   await populate();
   let payload = {sync: {type: "REQUEST"}, spheres: {[sphere.id]: {
     users:{
-      [admin.id]:  {data: { updatedAt: admin.updatedAt}},
-      [member.id]: {data: { updatedAt: member.updatedAt}},
-      ['hello']:   {data: { updatedAt: admin.updatedAt}},
+      [admin.id]:  {data: { updatedAt: admin.updatedAt  }},
+      [member.id]: {data: { updatedAt: member.updatedAt }},
+      ['hello']:   {data: { updatedAt: admin.updatedAt  }},
     }
   }}};
 

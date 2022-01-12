@@ -12,6 +12,8 @@ import {SyncRequestResponse} from "../declarations/syncTypes";
 import {repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
+import {authorize} from "@loopback/authorization";
+import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 
 
 
@@ -31,6 +33,7 @@ export class SphereController extends SphereItem {
   // Perform a sync operation within a sphere
   @post('/spheres/{id}/sync')
   @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereAccess())
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') id: string,

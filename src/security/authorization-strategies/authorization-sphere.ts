@@ -13,7 +13,7 @@ export const Authorization = {
   sphereAccess: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['guest','basic','hub','member','admin']}},
   sphereMember: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['hub','member','admin']}},
   sphereAdmin:  (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['admin']}},
-  sphereHub:    (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['hub']}},
+  sphereHub:    (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: ['hub','admin']}},
 }
 
 export class MyAuthorizationProvider implements Provider<Authorizer> {
@@ -29,9 +29,7 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
     context: AuthorizationContext,
     metadata: AuthorizationMetadata,
   ) {
-
     // TODO: Add OAUTH scope checking
-
     let userId     = context.principals[0][securityId];
     let controller = context.invocationContext.target;
     if ((controller as any).__sphereItem !== true) {
@@ -75,11 +73,14 @@ async function getAccessLevel(userId: string, itemId: string, modelName: string)
 
     if (item && item?.sphereId) {
       let sphereId = item.sphereId;
-      let accessLevel = await Dbs.sphereAccess.findOne({
+      let accessLevel = await Dbs.sphereAccess.find({
         where: {and: [{userId}, {sphereId}, {invitePending: false}]},
-        fields: {role: true}
+        fields: {role: true}, limit:1
       })
-      return accessLevel?.role || null;
+      if (accessLevel.length === 0) {
+        return null
+      }
+      return accessLevel[0].role || null;
     }
     return null;
   }

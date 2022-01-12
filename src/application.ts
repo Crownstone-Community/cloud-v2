@@ -20,6 +20,7 @@ import {UserService} from './services';
 import {AccessTokenStrategy} from "./security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "./config";
 import {SphereAuthorizationComponent} from "./security/authorization-strategies/authorization";
+import {HubService} from "./services/hub.service";
 
 export interface PackageInfo {
   name: string;
@@ -109,5 +110,6 @@ export class CrownstoneCloud extends BootMixin(ServiceMixin(RepositoryMixin(Rest
 
   setUpBindings(): void {
     this.bind("UserService").toClass(UserService);
+    this.bind("HubService").toClass(HubService);
   }
 }

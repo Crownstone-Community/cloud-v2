@@ -17,8 +17,10 @@ import {StoneAbility} from "../../src/models/stoneSubModels/stone-ability.model"
 
 
 export let USERS = {};
+export let HUBS = {};
 export function resetUsers() {
   USERS = {};
+  HUBS = {};
 }
 
 export let lastCreatedUser = {
@@ -60,6 +62,7 @@ export async function createHub(sphereId, name?, updatedAt?, token?) : Promise<H
 
   let hub = await dbs.hub.create({sphereId: sphereId, name: name, token: token, updatedAt, httpPort:80, localIPAddress:'10.0.0.123'})
   await dbs.sphereAccess.create({sphereId: sphereId, userId: hub.id, role:'hub', sphereAuthorizationToken: CloudUtil.createToken()})
+  HUBS[hub.id] = hub;
   return hub;
 }
 

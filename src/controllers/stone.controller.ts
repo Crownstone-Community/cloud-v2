@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {param, post, requestBody} from '@loopback/rest';
+import {del, param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -38,6 +38,17 @@ export class StoneController extends SphereItem {
   ): Promise<SyncRequestResponse> {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {stones:[id]})
     return result;
+  }
+
+  // Perform a sync operation within a sphere
+  @del('/stones/{id}')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereAdmin())
+  async deleteStone(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') id: string,
+  ): Promise<string> {
+    return "Not implemented yet."
   }
 
 }
