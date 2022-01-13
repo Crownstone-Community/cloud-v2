@@ -32,6 +32,8 @@ import {OauthTokenRepository}           from "../../src/repositories/users/oauth
 import {RepositoryContainer}            from "../../src/modules/containers/RepoContainer";
 import {DeviceSphereMapRepository}      from "../../src/repositories/data/device-sphere-map.repository";
 import {DeviceLocationMapRepository}    from "../../src/repositories/data/device-location-map.repository";
+import {FsChunksRepository}             from "../../src/repositories/files/fs.chunks.repository";
+import {FsFilesRepository}              from "../../src/repositories/files/fs.files.repository";
 
 function initRepositories() : RepositoryContainer {
   let sphere:               SphereRepository;
@@ -45,6 +47,8 @@ function initRepositories() : RepositoryContainer {
   let fingerprintLinker:    FingerprintLinkerRepository;
   let fingerprint:          FingerprintRepository;
   let firmware:             FirmwareRepository;
+  let fsChunks:             FsChunksRepository;
+  let fsFiles:              FsFilesRepository;
   let location:             LocationRepository;
   let message:              MessageRepository;
   let messageState:         MessageStateRepository;
@@ -75,6 +79,7 @@ function initRepositories() : RepositoryContainer {
   let messageGetter      = () : Promise<MessageRepository>      => { return new Promise((resolve, _) => { resolve(message) })}
   let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository>  => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
   let fingerprintGetter  = () : Promise<FingerprintRepository> => { return new Promise((resolve, _) => { resolve(fingerprint) })}
+  let fsFilesGetter      = () : Promise<FsFilesRepository> => { return new Promise((resolve, _) => { resolve(fsFiles) })}
   let messageUserGetter  = () : Promise<MessageUserRepository> => { return new Promise((resolve, _) => { resolve(messageUser) })}
   let userGetter         = () : Promise<UserRepository>        => { return new Promise((resolve, _) => { resolve(user) })}
 
@@ -90,8 +95,10 @@ function initRepositories() : RepositoryContainer {
   fingerprintLinker    = new FingerprintLinkerRepository(testdb, sphereGetter, locationGetter, deviceGetter, fingerprintGetter);
   deviceSphereMap      = new DeviceSphereMapRepository(testdb, userGetter, deviceGetter, sphereGetter);
   deviceLocationMap    = new DeviceLocationMapRepository(testdb, userGetter, deviceGetter, sphereGetter, locationGetter);
-  device               = new DeviceRepository(testdb, userGetter, appInstallation, fingerprintLinker, devicePreferences);
+  device               = new DeviceRepository(testdb, userGetter, appInstallation, fingerprintLinker, devicePreferences, deviceLocationMap, deviceSphereMap);
   fingerprint          = new FingerprintRepository(testdb, sphereGetter);
+  fsFiles              = new FsFilesRepository(testdb);
+  fsChunks             = new FsChunksRepository(testdb, fsFilesGetter);
   location             = new LocationRepository(testdb, sphereGetter);
   messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
   messageUser          = new MessageUserRepository(testdb, sphereGetter, messageGetter, userGetter);
@@ -125,6 +132,8 @@ function initRepositories() : RepositoryContainer {
     fingerprintLinker,
     fingerprint,
     firmware,
+    fsChunks,
+    fsFiles,
     location,
     message,
     messageState,

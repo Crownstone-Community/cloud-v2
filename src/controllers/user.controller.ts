@@ -14,7 +14,7 @@ import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
-import {DataDownloader} from "../modules/gdpr/DataDownloader";
+import {DataDownloader, UserDataDownloadThrottle} from "../modules/dataManagement/DataDownloader";
 import {Response} from "express";
 
 
@@ -85,15 +85,29 @@ export class UserController {
     @inject(SecurityBindings.USER)      userProfile : UserProfileDescription,
     @inject(RestBindings.Http.RESPONSE) response:     Response,
   ) : Promise<any> {
+    let userId = userProfile[securityId];
+    if (UserDataDownloadThrottle.allowUserSession(userId) === false) {
+      throw new HttpErrors.TooManyRequests("You can only access this method once every 5 minutes.")
+    }
+
     try {
-      let fileBuffer = await new DataDownloader(userProfile[securityId]).download();
+      let fileBuffer = await new DataDownloader(userId).download();
       response.header('Content-Disposition', `attachment; filename=Crownstone_user_data.zip`)
       response.header('Content-Type',        `application/zip`)
       response.end(fileBuffer)
     }
     catch (err) {
       console.error("Error downloading user data", err)
-      return new HttpErrors.InternalServerError()
+      if ((err as any)?.message === "ALREADY_IN_QUEUE") {
+        throw new HttpErrors.TooManyRequests("Cancelling request due to newly placed request. Place in queue has been reset.");
+      }
+      else if ((err as any)?.message === "REQUEST_WAIT_TIMEOUT") {
+        throw new HttpErrors.TooManyRequests("Request timed out due to many incoming request. Please try again later.");
+      }
+      else {
+        throw new HttpErrors.InternalServerError()
+      }
+
     }
   }
 

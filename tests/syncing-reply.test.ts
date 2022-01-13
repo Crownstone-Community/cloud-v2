@@ -13,7 +13,7 @@ import {CrownstoneCloud} from "../src/application";
 import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
-import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
+import {auth, getToken} from "./rest-helpers/rest.helpers";
 import {CloudUtil} from "../src/util/CloudUtil";
 import { mocked } from 'ts-jest/utils'
 
