@@ -22,7 +22,7 @@
     "@loopback/authorization": "^0.9.3",
     "@loopback/boot": "^3.4.3",
     "@loopback/context": "^3.17.2",
-    "@loopback/core": "^2.17.0",
+    "@loopback/core": "^3.0.1",
     "@loopback/openapi-v3": "^6.0.1",
     "@loopback/repository": "^3.7.2",
     "@loopback/rest": "^10.0.1",

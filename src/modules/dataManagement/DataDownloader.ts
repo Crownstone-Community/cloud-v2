@@ -1,5 +1,5 @@
 import {Dbs} from "../containers/RepoContainer";
-import {GridFsUtil} from "../../util/gridFsUtil";
+import {GridFsUtil} from "../../util/GridFsUtil";
 import {AccessLevels, SphereAccess} from "../../models/sphere-access.model";
 import path from "path";
 import {getEncryptionKeys} from "../sync/helpers/KeyUtil";

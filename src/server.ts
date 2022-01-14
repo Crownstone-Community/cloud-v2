@@ -6,6 +6,7 @@ import cors from 'cors';
 import { ApplicationConfig } from '@loopback/core';
 import {CrownstoneCloud} from "./application";
 import {SSEManager} from "./modules/sse/SSEManager";
+import {DataSanitizer} from "./modules/dataManagement/Sanitizer";
 
 export {ApplicationConfig};
 
@@ -22,7 +23,13 @@ export class ExpressServer {
 
     // Expose the front-end assets via Express, not as LB4 route
     this.app.use('/api', this.lbApp.requestHandler);
-
+    this.app.get('/sanitize-database', async function (_req: Request, res: Response) {
+      if (_req.query.token === process.env.SANITATION_TOKEN) {
+        let sanitizer = new DataSanitizer();
+        await sanitizer.sanitize()
+      }
+      res.end();
+    });
     // Custom Express routes
     this.app.get('/', function (_req: Request, res: Response) {
       res.sendFile(path.join(__dirname, '../public/index.html'));

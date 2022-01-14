@@ -15,7 +15,7 @@ export class StoneSwitchState extends AddTimestamps(BaseEntity) {
   @property({type: 'string', id: true})
   id: string;
 
-  @property({type: 'Date', defaultFn:'now'})
+  @property({type: 'date', defaultFn:'now'})
   timestamp: Date;
 
   @property({type: 'number', required: true})

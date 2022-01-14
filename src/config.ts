@@ -8,7 +8,8 @@ export const CONFIG = {
   mongoUserURL:  process.env.USER_DB_URL  ?? "mongodb://127.0.0.1:27017/users_v1",
 
   emailValidationRequired: process.env.EMAIL_VALIDATION_REQUIRED ?? true,
-  generateCustomIds: process.env.GENERATE_CUSTOM_IDS ?? false,
+  generateCustomIds:       process.env.GENERATE_CUSTOM_IDS       ?? false,
+  unittesting:             process.env.UNITTESTING_ENABLED       ?? false,
 
   SSEToken: process.env.SSE_TOKEN || "sse_token"
 }

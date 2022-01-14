@@ -12,6 +12,9 @@ export class CrownstoneToken extends Entity {
   @property({type: 'date', defaultFn: 'now'})
   created: Date;
 
+  @property({type: 'date', required: true})
+  expiredAt: Date;
+
   @property({type: 'number', default: 1209600, description: "time to live in seconds (2 weeks by default)"})
   ttl: number;
 

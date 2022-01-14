@@ -6,6 +6,8 @@ import {HttpErrors} from "@loopback/rest";
 
 let bcrypt = require("bcrypt")
 
+const TTL = 14*24*3600 // 2 weeks in seconds;
+
 export class UserService {
   constructor(
     @repository(UserRepository)            public userRepository: UserRepository,
@@ -24,7 +26,12 @@ export class UserService {
 
     let success = await bcrypt.compare(credentials.password, foundUser.password)
     if (foundUser.password && success) {
-      return await this.tokenRepository.create({userId: foundUser.id, principalType: 'user'})
+      return await this.tokenRepository.create({
+        userId: foundUser.id,
+        principalType: 'user',
+        ttl: TTL,
+        expiredAt: new Date(Date.now()+TTL*1000)
+      })
     }
 
     throw new HttpErrors.Unauthorized("Invalid username/password");

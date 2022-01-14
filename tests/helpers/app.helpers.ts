@@ -13,6 +13,7 @@ export async function createApp() : Promise<CrownstoneCloud> {
   await app.boot();
   app.bind('datasources.users').to(testdb);
   app.bind('datasources.data').to(testdb);
+  app.bind('datasources.files').to(testdb);
   await app.start();
   PopulateRepositoryContainer(app);
   return app;

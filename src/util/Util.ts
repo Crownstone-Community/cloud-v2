@@ -324,6 +324,94 @@ export const Util = {
     return true;
   },
 
+  twoWayDeepCompare(a: any, b: any) {
+    return Util.deepCompare(a,b) && Util.deepCompare(b,a);
+  },
+
+  /**
+   * Difference between 2 objects.
+   * @param from
+   * @param to
+   */
+  whatHasBeenChanged(from: any, to: any) {
+    let deleted : any = {};
+    let changed : any = {};
+    Util.diffFromTo(from, to, deleted, changed);
+    let added : any = {};
+    let changed_inversed : any = {};
+    Util.diffFromTo(to, from, added, changed_inversed);
+
+    return {added, deleted, changed, changed_inversed}
+  },
+
+  /**
+   * Mostly used to check if things have been deleted.
+   * When using an array with objects, they need to match. Order is not relevant.
+   * This will not diff inside an array of objects other than deepCompare entries
+   * @param from
+   * @param to
+   * @param deleted
+   * @param changed
+   */
+  diffFromTo: function(from : any, to: any, deleted: any = {}, changed: any = {}) {
+    let iterated = false;
+
+    for (let key in from) {
+      iterated = true;
+      if (to === undefined || to === null || to[key] === undefined && from[key] !== undefined) {
+        deleted[key] = from[key];
+      }
+      else {
+        if (Array.isArray(from[key]) && Array.isArray(to[key])) {
+          // two arrays
+          deleted[key] = [];
+          changed[key] = [];
+
+          let matchedKeys : any = {};
+          // check if anywhere in the to array the item exists first
+          for (let i = 0; i < from[key].length; i++) {
+            let item = from[key][i];
+            let match = null;
+            for (let j = 0; j < to[key].length; j++) {
+              if (Util.twoWayDeepCompare(item, to[key][j]) === true) {
+                match = j;
+                break;
+              }
+            }
+
+            if (match !== null) {
+              matchedKeys[match] = true;
+              continue;
+            }
+            else {
+              deleted[key].push(from[key][i])
+            }
+          }
+
+          if (deleted[key].length === 0) { delete deleted[key]; }
+          if (changed[key].length === 0) { delete changed[key]; }
+        }
+        else if (typeof from[key] === 'object' && typeof to[key] === 'object') {
+          // two objects
+          deleted[key] = {};
+          changed[key] = {};
+
+          Util.diffFromTo(from[key], to[key], deleted[key], changed[key])
+
+          if (Object.keys(deleted[key]).length === 0) { delete deleted[key]; }
+          if (Object.keys(changed[key]).length === 0) { delete changed[key]; }
+        }
+        else if (from[key] != to[key]) {
+          // two different things
+          changed[key] = to[key];
+        }
+        else {
+
+        }
+      }
+    }
+  },
+
   promiseBatchPerformer: function(arr : any[], method : PromiseCallback) {
     if (arr.length === 0) {
       return new Promise<void>((resolve, reject) => { resolve() });

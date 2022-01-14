@@ -1,6 +1,5 @@
 import crypto from "crypto";
 
-
 let RANDOM_COUNT = 2000;
 let DATABASE_LIST = {};
 let GLOBAL_TIME = 0;

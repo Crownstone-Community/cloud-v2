@@ -4,6 +4,8 @@ import {CrownstoneToken} from "../models/crownstone-token.model";
 import {HttpErrors} from "@loopback/rest";
 import {HubRepository} from "../repositories/users/hub.repository";
 
+const TTL = 14*24*3600 // 2 weeks in seconds;
+
 export class HubService {
   constructor(
     @repository(HubRepository)             public hubRepository: HubRepository,
@@ -23,7 +25,9 @@ export class HubService {
       if (foundHub.token === token) {
         return await this.tokenRepository.create({
           userId: foundHub.id,
-          principalType: 'Hub'
+          principalType: 'Hub',
+          ttl: TTL,
+          expiredAt: new Date(Date.now()+TTL*1000)
         });
       }
       throw new HttpErrors.Unauthorized("Invalid username/password");

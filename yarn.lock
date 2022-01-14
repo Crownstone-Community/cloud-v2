@@ -822,13 +822,26 @@
     tslib "^2.3.1"
     uuid "^8.3.2"
 
-"@loopback/core@^2.17.0":
-  version "2.17.0"
-  resolved "https://registry.yarnpkg.com/@loopback/core/-/core-2.17.0.tgz#0f703d0694e692c84aef603da7231a5ac884d0dc"
-  integrity sha512-XwhgQmPS8ta3Elv/FzF6/S5PCYo5T3NdI1CXuJpml8TQCztKFd6Fp0b1RUYVux0bLrUsYuvYXTSuOhAxlJz35Q==
+"@loopback/context@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@loopback/context/-/context-4.0.1.tgz#38185f405bbe2a428454e000d50b250594ad84b8"
+  integrity sha512-03JP+zyOMyAc17IbzTywjBayqZQ3CZRaWtd+wtMbrJfqQ4kWSPe5DGY4513yqR2Fjfk61dxxuJz5ke+QXKxccw==
   dependencies:
-    "@loopback/context" "^3.17.2"
-    debug "^4.3.2"
+    "@loopback/metadata" "^4.0.1"
+    "@types/debug" "^4.1.7"
+    debug "^4.3.3"
+    hyperid "^3.0.0"
+    p-event "^4.2.0"
+    tslib "^2.3.1"
+    uuid "^8.3.2"
+
+"@loopback/core@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@loopback/core/-/core-3.0.1.tgz#225c63cbd9ed85cfacf2221723bb30e7011da815"
+  integrity sha512-bWjUn73KkwfjKpTYDA23VeifaIgAQtbRP6fDWmm442WniLmeEpu2iKimcX6om7elB+PTh3IpGX1zyjbEJOzwGA==
+  dependencies:
+    "@loopback/context" "^4.0.1"
+    debug "^4.3.3"
     tslib "^2.3.1"
 
 "@loopback/eslint-config@^11.0.1":
@@ -882,6 +895,16 @@
   integrity sha512-I0PkT9ZI7tsJGpSPBmcGWlG+H3O2cprOOf4gK+J8wKOj3afCOsnrRRYodo17ortQDv9E7uAGk88hPJVrGU581w==
   dependencies:
     debug "^4.3.2"
+    lodash "^4.17.21"
+    reflect-metadata "^0.1.13"
+    tslib "^2.3.1"
+
+"@loopback/metadata@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@loopback/metadata/-/metadata-4.0.1.tgz#cf749f748c7af2b15311e992b398fe588fb6f476"
+  integrity sha512-gc4vXg8DnNVEuxDqZVsdsgKnduS+f+DdsdzXRAvuXqj8549/yr+WbpUITf0+eEudT1a4n/M0yobIRDc6c2CAsw==
+  dependencies:
+    debug "^4.3.3"
     lodash "^4.17.21"
     reflect-metadata "^0.1.13"
     tslib "^2.3.1"
@@ -2664,6 +2687,13 @@ debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@~4.1.0:
   dependencies:
     ms "^2.1.1"
 
+debug@^4.3.3:
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.3.tgz#04266e0b70a98d4462e6e288e38259213332b664"
+  integrity sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==
+  dependencies:
+    ms "2.1.2"
+
 debug@~3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
@@ -3877,6 +3907,14 @@ hyperid@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/hyperid/-/hyperid-2.3.1.tgz#70cc2c917b6367c9f7307718be243bc28b258353"
   integrity sha512-mIbI7Ymn6MCdODaW1/6wdf5lvvXzmPsARN4zTLakMmcziBOuP4PxCBJvHF6kbAIHX6H4vAELx/pDmt0j6Th5RQ==
+  dependencies:
+    uuid "^8.3.2"
+    uuid-parse "^1.1.0"
+
+hyperid@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/hyperid/-/hyperid-3.0.0.tgz#d66e370e5da04ef591fc227b1c6ecbe43ba7f145"
+  integrity sha512-vwl5ARjv9KGKphUpKrNlCpH6oC3qnlCxz7WRG24h53MvkWGit2Iwbv/H8usILbMohBsaRgs8Ieumgy7+oafuyw==
   dependencies:
     uuid "^8.3.2"
     uuid-parse "^1.1.0"

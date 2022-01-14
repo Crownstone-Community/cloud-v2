@@ -35,6 +35,75 @@ import {DeviceLocationMapRepository}    from "../../src/repositories/data/device
 import {FsChunksRepository}             from "../../src/repositories/files/fs.chunks.repository";
 import {FsFilesRepository}              from "../../src/repositories/files/fs.files.repository";
 
+import { User }                 from "../../src/models/user.model";
+import { Toon }                 from "../../src/models/toon.model";
+import { AppInstallation }      from "../../src/models/app-installation.model";
+import { Bootloader }           from "../../src/models/bootloader.model";
+import { CrownstoneToken }      from "../../src/models/crownstone-token.model";
+import { Device }               from "../../src/models/device.model";
+import { DeviceLocationMap }    from "../../src/models/device-location-map.model";
+import { DevicePreferences }    from "../../src/models/device-preferences.model";
+import { DeviceSphereMap }      from "../../src/models/device-sphere-map.model";
+import { Fingerprint }          from "../../src/models/fingerprint.model";
+import { FingerprintLinker }    from "../../src/models/fingerprint-linker.model";
+import { Firmware }             from "../../src/models/firmware.model";
+import { FsChunks }             from "../../src/models/gridFS/fs.chunks.model";
+import { FsFiles }              from "../../src/models/gridFS/fs.files.model";
+import { Hub }                  from "../../src/models/hub.model";
+import { Message }              from "../../src/models/message.model";
+import { Location }             from "../../src/models/location.model";
+import { MessageState }         from "../../src/models/messageSubModels/message-state.model";
+import { MessageUser }          from "../../src/models/messageSubModels/message-user.model";
+import { OauthToken }           from "../../src/models/oauth-token.model";
+import { Scene }                from "../../src/models/scene.model";
+import { Sphere }               from "../../src/models/sphere.model";
+import { SphereAccess }         from "../../src/models/sphere-access.model";
+import { SphereFeature }        from "../../src/models/sphere-feature.model";
+import { SphereKeys }           from "../../src/models/sphere-key.model";
+import { SphereTrackingNumber } from "../../src/models/sphere-tracking-number.model";
+import { Stone }                from "../../src/models/stone.model";
+import { StoneAbility }         from "../../src/models/stoneSubModels/stone-ability.model";
+import { StoneAbilityProperty } from "../../src/models/stoneSubModels/stone-ability-property.model";
+import { StoneBehaviour }       from "../../src/models/stoneSubModels/stone-behaviour.model";
+import { StoneKey }             from "../../src/models/stoneSubModels/stone-key.model";
+import { StoneSwitchState }     from "../../src/models/stoneSubModels/stone-switch-state.model";
+
+interface DatabaseDump {
+  appInstallation     : AppInstallation[],
+  bootloader          : Bootloader[],
+  crownstoneToken     : CrownstoneToken[],
+  device              : Device[],
+  deviceLocationMap   : DeviceLocationMap[],
+  devicePreferences   : DevicePreferences[],
+  deviceSphereMap     : DeviceSphereMap[],
+  fingerprint         : Fingerprint[],
+  fingerprintLinker   : FingerprintLinker[],
+  firmware            : Firmware[],
+  fsChunks            : FsChunks[],
+  fsFiles             : FsFiles[],
+  hub                 : Hub[],
+  location            : Location[],
+  message             : Message[],
+  messageState        : MessageState[],
+  messageUser         : MessageUser[],
+  oauthToken          : OauthToken[],
+  scene               : Scene[],
+  sphere              : Sphere[],
+  sphereAccess        : SphereAccess[],
+  sphereFeature       : SphereFeature[],
+  sphereKeys          : SphereKeys[],
+  sphereTrackingNumber: SphereTrackingNumber[],
+  stone               : Stone[],
+  stoneAbility        : StoneAbility[],
+  stoneAbilityProperty: StoneAbilityProperty[],
+  stoneBehaviour      : StoneBehaviour[],
+  stoneKeys           : StoneKey[],
+  stoneSwitchState    : StoneSwitchState[],
+  toon                : Toon[],
+  user                : User[],
+}
+
+
 function initRepositories() : RepositoryContainer {
   let sphere:               SphereRepository;
   let bootloader:           BootloaderRepository;
@@ -121,38 +190,38 @@ function initRepositories() : RepositoryContainer {
 
 
   return {
-    sphere,
-    bootloader,
-    oauthToken,
     appInstallation,
-    devicePreferences,
-    deviceLocationMap,
-    deviceSphereMap,
+    bootloader,
+    crownstoneToken,
     device,
-    fingerprintLinker,
+    deviceLocationMap,
+    devicePreferences,
+    deviceSphereMap,
     fingerprint,
+    fingerprintLinker,
     firmware,
     fsChunks,
     fsFiles,
+    hub,
     location,
     message,
     messageState,
     messageUser,
+    oauthToken,
     scene,
+    sphere,
     sphereAccess,
     sphereFeature,
-    sphereTrackingNumber,
     sphereKeys,
-    stoneKeys,
+    sphereTrackingNumber,
     stone,
-    stoneAbilityProperty,
     stoneAbility,
+    stoneAbilityProperty,
     stoneBehaviour,
+    stoneKeys,
     stoneSwitchState,
     toon,
-    user,
-    hub,
-    crownstoneToken,
+    user
   }
 }
 
@@ -172,3 +241,25 @@ export async function clearTestDatabase() {
 export function getRepositories() {
   return initRepositories();
 }
+
+export async function databaseDump() : Promise<DatabaseDump> {
+  let dbObject = getRepositories();
+  let dbs = Object.keys(dbObject);
+  let result : any = {}
+  for (let i = 0; i < dbs.length; i++) {
+    // @ts-ignore
+    result[dbs[i]] = JSON.parse(JSON.stringify(await dbObject[dbs[i]].find()));
+  }
+  return result;
+}
+export async function databasePureDump() : Promise<DatabaseDump> {
+  let dbObject = getRepositories();
+  let dbs = Object.keys(dbObject);
+  let result : any = {}
+  for (let i = 0; i < dbs.length; i++) {
+    // @ts-ignore
+    result[dbs[i]] = await dbObject[dbs[i]].find();
+  }
+  return result;
+}
+
