@@ -169,3 +169,127 @@ Object {
   },
 }
 `;
+
+exports[`Delete member in sphere and run sanitation, check if all proper data is removed and if all shared data is kept. 1`] = `
+Object {
+  "appInstallation": Array [
+    Object {
+      "appName": "testApp",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "developmentApp": false,
+      "deviceId": "dbId:DeviceRepository:3",
+      "deviceType": "phone",
+      "id": "dbId:AppInstallationRepository:3",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "crownstoneToken": Array [
+    Object {
+      "created": "2022-01-01T11:00:00.000Z",
+      "expiredAt": "2022-01-15T11:00:00.000Z",
+      "id": "TOKEN:2037xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "principalType": "user",
+      "ttl": 1209600,
+      "userId": "dbId:UserRepository:2",
+    },
+  ],
+  "device": Array [
+    Object {
+      "address": "abc",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": "dbId:DeviceRepository:3",
+      "name": "sphere1_device",
+      "ownerId": "dbId:UserRepository:2",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "devicePreferences": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "deviceId": "dbId:DeviceRepository:3",
+      "id": "dbId:DevicePreferencesRepository:4",
+      "property": "prop",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "value": true,
+    },
+  ],
+  "fingerprint": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "data": null,
+      "id": "dbId:FingerprintRepository:7",
+      "isTransformed": false,
+      "locationId": "dbId:LocationRepository:1",
+      "ownerId": "dbId:UserRepository:2",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "data": null,
+      "id": "dbId:FingerprintRepository:9",
+      "isTransformed": false,
+      "locationId": "dbId:LocationRepository:3",
+      "ownerId": "dbId:UserRepository:2",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "fingerprintLinker": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "deviceId": "dbId:DeviceRepository:3",
+      "fingerprintId": "dbId:FingerprintRepository:7",
+      "id": "dbId:FingerprintLinkerRepository:7",
+      "locationId": "dbId:LocationRepository:1",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "deviceId": "dbId:DeviceRepository:3",
+      "fingerprintId": "dbId:FingerprintRepository:5",
+      "id": "dbId:FingerprintLinkerRepository:8",
+      "locationId": "dbId:LocationRepository:2",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "deviceId": "dbId:DeviceRepository:3",
+      "fingerprintId": "dbId:FingerprintRepository:9",
+      "id": "dbId:FingerprintLinkerRepository:9",
+      "locationId": "dbId:LocationRepository:3",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "sphereAccess": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": "dbId:SphereAccessRepository:2",
+      "invitePending": false,
+      "role": "member",
+      "sphereAuthorizationToken": "TOKEN:2012xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "sphereId": "dbId:SphereRepository:1",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "userId": "dbId:UserRepository:2",
+    },
+  ],
+  "user": Array [
+    Object {
+      "accountCreationPending": false,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "email": "sphere1_member@test.com",
+      "emailVerified": false,
+      "id": "dbId:UserRepository:2",
+      "language": "en_us",
+      "new": true,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "uploadDeviceDetails": true,
+      "uploadLocation": true,
+      "uploadSwitchState": true,
+    },
+  ],
+}
+`;

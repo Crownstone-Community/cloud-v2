@@ -17,6 +17,7 @@ import {Client}                from "@loopback/testlab";
 import {keyTypes}              from "../../src/enums";
 import {StoneKey}              from "../../src/models/stoneSubModels/stone-key.model";
 import {StoneSwitchState}      from "../../src/models/stoneSubModels/stone-switch-state.model";
+import {DataSanitizer} from "../../src/modules/dataManagement/Sanitizer";
 
 
 
@@ -168,16 +169,16 @@ export async function createMockSphereDatabase(client: Client, version: string) 
 
   let device1 = await dbs.device.create({name:`${version}_device`,        address:'abc', ownerId: admin.id});
   let device2 = await dbs.device.create({name:`${version}_device_backup`, address:'abc', ownerId: admin.id});
-  let device3 = await dbs.device.create({name:`${version}_device`,        address:'abc', ownerId: member.id});
+  let member_device3 = await dbs.device.create({name:`${version}_device`,        address:'abc', ownerId: member.id});
 
   let deviceInstallation1 = await dbs.appInstallation.create({appName:'testApp', deviceType:'phone', developmentApp: false, deviceId: device1.id});
   let deviceInstallation2 = await dbs.appInstallation.create({appName:'testApp', deviceType:'phone', developmentApp: false, deviceId: device2.id});
-  let deviceInstallation3 = await dbs.appInstallation.create({appName:'testApp', deviceType:'phone', developmentApp: false, deviceId: device3.id});
+  let deviceInstallation3 = await dbs.appInstallation.create({appName:'testApp', deviceType:'phone', developmentApp: false, deviceId: member_device3.id});
 
   let devicePreferences1 = await dbs.devicePreferences.create({property:'prop',  value:'true',  deviceId: device1.id});
   let devicePreferences2 = await dbs.devicePreferences.create({property:'prop2', value:'false', deviceId: device1.id});
   let devicePreferences3 = await dbs.devicePreferences.create({property:'prop',  value:'true',  deviceId: device2.id});
-  let devicePreferences4 = await dbs.devicePreferences.create({property:'prop',  value:'true',  deviceId: device3.id});
+  let devicePreferences4 = await dbs.devicePreferences.create({property:'prop',  value:'true',  deviceId: member_device3.id});
 
   let fingerprint1  = await dbs.fingerprint.create({sphereId: sphere.id, locationId: location1.id, ownerId: admin.id,  data: "data"});
   let fingerprint2  = await dbs.fingerprint.create({sphereId: sphere.id, locationId: location2.id, ownerId: admin.id,  data: "data"});
@@ -196,9 +197,9 @@ export async function createMockSphereDatabase(client: Client, version: string) 
   let fingerprintLink_device2_1 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device2.id, locationId: location1.id, fingerprintId: fingerprint4.id });
   let fingerprintLink_device2_2 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device2.id, locationId: location2.id, fingerprintId: fingerprint5.id });
   let fingerprintLink_device2_3 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device2.id, locationId: location3.id, fingerprintId: fingerprint6.id });
-  let fingerprintLink_device3_1 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device3.id, locationId: location1.id, fingerprintId: fingerprint7.id });
-  let fingerprintLink_device3_2 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device3.id, locationId: location2.id, fingerprintId: fingerprint5.id });
-  let fingerprintLink_device3_3 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: device3.id, locationId: location3.id, fingerprintId: fingerprint9.id });
+  let fingerprintLink_device3_1 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: member_device3.id, locationId: location1.id, fingerprintId: fingerprint7.id });
+  let fingerprintLink_device3_2 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: member_device3.id, locationId: location2.id, fingerprintId: fingerprint5.id });
+  let fingerprintLink_device3_3 = await dbs.fingerprintLinker.create({sphereId: sphere.id, deviceId: member_device3.id, locationId: location3.id, fingerprintId: fingerprint9.id });
 
   let toon = await dbs.toon.create({
     sphereId: sphere.id,
