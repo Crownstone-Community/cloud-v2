@@ -11,7 +11,7 @@ makeUtilDeterministic();
 
 import {CrownstoneCloud} from "../src/application";
 import {Client, createRestAppClient} from '@loopback/testlab';
-import {clearTestDatabase, createApp, getRepositories} from "./helpers";
+import {clearTestDatabase, createApp, databaseDump, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
 import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
 import {SyncHandler} from "../src/modules/sync/SyncHandler";
@@ -57,6 +57,7 @@ async function populateMinimal() {
   admin    = await createUser('test@test.com', 'test', 0);
   sphere   = await createSphere(admin.id, 'mySphere', 0);
 }
+
 
 beforeEach(async () => {
   mocked(SSEManager.emit).mockReset();
@@ -472,7 +473,6 @@ test("Sync REQUEST after something updated an existing item", async () => {
   hub.updatedAt = new Date(10000000);
 
   await dbs.hub.update(hub, {acceptTimes: true});
-
 
   await client.post(auth("/sync")).send(request)
     .expect(({body}) => {

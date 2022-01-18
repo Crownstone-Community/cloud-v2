@@ -74,7 +74,7 @@ class Syncer {
           include: [
             {relation: 'behaviours'},
             {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
-            {relation: 'currentSwitchState'},
+            // {relation: 'currentSwitchState'},
           ]}
       });
     }
@@ -126,6 +126,7 @@ class Syncer {
     injectSphereSimpleItem(sphereData, 'scenes',          sphereItem);
     injectSphereSimpleItem(sphereData, 'trackingNumbers', sphereItem);
     injectSphereSimpleItem(sphereData, 'toons',           sphereItem);
+
     if (!ignore.sphereUsers) {
       let sphereUsers = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
       sphereItem.users = {}

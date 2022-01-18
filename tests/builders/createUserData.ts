@@ -55,15 +55,6 @@ export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> 
 
   let sphere = await dbs.sphere.create({name, updatedAt});
   await dbs.sphereAccess.create({sphereId: sphere.id, userId: userId, role:'admin', sphereAuthorizationToken: CloudUtil.createToken()});
-  await dbs.sphereKeys.createAll([
-    { sphereId: sphere.id, keyType: keyTypes.ADMIN_KEY,            key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.MEMBER_KEY,           key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.BASIC_KEY,            key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.LOCALIZATION_KEY,     key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.SERVICE_DATA_KEY,     key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.MESH_APPLICATION_KEY, key: CloudUtil.createKey(), ttl: 0 },
-    { sphereId: sphere.id, keyType: keyTypes.MESH_NETWORK_KEY,     key: CloudUtil.createKey(), ttl: 0 },
-  ])
   return sphere;
 }
 

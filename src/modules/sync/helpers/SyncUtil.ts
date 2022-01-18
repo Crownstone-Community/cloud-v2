@@ -49,7 +49,7 @@ export function getIds(collection: any[]) : string[] {
 
 
 export function getTimestamp(a : Date | number | string) : number {
-  let at
+  let at;
   if (typeof a === 'string') {
     at = new Date(a).valueOf();
   }
