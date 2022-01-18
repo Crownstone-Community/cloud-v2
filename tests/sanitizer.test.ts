@@ -36,7 +36,7 @@ let app: CrownstoneCloud;
 let client: Client;
 
 beforeEach(async () => {
-  advanceTo(new Date("2022-01-01 12:00:00").valueOf()); // reset to timestamp
+  advanceTo(1641034800000); // reset to timestamp "2022-01-01 12:00:00" in this timezone
   await clearTestDatabase();
   resetUsers();
   resetMockRandom();
