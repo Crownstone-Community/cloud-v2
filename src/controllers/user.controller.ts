@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {get, HttpErrors, oas, post, requestBody, RestBindings, SchemaObject} from '@loopback/rest';
+import {del, get, HttpErrors, oas, param, post, requestBody, RestBindings, SchemaObject} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -105,10 +105,23 @@ export class UserController {
         throw new HttpErrors.TooManyRequests("Request timed out due to many incoming request. Please try again later.");
       }
       else {
-        throw new HttpErrors.InternalServerError()
+        throw new HttpErrors.InternalServerError();
       }
-
     }
+  }
+  
+  @del("/user")
+  @authenticate(SecurityTypes.accessToken)
+  async deleteUser(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.query.string('AreYouSure', {required:true}) areYouSure: string,
+  ) : Promise<void> {
+    let userId = userProfile[securityId];
+    if (areYouSure !== "I_AM_SURE") {
+      throw new HttpErrors.BadRequest("AreYouSure argument must be I_AM_SURE")
+    }
+    await this.userRepo.deleteById(userId);
+
   }
 
 }

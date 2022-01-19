@@ -37,6 +37,11 @@ export class ExpressServer {
       res.sendFile(path.join(__dirname, '../public/index.html'));
     });
 
+    // Custom Express routes
+    this.app.get('/user-data', function (_req: Request, res: Response) {
+      res.sendFile(path.join(__dirname, '../public/user-data.html'));
+    });
+
     // Serve static files in the public folder
     this.app.use(express.static(path.join(__dirname, '../public')));
   }
