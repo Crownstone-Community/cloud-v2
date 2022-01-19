@@ -9,5 +9,6 @@ coverage
 dist
 !execute.js
 !jest.config.js
+!container.js
 
 isolate-session*
