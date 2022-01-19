@@ -56,6 +56,15 @@ test("Before deleting users, check sanitation deletion counts", async () => {
   expect(result).toMatchSnapshot()
 });
 
+test("Running twice should not have any effect", async () => {
+  await createMockSphereDatabase(client, "sphere1");
+  await DataSanitizer.sanitize();
+  let initialDump = await databaseDump();
+  await DataSanitizer.sanitize();
+  let secondDump = await databaseDump();
+  expect(initialDump).toStrictEqual(secondDump)
+});
+
 test("Before deleting users, check if expired tokens are removed", async () => {
   let sphere = await createMockSphereDatabase(client, "sphere1");
 

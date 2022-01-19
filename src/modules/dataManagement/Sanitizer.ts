@@ -1,72 +1,74 @@
 import {Dbs} from "../containers/RepoContainer";
-import {AccessLevels, SphereAccess} from "../../models/sphere-access.model";
+import {AccessLevels} from "../../models/sphere-access.model";
 
 
 export class DataSanitizer {
 
 
   static async sanitize() {
-    let users      = await Dbs.user.find({fields: {id: true, profilePicId: true}})
-    let userIds    = await idArray(new Promise((resolve, reject) => { resolve(users); }));
+    let beginTime = Date.now();
 
-    let userImageIds = await idArray(new Promise((resolve, reject) => { resolve(users); }), 'profilePicId');
+    let users                         = await Dbs.user.find({fields: {id: true, profilePicId: true}})
+    let userIds                       = await idArray(new Promise((resolve, reject) => { resolve(users); }));
+    let userImageIds                  = await idArray(new Promise((resolve, reject) => { resolve(users); }), 'profilePicId');
 
     // @ts-ignore
-    let deletedExpiredTokenCount  = (await Dbs.crownstoneToken.deleteAll({expiredAt: {lt: Date.now()}})).count;
-    let deletedOrphanedTokenCount = (await Dbs.crownstoneToken.deleteAll({userId: {nin: userIds}, principalType:"user"})).count;
-    let deletedOauthTokenCount    = (await Dbs.oauthToken.deleteAll({userId: {nin: userIds}})).count;
+    let deletedExpiredTokenCount      = await deleteGetCount(Dbs.crownstoneToken,{expiredAt: {lt: Date.now()}});
+    let deletedOrphanedTokenCount     = await deleteGetCount(Dbs.crownstoneToken,{userId: {nin: userIds}, principalType:"user"});
+    let deletedOauthTokenCount        = await deleteGetCount(Dbs.oauthToken,{userId: {nin: userIds}});
 
-    let deletedDevicesCount       = (await Dbs.device.deleteAll({ownerId: {nin: userIds}})).count;
-    let existingDeviceIds         = await idArray(Dbs.device.find({fields:{id:true}}));
+    let deletedDevicesCount           = await deleteGetCount(Dbs.device,{ownerId: {nin: userIds}});
+    let existingDeviceIds             = await idArray(Dbs.device.find({fields:{id:true}}));
 
-    let deletedDeviceLocationsCount  = (await Dbs.deviceLocationMap.deleteAll({deviceId: {nin: existingDeviceIds}})).count;
-    let deletedDeviceSphereCount     = (await Dbs.deviceSphereMap.deleteAll(  {deviceId: {nin: existingDeviceIds}})).count;
-    let deletedAppInstallationCount  = (await Dbs.appInstallation.deleteAll(  {deviceId: {nin: existingDeviceIds}})).count;
-    let deletedPreferencesCount      = (await Dbs.devicePreferences.deleteAll({deviceId: {nin: existingDeviceIds}})).count;
-    let deletedFingerprintLinksCount = (await Dbs.fingerprintLinker.deleteAll({deviceId: {nin: existingDeviceIds}})).count;
+    let deletedDeviceLocationsCount   = await deleteGetCount(Dbs.deviceLocationMap,{deviceId: {nin: existingDeviceIds}});
+    let deletedDeviceSphereCount      = await deleteGetCount(Dbs.deviceSphereMap,  {deviceId: {nin: existingDeviceIds}});
+    let deletedAppInstallationCount   = await deleteGetCount(Dbs.appInstallation,  {deviceId: {nin: existingDeviceIds}});
+    let deletedPreferencesCount       = await deleteGetCount(Dbs.devicePreferences,{deviceId: {nin: existingDeviceIds}});
+    let deletedFingerprintLinksCount  = await deleteGetCount(Dbs.fingerprintLinker,{deviceId: {nin: existingDeviceIds}});
 
-    let linkedFingerprintIds     = await idArray(Dbs.fingerprintLinker.find({fields:{fingerprintId:true}}), 'fingerprintId');
-    let deletedFingerprintCount  = (await Dbs.fingerprint.deleteAll( {id: {nin: linkedFingerprintIds}})).count;
-    let deletedSphereAccessCount = (await Dbs.sphereAccess.deleteAll({userId: {nin: userIds}, role:{neq:AccessLevels.hub}})).count;
+    let linkedFingerprintIds          = await idArray(Dbs.fingerprintLinker.find({fields:{fingerprintId:true}}), 'fingerprintId');
+    let deletedFingerprintCount       = await deleteGetCount(Dbs.fingerprint,{id: {nin: linkedFingerprintIds}});
+    let deletedSphereAccessCount      = await deleteGetCount(Dbs.sphereAccess,{userId: {nin: userIds}, role:{neq:AccessLevels.hub}});
 
-    let spheresWithOwnerIds   = await idArray(Dbs.sphereAccess.find({where: {role:{neq:AccessLevels.hub}}, fields: {sphereId: true}}), 'sphereId')
-    let deletedSphereCount    = (await Dbs.sphere.deleteAll({id: {nin: spheresWithOwnerIds}})).count;
-    let deletedSceneCount     = (await Dbs.scene.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedLocationsCount = (await Dbs.location.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedStoneCount     = (await Dbs.stone.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
+    let spheresWithOwnerIds           = await idArray(Dbs.sphereAccess.find({where: {role:{neq:AccessLevels.hub}}, fields: {sphereId: true}}), 'sphereId')
+    let deletedSphereCount            = await deleteGetCount(Dbs.sphere,{id: {nin: spheresWithOwnerIds}});
+    let deletedSceneCount             = await deleteGetCount(Dbs.scene,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedLocationsCount         = await deleteGetCount(Dbs.location,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedStoneCount             = await deleteGetCount(Dbs.stone,{sphereId: {nin: spheresWithOwnerIds}});
 
-    let stoneIds = await idArray(Dbs.stone.find({fields:{id: true}}));
+    let stoneIds                      = await idArray(Dbs.stone.find({fields:{id: true}}));
 
-    let deletedStoneBehavioursCount  = (await Dbs.stoneBehaviour.deleteAll({stoneId: {nin: stoneIds}})).count;
-    let deletedStoneAbilitiesCount   = (await Dbs.stoneAbility.deleteAll({stoneId: {nin: stoneIds}})).count;
-    let deletedStoneAbilityPropertiesCount  = (await Dbs.stoneAbilityProperty.deleteAll({stoneId: {nin: stoneIds}})).count;
-    let deletedSwitchStateCount      = (await Dbs.stoneSwitchState.deleteAll({stoneId:{nin:stoneIds}})).count;
-    let deletedStoneKeysCount        = (await Dbs.stoneKeys.deleteAll({stoneId:{nin:stoneIds}})).count;
+    let deletedStoneBehavioursCount   = await deleteGetCount(Dbs.stoneBehaviour,{stoneId: {nin: stoneIds}});
+    let deletedStoneAbilitiesCount    = await deleteGetCount(Dbs.stoneAbility,{stoneId: {nin: stoneIds}});
+    let deletedStoneAbilityPropsCount = await deleteGetCount(Dbs.stoneAbilityProperty,{stoneId: {nin: stoneIds}});
+    let deletedSwitchStateCount       = await deleteGetCount(Dbs.stoneSwitchState,{stoneId: {nin: stoneIds}});
+    let deletedStoneKeysCount         = await deleteGetCount(Dbs.stoneKeys,{stoneId: {nin: stoneIds}});
 
-    let deletedHubCount              = (await Dbs.hub.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
+    let deletedHubCount               = await deleteGetCount(Dbs.hub,{sphereId: {nin: spheresWithOwnerIds}});
 
-    let existingHubIds               = await idArray(Dbs.hub.find({fields:{id:true}}))
-    let deletedOrphanedHubTokenCount = (await Dbs.crownstoneToken.deleteAll({userId: {nin: existingHubIds}, principalType:"Hub"})).count;
-    let deletedSphereAccessHubCount  = (await Dbs.sphereAccess.deleteAll({userId: {nin: existingHubIds}, role:AccessLevels.hub})).count;
+    let existingHubIds                = await idArray(Dbs.hub.find({fields:{id:true}}))
+    let deletedOrphanedHubTokenCount  = await deleteGetCount(Dbs.crownstoneToken,{userId: {nin: existingHubIds}, principalType:"Hub"});
+    let deletedSphereAccessHubCount   = await deleteGetCount(Dbs.sphereAccess,{userId: {nin: existingHubIds}, role:AccessLevels.hub});
 
-    let deletedSphereKeyCount        = (await Dbs.sphereKeys.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedMessagesCount         = (await Dbs.message.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedMessagesStateCount    = (await Dbs.messageState.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedMessagesUserCount     = (await Dbs.messageUser.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
+    let deletedSphereKeyCount         = await deleteGetCount(Dbs.sphereKeys,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesCount          = await deleteGetCount(Dbs.message,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesStateCount     = await deleteGetCount(Dbs.messageState,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesUserCount      = await deleteGetCount(Dbs.messageUser,{sphereId: {nin: spheresWithOwnerIds}});
 
-    let deletedToonCount             = (await Dbs.toon.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
-    let deletedSphereTrackingNumberCount = (await Dbs.sphereTrackingNumber.deleteAll({sphereId: {nin: spheresWithOwnerIds}})).count;
+    let deletedToonCount              = await deleteGetCount(Dbs.toon,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedSphereTrackingNrCount  = await deleteGetCount(Dbs.sphereTrackingNumber,{sphereId: {nin: spheresWithOwnerIds}});
 
-    let sceneImageIds = await idArray(Dbs.scene.find({fields:{customPictureId: true}}),'customPictureId');
-    let locationIds   = await idArray(Dbs.location.find({fields:{imageId: true}}),'imageId');
+    let sceneImageIds                 = await idArray(Dbs.scene.find({fields:{customPictureId: true}}),'customPictureId');
+    let locationIds                   = await idArray(Dbs.location.find({fields:{imageId: true}}),'imageId');
 
     let allFileIds = userImageIds.concat(sceneImageIds, locationIds);
 
+    let deletedFsFileCount            = await deleteGetCount(Dbs.fsFiles,{id: {nin: allFileIds}});
+    let deletedFsChunksCount          = await deleteGetCount(Dbs.fsChunks,{files_id: {nin: allFileIds}});
 
-    let deletedFsFileCount   = (await Dbs.fsFiles.deleteAll({id: {nin: allFileIds}})).count;
-    let deletedFsChunksCount = (await Dbs.fsChunks.deleteAll({files_id: {nin: allFileIds}})).count;
 
-    return {
+
+    let sanitationResult = {
       tokens: {
         crownstoneTokens: deletedOrphanedTokenCount + deletedExpiredTokenCount + deletedOrphanedHubTokenCount,
         oauthTokens: deletedOauthTokenCount,
@@ -90,7 +92,7 @@ export class DataSanitizer {
           stones: deletedStoneCount,
           behaviours: deletedStoneBehavioursCount,
           abilities: deletedStoneAbilitiesCount,
-          abilityProperties: deletedStoneAbilityPropertiesCount,
+          abilityProperties: deletedStoneAbilityPropsCount,
           switchStates: deletedSwitchStateCount,
           keys: deletedStoneKeysCount
         },
@@ -101,13 +103,21 @@ export class DataSanitizer {
           messageUsers: deletedMessagesUserCount,
         },
         toons: deletedToonCount,
-        trackingNumbers: deletedSphereTrackingNumberCount
+        trackingNumbers: deletedSphereTrackingNrCount
       },
       files: {
         files: deletedFsFileCount,
         chunks: deletedFsChunksCount
       }
-    }
+    };
+
+
+
+    let duration = Date.now() - beginTime;
+    console.log("Sanitation: Sanitation took",duration,"ms and deleted", getTotalCount(sanitationResult), "entries.");
+    console.log("Sanitation: Deleted items per segment:\n", JSON.stringify(sanitationResult, null, 2));
+
+    return sanitationResult;
   }
 
   /**
@@ -149,6 +159,16 @@ export class DataSanitizer {
    */
 }
 
+async function deleteGetCount(model: any, query: any) : Promise<number> {
+  let modelName = model.constructor.name;
+  let startTime = Date.now();
+  let count = (await model.deleteAll(query)).count;
+  let duration = Date.now() - startTime;
+  console.log("Sanitation: Deleting", count, "items from", modelName, "took", duration, "ms");
+  return count;
+}
+
+
 function pureMap(dataArray: any[], key = 'id') : Record<string, true> {
   let data : Record<string, true> = {};
   for (let point of dataArray) {
@@ -163,6 +183,21 @@ async function map(promise: Promise<any>, key = 'id') : Promise<Record<string, t
   let dataArray = await promise;
   return pureMap(dataArray,key)
 }
+
 async function idArray(promise: Promise<any>, key = 'id') : Promise<string[]> {
   return Object.keys(await map(promise, key));
+}
+
+
+function getTotalCount(sanitationResult: any) : number {
+  let total = 0;
+  for (let item in sanitationResult) {
+    if (typeof sanitationResult[item] !== "number") {
+      total += getTotalCount(sanitationResult[item]);
+    }
+    else {
+      total += sanitationResult[item];
+    }
+  }
+  return total;
 }

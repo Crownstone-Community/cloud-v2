@@ -25,10 +25,12 @@ export class ExpressServer {
     this.app.use('/api', this.lbApp.requestHandler);
     this.app.get('/sanitize-database', async function (_req: Request, res: Response) {
       if (_req.query.token === process.env.SANITATION_TOKEN) {
-        let sanitizer = new DataSanitizer();
-        await sanitizer.sanitize()
+        let result = await DataSanitizer.sanitize()
+        res.write("Processing...\n")
+        res.write("Removed the following data:\n")
+        return res.end(JSON.stringify(result, null, 2));
       }
-      res.end();
+      res.end("INVALID_TOKEN");
     });
     // Custom Express routes
     this.app.get('/', function (_req: Request, res: Response) {
