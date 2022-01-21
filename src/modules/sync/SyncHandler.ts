@@ -78,9 +78,6 @@ class Syncer {
           ]}
       });
     }
-    if (!ignore.trackingNumbers) {
-      includeArray.push({relation:'trackingNumbers'});
-    }
     if (!ignore.toons) {
       includeArray.push({relation:'toons'});
     }
@@ -124,7 +121,6 @@ class Syncer {
     injectSphereSimpleItem(sphereData, 'messages',        sphereItem);
     injectSphereSimpleItem(sphereData, 'locations',       sphereItem);
     injectSphereSimpleItem(sphereData, 'scenes',          sphereItem);
-    injectSphereSimpleItem(sphereData, 'trackingNumbers', sphereItem);
     injectSphereSimpleItem(sphereData, 'toons',           sphereItem);
 
     if (!ignore.sphereUsers) {
@@ -349,7 +345,6 @@ class Syncer {
     let abilityData         = ignore.stones    ? [] : await Dbs.stoneAbility.find(filter)
     let abilityPropertyData = ignore.stones    ? [] : await Dbs.stoneAbilityProperty.find(filter)
 
-    let trackingNumberData  = ignore.trackingNumbers ? [] : await Dbs.sphereTrackingNumber.find(filter);
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
 
     let sphereUsers         = ignore.sphereUsers     ? {} : await SphereAccessUtil.getSphereUsers(sphereIds);
@@ -371,7 +366,6 @@ class Syncer {
     let cloud_behaviours      = getNestedIdMap(behaviourData,         'stoneId');
     let cloud_abilities       = getNestedIdMap(abilityData,           'stoneId');
     let cloud_abilityProperties  = getNestedIdMap(abilityPropertyData,'abilityId');
-    let cloud_trackingNumbers = getNestedIdMap(trackingNumberData,    'sphereId');
     let cloud_toons           = getNestedIdMap(toonData,              'sphereId');
 
     let reply : SyncRequestResponse = {spheres:{}};
@@ -423,10 +417,6 @@ class Syncer {
 
         if (!ignore.toons) {
           await SphereSyncer.toons.processRequest(cloud_toons[sphereId]);
-        }
-
-        if (!ignore.trackingNumbers) {
-          await SphereSyncer.trackingNumbers.processRequest(cloud_trackingNumbers[sphereId]);
         }
 
         if (!ignore.stones) {
@@ -567,8 +557,6 @@ class Syncer {
         await SphereSyncer.scenes.processReply();
 
         await SphereSyncer.toons.processReply();
-
-        await SphereSyncer.trackingNumbers.processReply();
 
         await SphereSyncer.stones.processReply();
       }

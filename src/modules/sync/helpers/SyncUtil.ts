@@ -96,7 +96,6 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
       spheres:         value,
       sphereUsers:     value,
       stones:          value,
-      trackingNumbers: value,
       toons:           value,
       user:            value,
     };
@@ -114,7 +113,6 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
       spheres:         value,
       sphereUsers:     value,
       stones:          value,
-      trackingNumbers: value,
       toons:           value,
       user:            false,
     };
@@ -132,7 +130,6 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
       spheres:         false,
       sphereUsers:     false,
       stones:          value,
-      trackingNumbers: false,
       toons:           false,
       user:            false,
     };

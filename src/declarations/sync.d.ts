@@ -9,7 +9,6 @@ type SyncCategory = 'bootloaders'     |
                     'spheres'         |
                     'sphereUsers'     |
                     'stones'          |
-                    'trackingNumbers' |
                     'toons'           |
                     'user'
 
@@ -27,7 +26,6 @@ interface SyncIgnoreMap {
   spheres:         boolean,
   sphereUsers:     boolean,
   stones:          boolean,
-  trackingNumbers: boolean,
   toons:           boolean,
   user:            boolean,
 }
