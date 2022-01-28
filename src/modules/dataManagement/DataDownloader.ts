@@ -94,6 +94,7 @@ export class DataDownloader {
   }
 
   async download() {
+    let startTime = Date.now()
     await UserDataDownloadThrottle.startSession(this.userId);
 
     try {
@@ -106,7 +107,7 @@ export class DataDownloader {
       await this.addFile(user.profilePicId, 'user profile picture');
 
       // download all devices
-      let devices = await Dbs.device.find({
+      let devices = await find(Dbs.device,{
         where: {ownerId: this.userId },
         include: [
           {relation: 'installations'},
@@ -118,15 +119,15 @@ export class DataDownloader {
       this.addJson(devices,'devices');
 
       let deviceIds = devices.map((device: Device) => { return device.id; })
-      let fingerprintLinks = await Dbs.fingerprintLinker.find({where: {deviceId: {inq: deviceIds}}});
+      let fingerprintLinks = await find(Dbs.fingerprintLinker,{where: {deviceId: {inq: deviceIds}}});
       let fingerprintIds = fingerprintLinks.map((fingerprintLink: FingerprintLinker) => { return fingerprintLink.fingerprintId; })
 
       // download all fingerprints
-      let fingerprints = await Dbs.fingerprint.find({where: {id: {inq: fingerprintIds}}});
+      let fingerprints = await find(Dbs.fingerprint,{where: {id: {inq: fingerprintIds}}});
       this.addJson(fingerprints,'fingerprints');
 
       // download spehres (where member or admin)
-      let spheresWithAccess : SphereAccess[] = await Dbs.sphereAccess.find({
+      let spheresWithAccess : SphereAccess[] = await find(Dbs.sphereAccess,{
         where: {
           and: [
             {userId: this.userId}, {invitePending: false}, {role: {inq:[AccessLevels.admin, AccessLevels.member]}}
@@ -134,7 +135,7 @@ export class DataDownloader {
         }, fields:{sphereId:true, role:true}});
       let sphereIds = spheresWithAccess.map((data) => { return data.sphereId; })
       let roles     = spheresWithAccess.map((data) => { return data.role; })
-      let spheres   = await Dbs.sphere.find({where:{id:{inq: sphereIds}}});
+      let spheres   = await find(Dbs.sphere,{where:{id:{inq: sphereIds}}});
 
       // get sphere contents
       for (let i = 0;  i < spheres.length; i++) {
@@ -145,7 +146,7 @@ export class DataDownloader {
         this.addJson(sphere,sphere.name, 'spheres');
 
         // get scenes
-        let scenes = await Dbs.scene.find({where:{sphereId: sphereId}});
+        let scenes = await find(Dbs.scene,{where:{sphereId: sphereId}});
         this.addJson(scenes, 'scenes', ['spheres', sphere.name]);
 
         // get custom images
@@ -155,31 +156,46 @@ export class DataDownloader {
           }
         }
 
-        let stoneIds = (await Dbs.stone.find({where:{sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; })
-        for (let stoneId of stoneIds) {
-          // get stones
-          let stone = await Dbs.stone.findById(stoneId);
-          let behaviour = await Dbs.stoneBehaviour.find({where:{stoneId: stoneId}});
-          let abilities = await Dbs.stoneAbility.find({where:{stoneId: stoneId}, include: [{relation: 'properties'}]});
-          let switchStateHistory = await Dbs.stoneSwitchState.find({where:{stoneId: stoneId}});
+        // get stones
+        let stoneIds = (await find(Dbs.stone,{where:{sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; })
+        let stones = await find(Dbs.stone, {where: {id:{inq:stoneIds}}, include: [
+            {relation: 'behaviours'},
+            {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
+            {relation: 'switchStateHistory'},
+          ]});
 
-          // Adding keys to stone if the user is an admin.
-          if (roleInSphere === 'admin') {
-            let keys = await Dbs.stoneKeys.find({where: {stoneId: stoneId}});
-            if (keys.length > 0) {
-              // @ts-ignore
-              stone.keys = keys;
+        // map stones so we can easily look them up
+        let stoneMap : any = {};
+        for (let stone of stones) {
+          // we stringify and parse to remove the Loopback checkers which remove the keys from this object
+          // it would remove keys on stringification otherwise.
+          stoneMap[stone.id] = JSON.parse(JSON.stringify(stone));
+        }
+        // inject keys into the stone
+        if (roleInSphere === 'admin') {
+          let keys = await find(Dbs.stoneKeys, {where: {stoneId: {inq: stoneIds}}});
+          for (let key of keys) {
+            let stoneId = key.stoneId;
+            if (stoneMap[stoneId]) {
+              if (!stoneMap[stoneId].keys) { stoneMap[stoneId].keys = []; }
+              stoneMap[stoneId].keys.push(key);
             }
           }
-          if (behaviour.length > 0)           { stone.behaviours = behaviour; }
-          if (abilities.length > 0)           { stone.abilities = abilities; }
-          if (switchStateHistory.length > 0)  { stone.switchStateHistory = switchStateHistory; }
+        }
+
+        // add to zip.
+        for (let stoneId in stoneMap) {
+          let stone = stoneMap[stoneId];
+
+          if (stone.behaviours === undefined) {
+            delete stone.behaviours;
+          }
 
           this.addJson(stone, stone.name, ['spheres', sphere.name, 'crownstones'])
-          await Util.wait(250);
         }
+
         // get locations
-        let locations = await Dbs.location.find({where:{sphereId: sphereId}});
+        let locations = await find(Dbs.location, {where:{sphereId: sphereId}});
         for (let location of locations) {
           if (location.imageId) {
             await this.addFile(location.imageId, ['spheres', sphere.name, 'images','locations']);
@@ -187,13 +203,13 @@ export class DataDownloader {
         }
         this.addJson(locations, 'locations', ['spheres', sphere.name]);
         // get hubs
-        this.addJson(await Dbs.hub.find({where:{sphereId: sphereId}}), 'hubs', ['spheres', sphere.name]);
+        this.addJson(await find(Dbs.hub, {where:{sphereId: sphereId}}), 'hubs', ['spheres', sphere.name]);
         // get toons
-        this.addJson(await Dbs.toon.find({where:{sphereId: sphereId}}), 'toons', ['spheres', sphere.name]);
+        this.addJson(await find(Dbs.toon, {where:{sphereId: sphereId}}), 'toons', ['spheres', sphere.name]);
         // get sphere keys (you have access to)
         this.addJson(await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]), 'keys', ['spheres', sphere.name]);
         // get messages (sent by you)
-        this.addJson(await Dbs.message.find({where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}}), 'messages', ['spheres', sphere.name]);
+        this.addJson(await find(Dbs.message,{where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}}), 'messages', ['spheres', sphere.name]);
 
         await Util.wait(250);
       }
@@ -205,6 +221,8 @@ export class DataDownloader {
     }
     finally {
       UserDataDownloadThrottle.endSession(this.userId);
+      let duration = Date.now() - startTime;
+      console.log("User-data: getting all datatook", duration, "ms");
     }
   }
 
@@ -262,4 +280,15 @@ export class DataDownloader {
     this.zipFile.addFile(filePath, Buffer.from(stringifiedData, "utf8"))
   }
 
+}
+
+
+async function find(model: any, query: any) : Promise<any[]> {
+  let modelName = model.constructor.name;
+  let startTime = Date.now();
+  let data = await model.find(query);
+  let duration = Date.now() - startTime;
+  const used = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  // console.log(used,"MB for User-data: getting", data.length, "items from", modelName, "took", duration, "ms");
+  return data;
 }

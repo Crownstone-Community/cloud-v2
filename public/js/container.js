@@ -211,11 +211,12 @@ var UserData = function (_React$Component2) {
 
       this.setState({ downloading: true });
       fetch(pathPrefix + '/api/user/allUserData', { method: 'GET', headers: { 'Authorization': this.props.accessToken } }).then(function (response) {
-        if (response.status !== 200) {
-          alert('Something went wrong (' + response.status + ')');
-          _this5.setState({ downloading: false });
-        } else if (response.status === 429) {
+        if (response.status === 429) {
           alert('You can only do this once every 5 minutes... Try again later.');
+          _this5.setState({downloading: false});
+        }
+        else if (response.status !== 200) {
+          alert('Something went wrong (' + response.status + ')');
           _this5.setState({ downloading: false });
         } else {
           return response.blob().then(function (blob) {
