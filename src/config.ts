@@ -7,7 +7,7 @@ export const CONFIG = {
   mongoDataURL:  process.env.DATA_DB_URL  ?? "mongodb://127.0.0.1:27017/data_v1",
   mongoUserURL:  process.env.USER_DB_URL  ?? "mongodb://127.0.0.1:27017/users_v1",
 
-  emailValidationRequired: process.env.EMAIL_VALIDATION_REQUIRED ?? true,
+  emailValidationRequired: process.env.EMAIL_VALIDATION_REQUIRED === 'true' ? true : false,
   generateCustomIds:       process.env.GENERATE_CUSTOM_IDS       ?? false,
   unittesting:             process.env.UNITTESTING_ENABLED       ?? false,
 
