@@ -296,9 +296,10 @@ var LoginForm = function (_React$Component3) {
         React.createElement('input', {
           style: styles.input,
           placeholder: "email",
+          inputmode: 'email',
           value: this.state.email,
           onChange: function onChange(e) {
-            _this8.setState({ email: e.target.value });
+            _this8.setState({ email: e.target.value.toLowerCase() });
           }
         }),
         React.createElement('br', null),
