@@ -10,7 +10,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var styles = {
   input: {
-    width: '85vw',
+    width: 'min(85vw, 450px)',
     height: 35,
     padding: 5,
     borderRadius: 5,
@@ -18,7 +18,7 @@ var styles = {
     borderWidth: 1
   },
   warningButton: {
-    width: '85vw',
+    width: 'min(85vw, 450px)',
     height: 35,
     padding: 5,
     borderRadius: 5,
