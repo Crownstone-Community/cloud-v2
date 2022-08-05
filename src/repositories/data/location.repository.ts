@@ -33,12 +33,12 @@ export class LocationRepository extends TimestampedCrudRepository<Location,typeo
     return super.create(entity, options);
   }
 
-  async delete(entity: Location, options?: Options): Promise<void> {
+  async deleteById(id: any, options?: Options): Promise<void> {
     // cascade
-    if (!entity.id) { throw "locationId missing"; }
+    if (!id) { throw "locationId missing"; }
 
-    await this.fingerprints(entity.id).delete()
-    return super.delete(entity, options);
+    await this.fingerprints(id).delete()
+    return super.deleteById(id, options);
   }
 
 }

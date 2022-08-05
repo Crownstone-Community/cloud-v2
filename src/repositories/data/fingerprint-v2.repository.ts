@@ -4,6 +4,8 @@ import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository"
 import { SphereRepository } from "./sphere.repository";
 import { Sphere } from "../../models/sphere.model";
 import {FingerprintV2} from "../../models/fingerprint-v2.model";
+import {HttpErrors} from "@loopback/rest";
+import {Dbs} from "../../modules/containers/RepoContainer";
 
 
 export class FingerprintV2Repository extends TimestampedCrudRepository<FingerprintV2,typeof FingerprintV2.prototype.id > {
@@ -18,4 +20,23 @@ export class FingerprintV2Repository extends TimestampedCrudRepository<Fingerpri
   }
 
 
+  async create(fingerprint: FingerprintV2): Promise<FingerprintV2> {
+    if (!fingerprint.locationId) {
+      throw new HttpErrors.UnprocessableEntity('locationId is required');
+    }
+
+    try {
+      let location = await Dbs.location.findById(fingerprint.locationId);
+
+      // this location id does not belong to this sphere.
+      if (location?.sphereId !== fingerprint.sphereId) {
+        throw new Error();
+      }
+    }
+    catch (err) {
+      throw new HttpErrors.UnprocessableEntity('locationId is invalid');
+    }
+
+    return super.create(fingerprint);
+  }
 }

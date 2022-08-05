@@ -80,15 +80,15 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     return stone;
   }
 
-  async delete(entity: Stone, options?: Options): Promise<void> {
-    if (!entity.id) { throw "StoneIdRequired" }
+  async deleteById(id: any, options?: Options): Promise<void> {
+    if (!id) { throw "StoneIdRequired" }
 
-    await this.behaviours(entity.id).delete()
-    await this.abilities(entity.id).delete()
-    await this.switchStateHistory(entity.id).delete()
-    await Dbs.stoneKeys.deleteAll({stoneId: entity.id});
+    await this.behaviours(id).delete()
+    await this.abilities(id).delete()
+    await this.switchStateHistory(id).delete()
+    await Dbs.stoneKeys.deleteAll({stoneId: id});
 
-    return super.delete(entity, options);
+    return super.deleteById(id, options);
   }
 
 }

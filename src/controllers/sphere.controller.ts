@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {del, param, post, requestBody} from '@loopback/rest';
+import {del, getModelSchemaRef, param, post, put, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -15,6 +15,7 @@ import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 import {Dbs} from "../modules/containers/RepoContainer";
+import {FingerprintV2} from "../models/fingerprint-v2.model";
 
 
 
@@ -34,21 +35,47 @@ export class SphereController extends SphereItem {
   @authorize(Authorization.sphereAccess())
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') id: string,
+    @param.path.string('id') sphereId: string,
     @requestBody({required: true}) syncData: any
   ): Promise<SyncRequestResponse> {
-    let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {spheres:[id]})
+    let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {spheres:[sphereId]})
     return result;
   }
 
-  // Perform a sync operation within a sphere
-  @del('/spheres/{id}/fingerprint/{fk}')
+  @post('/spheres/{id}/fingerprint')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async addFingerprint(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') sphereId: string,
+    @requestBody({required: true}) fingerprintData: FingerprintV2
+  ): Promise<FingerprintV2> {
+    fingerprintData.sphereId = sphereId;
+    return Dbs.fingerprintV2.create(fingerprintData);
+  }
+
+  @put('/spheres/{id}/fingerprint/{fingerprintId}')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async updateFingerprint(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') sphereId: string,
+    @param.path.string('fingerprintId') fingerprintId: string,
+    @requestBody({required: true}) fingerprintData: Partial<FingerprintV2>
+  ): Promise<void> {
+    fingerprintData.sphereId = sphereId;
+    return Dbs.fingerprintV2.updateById(fingerprintId, fingerprintData);
+  }
+
+
+
+  @del('/spheres/{id}/fingerprint/{fingerprintId}')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async deleteFingerprint(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') id: string,
-    @param.path.string('fk') fingerprintId: string,
+    @param.path.string('id') sphereId: string,
+    @param.path.string('fingerprintId') fingerprintId: string,
   ): Promise<void> {
     return Dbs.fingerprintV2.deleteById(fingerprintId);
   }

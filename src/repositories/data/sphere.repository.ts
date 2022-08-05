@@ -108,28 +108,28 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     return sphere;
   }
 
-  async delete(entity: Sphere, options?: Options): Promise<void> {
+  async deleteById(id: any, options?: Options): Promise<void> {
+    if (!id) { throw new HttpErrors.BadRequest('id is required'); }
+
     // cascade
-    let stones = await this.stones(entity.id).find({fields: {id:true}});
+    let stones = await this.stones(id).find({fields: {id:true}});
     if (stones.length > 0) {
       throw new HttpErrors.PreconditionFailed("Can't delete spheres while there are still Crownstones assigned to it.");
     }
 
-    if (!entity.id) { throw "SphereIdMissing"; }
+    await Dbs.sphereKeys.deleteAll({sphereId: id});
 
-    await Dbs.sphereKeys.deleteAll({sphereId: entity.id});
-
-    await this.stones(entity.id).delete()
-    await this.locations(entity.id).delete()
-    await this.fingerprints(entity.id).delete()
-    await this.scenes(entity.id).delete()
-    await this.messages(entity.id).delete()
-    await this.hubs(entity.id).delete()
-    await this.sphereFeatures(entity.id).delete()
-    await this.trackingNumbers(entity.id).delete()
-    await this.toons(entity.id).delete()
+    await this.stones(id).delete()
+    await this.locations(id).delete()
+    await this.fingerprints(id).delete()
+    await this.scenes(id).delete()
+    await this.messages(id).delete()
+    await this.hubs(id).delete()
+    await this.sphereFeatures(id).delete()
+    await this.trackingNumbers(id).delete()
+    await this.toons(id).delete()
     
-    return super.delete(entity, options);
+    return super.deleteById(id, options);
   }
 
 
