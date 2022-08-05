@@ -1,6 +1,7 @@
 type SyncCategory = 'bootloaders'     |
                     'features'        |
                     'firmwares'       |
+                    'fingerprints'    |
                     'hubs'            |
                     'keys'            |
                     'locations'       |
@@ -17,6 +18,7 @@ type DataCategory = SyncCategory | 'abilities' | 'properties' | 'behaviours' | '
 interface SyncIgnoreMap {
   bootloaders:     boolean,
   features:        boolean,
+  fingerprints:    boolean,
   firmwares:       boolean,
   hubs:            boolean,
   keys:            boolean,
@@ -50,6 +52,9 @@ interface SyncRequestSphereData {
     },
     features?: {
       [featureId: string]: RequestItemCoreType
+    }
+    fingerprints?: {
+      [fingerprintId: string]: RequestItemCoreType
     }
     locations?: {
       [locationId: string]: RequestItemCoreType

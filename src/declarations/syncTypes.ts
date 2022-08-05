@@ -14,6 +14,7 @@ import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
 import {Entity} from "@loopback/repository";
 import {SphereKeys} from "../models/sphere-key.model";
+import {FingerprintV2} from "../models/fingerprint-v2.model";
 
 
 interface FirmwareBootloaderList {
@@ -42,6 +43,11 @@ export interface SyncRequestResponse_Sphere {
       data: SyncResponseItemCore<SphereFeature>
     }
   },
+  fingerprints?: {
+    [fingerprintId: string] : {
+      data: SyncResponseItemCore<FingerprintV2>
+    }
+  }
   locations?: {
     [locationId: string]: {
       data: SyncResponseItemCore<Location>,

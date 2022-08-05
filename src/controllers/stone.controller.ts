@@ -40,7 +40,7 @@ export class StoneController extends SphereItem {
     return result;
   }
 
-  // Perform a sync operation within a sphere
+  // Delete a stone
   @del('/stones/{id}')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereAdmin())

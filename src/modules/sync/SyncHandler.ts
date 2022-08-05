@@ -52,6 +52,9 @@ class Syncer {
     if (!ignore.features) {
       includeArray.push({relation:'features'});
     }
+    if (!ignore.fingerprints) {
+      includeArray.push({relation:'fingerprints'});
+    }
     if (!ignore.locations) {
       includeArray.push({relation:'locations'});
     }
@@ -330,43 +333,39 @@ class Syncer {
     }
 
 
-    let featureData         = ignore.features  ? [] : await Dbs.sphereFeature.find(filter);
-    let locationData        = ignore.locations ? [] : await Dbs.location.find(filter);
+    let featureData         = ignore.features     ? [] : await Dbs.sphereFeature.find(filter);
+    let locationData        = ignore.locations    ? [] : await Dbs.location.find(filter);
+    let fingerprintData     = ignore.fingerprints ? [] : await Dbs.fingerprintV2.find(filter);
 
-    let messageData         = ignore.messages  ? [] : await Dbs.message.find(filter);
-    let messageStateData    = ignore.messages  ? [] : await Dbs.messageState.find(filter);
-    let messageUserData     = ignore.messages  ? [] : await Dbs.messageUser.find( filter);
+    let messageData         = ignore.messages     ? [] : await Dbs.message.find(filter);
 
-    let hubData             = ignore.hubs      ? [] : await Dbs.hub.find(filter);
-    let sceneData           = ignore.scenes    ? [] : await Dbs.scene.find(filter);
+    let hubData             = ignore.hubs         ? [] : await Dbs.hub.find(filter);
+    let sceneData           = ignore.scenes       ? [] : await Dbs.scene.find(filter);
 
-    let stoneData           = ignore.stones    ? [] : await Dbs.stone.find(stoneFilter);
-    let behaviourData       = ignore.stones    ? [] : await Dbs.stoneBehaviour.find(filter)
-    let abilityData         = ignore.stones    ? [] : await Dbs.stoneAbility.find(filter)
-    let abilityPropertyData = ignore.stones    ? [] : await Dbs.stoneAbilityProperty.find(filter)
+    let stoneData           = ignore.stones       ? [] : await Dbs.stone.find(stoneFilter);
+    let behaviourData       = ignore.stones       ? [] : await Dbs.stoneBehaviour.find(filter)
+    let abilityData         = ignore.stones       ? [] : await Dbs.stoneAbility.find(filter)
+    let abilityPropertyData = ignore.stones       ? [] : await Dbs.stoneAbilityProperty.find(filter)
 
     let toonData            = ignore.toons           ? [] : await Dbs.toon.find(filter);
 
     let sphereUsers         = ignore.sphereUsers     ? {} : await SphereAccessUtil.getSphereUsers(sphereIds);
 
     // this is cheap to do with empty arrays do we dont check for ignore here.
-    let cloud_spheres         = getUniqueIdMap(sphereData);
-    let cloud_features        = getNestedIdMap(featureData,           'sphereId');
-    let cloud_locations       = getNestedIdMap(locationData,          'sphereId');
+    let cloud_spheres           = getUniqueIdMap(sphereData);
+    let cloud_features          = getNestedIdMap(featureData,         'sphereId');
+    let cloud_locations         = getNestedIdMap(locationData,        'sphereId');
+    let cloud_fingerprints      = getNestedIdMap(fingerprintData,     'sphereId');
 
-    // TODO: do something with messages.
-    let cloud_messages        = getNestedIdMap(messageData,           'sphereId');
-    let cloud_messageStatesD  = getNestedIdMap(messageStateData,      'messageDeliveredId');
-    let cloud_messageStatesR  = getNestedIdMap(messageStateData,      'messageReadId');
-    let cloud_messageUsers    = getNestedIdMap(messageUserData,       'messageId');
+    let cloud_messages          = getNestedIdMap(messageData,         'sphereId');
 
-    let cloud_hubs            = getNestedIdMap(hubData,               'sphereId');
-    let cloud_scenes          = getNestedIdMap(sceneData,             'sphereId');
-    let cloud_stones          = getNestedIdMap(stoneData,             'sphereId');
-    let cloud_behaviours      = getNestedIdMap(behaviourData,         'stoneId');
-    let cloud_abilities       = getNestedIdMap(abilityData,           'stoneId');
-    let cloud_abilityProperties  = getNestedIdMap(abilityPropertyData,'abilityId');
-    let cloud_toons           = getNestedIdMap(toonData,              'sphereId');
+    let cloud_hubs              = getNestedIdMap(hubData,             'sphereId');
+    let cloud_scenes            = getNestedIdMap(sceneData,           'sphereId');
+    let cloud_stones            = getNestedIdMap(stoneData,           'sphereId');
+    let cloud_behaviours        = getNestedIdMap(behaviourData,       'stoneId');
+    let cloud_abilities         = getNestedIdMap(abilityData,         'stoneId');
+    let cloud_abilityProperties = getNestedIdMap(abilityPropertyData, 'abilityId');
+    let cloud_toons             = getNestedIdMap(toonData,            'sphereId');
 
     let reply : SyncRequestResponse = {spheres:{}};
 
@@ -409,6 +408,14 @@ class Syncer {
 
         if (!ignore.features) {
           await SphereSyncer.features.processRequest(cloud_features[sphereId]);
+        }
+
+        // if (!ignore.messages) {
+        //   await SphereSyncer.messages.processRequest(cloud_messages[sphereId]);
+        // }
+
+        if (!ignore.fingerprints) {
+          await SphereSyncer.fingerprints.processRequest(cloud_fingerprints[sphereId]);
         }
 
         if (!ignore.scenes) {

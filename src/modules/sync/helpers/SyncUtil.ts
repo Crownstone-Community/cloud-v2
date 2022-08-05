@@ -88,6 +88,7 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
       bootloaders:     value,
       features:        value,
       firmwares:       value,
+      fingerprints:    value,
       hubs:            value,
       keys:            value,
       locations:       value,
@@ -105,6 +106,7 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
       bootloaders:     false,
       features:        value,
       firmwares:       false,
+      fingerprints:    value,
       hubs:            value,
       keys:            false,
       locations:       value,
@@ -121,6 +123,7 @@ function getSyncCategories(value: boolean, domain?: SyncDomain) : SyncIgnoreMap 
     return {
       bootloaders:     false,
       features:        false,
+      fingerprints:    false,
       firmwares:       false,
       hubs:            false,
       keys:            false,

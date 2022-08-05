@@ -1,9 +1,9 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {Stone} from "./stone.model";
-import {Fingerprint} from "./fingerprint.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {Sphere} from "./sphere.model";
+import {FingerprintV2} from "./fingerprint-v2.model";
 
 @model()
 export class Location extends AddTimestamps(BaseEntity) {
@@ -26,8 +26,11 @@ export class Location extends AddTimestamps(BaseEntity) {
   @property({type: 'string'})
   imageId: string;
 
-  @hasMany(() => Fingerprint, {keyTo: 'locationId'})
-  fingerprints: Fingerprint[];
+  @property({type: 'string'})
+  stockPicture: string;
+
+  @hasMany(() => FingerprintV2, {keyTo: 'locationId'})
+  fingerprints: FingerprintV2[];
 
   @hasMany(() => Stone, {keyTo: 'locationId'})
   stones: Stone[];

@@ -32,18 +32,21 @@ import {CloudUtil} from "../../util/CloudUtil";
 import {keyTypes} from "../../enums";
 import {HttpErrors} from "@loopback/rest";
 import {Dbs} from "../../modules/containers/RepoContainer";
+import {FingerprintV2} from "../../models/fingerprint-v2.model";
+import {FingerprintV2Repository} from "./fingerprint-v2.repository";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {
-  public stones:         HasManyRepositoryFactory<Stone,         typeof Stone.prototype.id>;
-  public locations:      HasManyRepositoryFactory<Location,      typeof Location.prototype.id>;
-  public scenes:         HasManyRepositoryFactory<Scene,         typeof Scene.prototype.id>;
-  public messages:       HasManyRepositoryFactory<Message,       typeof Message.prototype.id>;
-  public hubs:           HasManyRepositoryFactory<Hub,           typeof Hub.prototype.id>;
-  public sphereFeatures: HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
+  public stones:          HasManyRepositoryFactory<Stone,         typeof Stone.prototype.id>;
+  public locations:       HasManyRepositoryFactory<Location,      typeof Location.prototype.id>;
+  public scenes:          HasManyRepositoryFactory<Scene,         typeof Scene.prototype.id>;
+  public fingerprints:    HasManyRepositoryFactory<FingerprintV2, typeof FingerprintV2.prototype.id>;
+  public messages:        HasManyRepositoryFactory<Message,       typeof Message.prototype.id>;
+  public hubs:            HasManyRepositoryFactory<Hub,           typeof Hub.prototype.id>;
+  public sphereFeatures:  HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
   public trackingNumbers: HasManyRepositoryFactory<SphereTrackingNumber, typeof SphereTrackingNumber.prototype.id>;
-  public toons:          HasManyRepositoryFactory<Toon, typeof Toon.prototype.id>;
-  public users:          HasManyThroughRepositoryFactory<User, typeof User.prototype.id, SphereAccess, typeof Sphere.prototype.id>;
+  public toons:           HasManyRepositoryFactory<Toon,          typeof Toon.prototype.id>;
+  public users:           HasManyThroughRepositoryFactory<User,   typeof User.prototype.id, SphereAccess, typeof Sphere.prototype.id>;
 
 
   constructor(
@@ -54,6 +57,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(StoneRepository)         protected stoneRepo:         StoneRepository,
     @repository(LocationRepository)      protected locationRepo:      LocationRepository,
     @repository(SceneRepository)         protected sceneRepo:         SceneRepository,
+    @repository(FingerprintV2Repository) protected fingerprintRepo:   FingerprintV2Repository,
     @repository(MessageRepository)       protected messageRepo:       MessageRepository,
     @repository(HubRepository)           protected hubRepo:           HubRepository,
     @repository(SphereFeatureRepository) protected sphereFeatureRepo: SphereFeatureRepository,
@@ -63,19 +67,21 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     super(Sphere, datasource);
     this.users           = this.createHasManyThroughRepositoryFactoryFor('users', userRepoGetter, sphereAccessRepoGetter);
 
-    this.stones          = this.createHasManyRepositoryFactoryFor('stones',     async () => stoneRepo);
-    this.locations       = this.createHasManyRepositoryFactoryFor('locations',  async () => locationRepo);
-    this.scenes          = this.createHasManyRepositoryFactoryFor('scenes',     async () => sceneRepo);
-    this.messages        = this.createHasManyRepositoryFactoryFor('messages',   async () => messageRepo);
-    this.hubs            = this.createHasManyRepositoryFactoryFor('hubs',       async () => hubRepo);
-    this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',   async () => sphereFeatureRepo);
+    this.stones          = this.createHasManyRepositoryFactoryFor('stones',      async () => stoneRepo);
+    this.locations       = this.createHasManyRepositoryFactoryFor('locations',   async () => locationRepo);
+    this.scenes          = this.createHasManyRepositoryFactoryFor('scenes',      async () => sceneRepo);
+    this.fingerprints    = this.createHasManyRepositoryFactoryFor('fingerprints',async () => fingerprintRepo);
+    this.messages        = this.createHasManyRepositoryFactoryFor('messages',    async () => messageRepo);
+    this.hubs            = this.createHasManyRepositoryFactoryFor('hubs',        async () => hubRepo);
+    this.sphereFeatures  = this.createHasManyRepositoryFactoryFor('features',    async () => sphereFeatureRepo);
     this.trackingNumbers = this.createHasManyRepositoryFactoryFor('trackingNumbers',async () => sphereTrackingNumberRepo);
-    this.toons           = this.createHasManyRepositoryFactoryFor('toons',      async () => toonRepo);
+    this.toons           = this.createHasManyRepositoryFactoryFor('toons',       async () => toonRepo);
 
     // add this line to register inclusion resolver
     this.registerInclusionResolver('stones',          this.stones.inclusionResolver);
     this.registerInclusionResolver('locations',       this.locations.inclusionResolver);
     this.registerInclusionResolver('scenes',          this.scenes.inclusionResolver);
+    this.registerInclusionResolver('fingerprints',    this.fingerprints.inclusionResolver);
     this.registerInclusionResolver('messages',        this.messages.inclusionResolver);
     this.registerInclusionResolver('hubs',            this.hubs.inclusionResolver);
     this.registerInclusionResolver('features',        this.sphereFeatures.inclusionResolver);
@@ -115,6 +121,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
 
     await this.stones(entity.id).delete()
     await this.locations(entity.id).delete()
+    await this.fingerprints(entity.id).delete()
     await this.scenes(entity.id).delete()
     await this.messages(entity.id).delete()
     await this.hubs(entity.id).delete()

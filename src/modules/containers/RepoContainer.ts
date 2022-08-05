@@ -31,6 +31,7 @@ import {DeviceLocationMapRepository}    from "../../repositories/data/device-loc
 import {DeviceSphereMapRepository}      from "../../repositories/data/device-sphere-map.repository";
 import {FsChunksRepository}             from "../../repositories/files/fs.chunks.repository";
 import {FsFilesRepository}              from "../../repositories/files/fs.files.repository";
+import { FingerprintV2Repository } from "../../repositories/data/fingerprint-v2.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
@@ -43,6 +44,7 @@ export interface RepositoryContainer {
   device:               DeviceRepository,
   fingerprintLinker:    FingerprintLinkerRepository,
   fingerprint:          FingerprintRepository,
+  fingerprintV2:        FingerprintV2Repository,
   firmware:             FirmwareRepository,
   fsChunks:             FsChunksRepository,
   fsFiles:              FsFilesRepository,
@@ -81,6 +83,7 @@ export let Dbs : RepositoryContainer = {
   fsFiles:              null,
   fingerprintLinker:    null,
   fingerprint:          null,
+  fingerprintV2:        null,
   firmware:             null,
   hub:                  null,
   location:             null,
@@ -114,6 +117,7 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.device               = await app.getRepository( DeviceRepository );
   Dbs.fingerprintLinker    = await app.getRepository( FingerprintLinkerRepository );
   Dbs.fingerprint          = await app.getRepository( FingerprintRepository );
+  Dbs.fingerprintV2        = await app.getRepository( FingerprintV2Repository );
   Dbs.firmware             = await app.getRepository( FirmwareRepository );
   Dbs.fsChunks             = await app.getRepository( FsChunksRepository );
   Dbs.fsFiles              = await app.getRepository( FsFilesRepository );

@@ -181,6 +181,7 @@ Object {
   "deviceSphereMap": Array [],
   "fingerprint": Array [],
   "fingerprintLinker": Array [],
+  "fingerprintV2": Array [],
   "firmware": Array [],
   "fsChunks": Array [],
   "fsFiles": Array [],

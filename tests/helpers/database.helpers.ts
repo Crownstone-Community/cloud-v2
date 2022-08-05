@@ -67,6 +67,7 @@ import { StoneAbilityProperty } from "../../src/models/stoneSubModels/stone-abil
 import { StoneBehaviour }       from "../../src/models/stoneSubModels/stone-behaviour.model";
 import { StoneKey }             from "../../src/models/stoneSubModels/stone-key.model";
 import { StoneSwitchState }     from "../../src/models/stoneSubModels/stone-switch-state.model";
+import {FingerprintV2Repository} from "../../src/repositories/data/fingerprint-v2.repository";
 
 interface DatabaseDump {
   appInstallation     : AppInstallation[],
@@ -115,6 +116,7 @@ function initRepositories() : RepositoryContainer {
   let device:               DeviceRepository;
   let fingerprintLinker:    FingerprintLinkerRepository;
   let fingerprint:          FingerprintRepository;
+  let fingerprintV2:        FingerprintV2Repository;
   let firmware:             FirmwareRepository;
   let fsChunks:             FsChunksRepository;
   let fsFiles:              FsFilesRepository;
@@ -166,9 +168,10 @@ function initRepositories() : RepositoryContainer {
   deviceLocationMap    = new DeviceLocationMapRepository(testdb, userGetter, deviceGetter, sphereGetter, locationGetter);
   device               = new DeviceRepository(testdb, userGetter, appInstallation, fingerprintLinker, devicePreferences, deviceLocationMap, deviceSphereMap);
   fingerprint          = new FingerprintRepository(testdb, sphereGetter);
+  fingerprintV2        = new FingerprintV2Repository(testdb, sphereGetter);
   fsFiles              = new FsFilesRepository(testdb);
   fsChunks             = new FsChunksRepository(testdb, fsFilesGetter);
-  location             = new LocationRepository(testdb, sphereGetter);
+  location             = new LocationRepository(testdb, sphereGetter, fingerprintV2);
   messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
   messageUser          = new MessageUserRepository(testdb, sphereGetter, messageGetter, userGetter);
   message              = new MessageRepository(testdb, sphereGetter, userGetter, messageUserGetter, messageState);
@@ -185,7 +188,7 @@ function initRepositories() : RepositoryContainer {
   stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
-  sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, message, hub, sphereFeature, sphereTrackingNumber, toon);
+  sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, fingerprintV2, message, hub, sphereFeature, sphereTrackingNumber, toon);
   user                 = new UserRepository(testdb, sphereAccessGetter, sphereGetter, device);
 
 
@@ -197,6 +200,7 @@ function initRepositories() : RepositoryContainer {
     deviceLocationMap,
     devicePreferences,
     deviceSphereMap,
+    fingerprintV2,
     fingerprint,
     fingerprintLinker,
     firmware,

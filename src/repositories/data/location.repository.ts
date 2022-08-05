@@ -1,4 +1,4 @@
-import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
+import {BelongsToAccessor, Getter, HasManyRepositoryFactory, juggler, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
 import {DataObject, Options} from "@loopback/repository/src/common-types";
@@ -6,17 +6,24 @@ import {SphereRepository} from "./sphere.repository";
 import {Location} from "../../models/location.model";
 import {Sphere} from "../../models/sphere.model";
 import {HttpErrors} from "@loopback/rest";
+import {FingerprintV2} from "../../models/fingerprint-v2.model";
+import {FingerprintV2Repository} from "./fingerprint-v2.repository";
 
 
 export class LocationRepository extends TimestampedCrudRepository<Location,typeof Location.prototype.id > {
   public readonly sphere: BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
+  public fingerprints:   HasManyRepositoryFactory<FingerprintV2, typeof FingerprintV2.prototype.id>;
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
     @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
+    @repository(FingerprintV2Repository) protected fingerprintRepo:   FingerprintV2Repository,
     ) {
     super(Location, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
+
+    this.fingerprints = this.createHasManyRepositoryFactoryFor('fingerprints',async () => fingerprintRepo);
+    this.registerInclusionResolver('fingerprints',    this.fingerprints.inclusionResolver);
   }
 
   async create(entity: DataObject<Location>, options?: Options): Promise<Location> {
@@ -25,6 +32,15 @@ export class LocationRepository extends TimestampedCrudRepository<Location,typeo
 
     return super.create(entity, options);
   }
+
+  async delete(entity: Location, options?: Options): Promise<void> {
+    // cascade
+    if (!entity.id) { throw "locationId missing"; }
+
+    await this.fingerprints(entity.id).delete()
+    return super.delete(entity, options);
+  }
+
 }
 
 

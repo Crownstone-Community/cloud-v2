@@ -5,12 +5,16 @@ import {Sync_Toons} from "./Sync_Toons";
 import {Sync_Hubs} from "./Sync_Hubs";
 import {Sync_Stones} from "./Sync_Stones";
 import {Sync_SphereUsers} from "./Sync_SphereUsers";
+import {Sync_Messages} from "./Sync_Messages";
+import {Sync_Fingerprints} from "./Sync_Fingerprints";
 
 
 export class Sync_SphereComponents {
 
   locations:       Sync_Locations;
   features:        Sync_Features;
+  fingerprints:    Sync_Fingerprints;
+  messages:        Sync_Messages;
   scenes:          Sync_Scenes;
   toons:           Sync_Toons;
   hubs:            Sync_Hubs;
@@ -24,12 +28,14 @@ export class Sync_SphereComponents {
     requestSphere: any,
     replySphere: any
   ) {
-    this.locations       = new Sync_Locations(      sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.features        = new Sync_Features(       sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.scenes          = new Sync_Scenes(         sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.toons           = new Sync_Toons(          sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.hubs            = new Sync_Hubs(           sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.stones          = new Sync_Stones(         sphereId, accessRole, requestSphere, replySphere, creationMap);
-    this.users           = new Sync_SphereUsers(    sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.features        = new Sync_Features(    sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.fingerprints    = new Sync_Fingerprints(sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.hubs            = new Sync_Hubs(        sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.locations       = new Sync_Locations(   sphereId, accessRole, requestSphere, replySphere, creationMap);
+    // this.messages        = new Sync_Messages(    sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.scenes          = new Sync_Scenes(      sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.stones          = new Sync_Stones(      sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.users           = new Sync_SphereUsers( sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.toons           = new Sync_Toons(       sphereId, accessRole, requestSphere, replySphere, creationMap);
   }
 }

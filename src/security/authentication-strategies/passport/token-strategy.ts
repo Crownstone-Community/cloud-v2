@@ -14,9 +14,9 @@ import {HttpErrors} from "@loopback/rest";
 
 
 var strategyOptions = {
-  tokenHeader:    'Authorization',
-  tokenField:     'access_token',
-  tokenQuery:     'access_token',
+  tokenHeader: 'Authorization',
+  tokenField:  'access_token',
+  tokenQuery:  'access_token',
 };
 
 type TokenPrincipalType = 'user' | 'hub'

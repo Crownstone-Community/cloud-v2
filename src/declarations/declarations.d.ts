@@ -65,4 +65,6 @@ interface RolePermissions {
   guest?  : boolean,
   hub?    : boolean
 }
-
+type CrownstoneIdentifier = string; // maj_min as identifier representing the Crownstone.
+type rssi = number;
+type FingerprintDataPointObject = Record<CrownstoneIdentifier, rssi>

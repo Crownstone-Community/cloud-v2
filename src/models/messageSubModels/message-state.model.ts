@@ -16,9 +16,6 @@ export class MessageState extends AddTimestamps(BaseEntity) {
   @property({type: 'boolean', required: true})
   enabled: string;
 
-  @property({type: 'boolean', required: true})
-  syncedToCrownstone: string;
-
   @belongsTo(() => Message, {name:"messageDelivered"})
   messageDeliveredId: string;
 
