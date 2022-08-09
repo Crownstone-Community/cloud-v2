@@ -27,9 +27,8 @@ export class FingerprintV2Repository extends TimestampedCrudRepository<Fingerpri
 
     try {
       let location = await Dbs.location.findById(fingerprint.locationId);
-
       // this location id does not belong to this sphere.
-      if (location?.sphereId !== fingerprint.sphereId) {
+      if (String(location?.sphereId) !== String(fingerprint.sphereId)) {
         throw new Error();
       }
     }
@@ -40,3 +39,4 @@ export class FingerprintV2Repository extends TimestampedCrudRepository<Fingerpri
     return super.create(fingerprint);
   }
 }
+

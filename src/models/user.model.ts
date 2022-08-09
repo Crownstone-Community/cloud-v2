@@ -4,6 +4,7 @@ import {Device} from "./device.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 import {SphereAccess} from "./sphere-access.model";
+import {FingerprintV2} from "./fingerprint-v2.model";
 
 @model({settings: {
     hiddenProperties: ["earlyAccessLevel", "password", 'verificationToken'],
@@ -58,6 +59,9 @@ export class User extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => Sphere, {through: {model: () => SphereAccess}})
   spheres: Sphere[];
+
+  @hasMany(() => FingerprintV2, {keyTo: 'createdByUser'})
+  fingerprints: FingerprintV2[];
 
   @hasMany(() => Device, {keyTo: 'ownerId'})
   devices: Device[];

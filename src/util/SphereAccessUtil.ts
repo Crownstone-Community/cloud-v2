@@ -1,4 +1,5 @@
 import {Dbs} from "../modules/containers/RepoContainer";
+import {AccessLevels} from "../models/sphere-access.model";
 
 
 export const SphereAccessUtil = {
@@ -9,6 +10,22 @@ export const SphereAccessUtil = {
     }
     return result;
   },
+
+
+
+  /** get access level for spheres where the role is the maximum of the access levels of the spheres */
+  getAccessLevelArray(role: ACCESS_ROLE) : string[]{
+    switch (role) {
+      case 'admin':
+        return [AccessLevels.admin];
+      case 'member':
+        return [AccessLevels.admin, AccessLevels.member];
+      case 'guest':
+        return [AccessLevels.admin, AccessLevels.member, AccessLevels.guest];
+    }
+    return [];
+  },
+
 
   getSphereUsersForSphere: async function(sphereId: string) : Promise<SphereUsers> {
     let entries = await Dbs.sphereAccess.find({where:{sphereId}}, {fields:{invitePending: true, sphereId: true, userId: true, role: true, updatedAt: true}});
@@ -48,4 +65,13 @@ export const SphereAccessUtil = {
     }
     return result;
   },
+
+  getSphereIdsForUser: async function(userId: string, accessLevel: ACCESS_ROLE = 'guest') : Promise<string[]> {
+    let sphereAccess = await Dbs.sphereAccess.find({where:{and: [{userId}, {role:{inq:SphereAccessUtil.getAccessLevelArray(accessLevel) }}]}}, {fields:{sphereId: true}});
+    let sphereIds = [];
+    for (let entry of sphereAccess) {
+      sphereIds.push(entry.sphereId);
+    }
+    return sphereIds;
+  }
 }

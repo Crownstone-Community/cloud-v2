@@ -42,42 +42,4 @@ export class SphereController extends SphereItem {
     return result;
   }
 
-  @post('/spheres/{id}/fingerprint')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async addFingerprint(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') sphereId: string,
-    @requestBody({required: true}) fingerprintData: FingerprintV2
-  ): Promise<FingerprintV2> {
-    fingerprintData.sphereId = sphereId;
-    return Dbs.fingerprintV2.create(fingerprintData);
-  }
-
-  @put('/spheres/{id}/fingerprint/{fingerprintId}')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async updateFingerprint(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') sphereId: string,
-    @param.path.string('fingerprintId') fingerprintId: string,
-    @requestBody({required: true}) fingerprintData: Partial<FingerprintV2>
-  ): Promise<void> {
-    fingerprintData.sphereId = sphereId;
-    return Dbs.fingerprintV2.updateById(fingerprintId, fingerprintData);
-  }
-
-
-
-  @del('/spheres/{id}/fingerprint/{fingerprintId}')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async deleteFingerprint(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') sphereId: string,
-    @param.path.string('fingerprintId') fingerprintId: string,
-  ): Promise<void> {
-    return Dbs.fingerprintV2.deleteById(fingerprintId);
-  }
-
 }

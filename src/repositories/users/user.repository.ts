@@ -29,12 +29,12 @@ export class UserRepository extends TimestampedCrudRepository<User,typeof User.p
   constructor(
     @inject('datasources.users') protected datasource: juggler.DataSource,
     @repository.getter('SphereAccessRepository') sphereAccessRepoGetter: Getter<SphereAccessRepository>,
-    @repository.getter('SphereRepository') sphereRepoGetter: Getter<SphereRepository>,
-    @repository(DeviceRepository) protected deviceRepository: DeviceRepository,
+    @repository.getter('SphereRepository')       sphereRepoGetter:       Getter<SphereRepository>,
+    @repository(DeviceRepository)        protected deviceRepository:      DeviceRepository,
   ) {
     super(User, datasource);
-    this.spheres = this.createHasManyThroughRepositoryFactoryFor('spheres', sphereRepoGetter, sphereAccessRepoGetter);
-    this.devices = this.createHasManyRepositoryFactoryFor('devices',async () => deviceRepository);
+    this.spheres      = this.createHasManyThroughRepositoryFactoryFor('spheres', sphereRepoGetter, sphereAccessRepoGetter);
+    this.devices      = this.createHasManyRepositoryFactoryFor(       'devices',async () => deviceRepository);
   }
 
   async create(entity: DataObject<User>, options?: Options): Promise<User> {

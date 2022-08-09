@@ -24,7 +24,6 @@ export class SphereAccess extends AddTimestamps(BaseEntity) {
 
   @belongsTo(() => User)
   userId: string;
-
 }
 
 

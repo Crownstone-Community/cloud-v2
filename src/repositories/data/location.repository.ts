@@ -12,7 +12,7 @@ import {FingerprintV2Repository} from "./fingerprint-v2.repository";
 
 export class LocationRepository extends TimestampedCrudRepository<Location,typeof Location.prototype.id > {
   public readonly sphere: BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
-  public fingerprints:   HasManyRepositoryFactory<FingerprintV2, typeof FingerprintV2.prototype.id>;
+  public fingerprints:    HasManyRepositoryFactory<FingerprintV2, typeof FingerprintV2.prototype.id>;
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
