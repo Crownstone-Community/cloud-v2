@@ -3,21 +3,23 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {del, getModelSchemaRef, param, post, put, requestBody} from '@loopback/rest';
+import {param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
-import {repository} from "@loopback/repository";
+import {ModelDefinition, repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
-import {Dbs} from "../modules/containers/RepoContainer";
-import {FingerprintV2} from "../models/fingerprint-v2.model";
+import {Message} from "../models/message.model";
 
 
+// const MessageWithRecipients = new ModelDefinition('MessageWithRecipients')
+//   .addProperty('message', Message)
+//   .addProperty('recipients', {type: 'array', itemType: 'string'});
 
 export class SphereController extends SphereItem {
   modelName = "Sphere";
@@ -25,9 +27,7 @@ export class SphereController extends SphereItem {
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
     @repository(SphereRepository) protected sphereRepo: SphereRepository,
-  ) {
-    super();
-  }
+  ) { super(); }
 
   // Perform a sync operation within a sphere
   @post('/spheres/{id}/sync')
@@ -41,5 +41,28 @@ export class SphereController extends SphereItem {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {spheres:[sphereId]})
     return result;
   }
+
+
+  // @post('/spheres/{id}/message')
+  // @authenticate(SecurityTypes.accessToken)
+  // @authorize(Authorization.sphereMember())
+  // async sendMessage(
+  //   @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+  //   @param.path.string('id') sphereId: string,
+  //   @requestBody({required: true}) messageData: typeof MessageWithRecipients,
+  // ): Promise<Message> {
+  //   messageData.ownerId = userProfile[securityId];
+  //
+  //   let message = await this.sphereRepo.messages(sphereId).create(messageData.message);
+  //
+  //   if (messageData.recipients) {
+  //     for (let userId of messageData.recipients) {
+  //       await Dbs.message.addRecipient(message.id, userId);
+  //     }
+  //   }
+  //   return message;
+  // }
+
+
 
 }

@@ -160,7 +160,7 @@ test("Request sync users from sphere", async () => {
   setDate(2e7)
   let accessData = await Dbs.sphereAccess.find({where: {userId: member.id}});
   accessData[0].role = "admin"
-  await Dbs.sphereAccess.update(accessData[0])
+  await Dbs.sphereAccess.update(accessData[0]);
 
   await client.post(auth("/user/sync"))
     .send(payload2)
