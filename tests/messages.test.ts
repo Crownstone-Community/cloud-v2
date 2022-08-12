@@ -26,11 +26,9 @@ import {
   resetUsers,
 } from "./builders/createUserData";
 import { auth, getToken } from "./rest-helpers/rest.helpers";
-import { getEncryptionKeys } from "../src/modules/sync/helpers/KeyUtil";
 import { CloudUtil } from "../src/util/CloudUtil";
 import { mocked } from "ts-jest/utils";
 import { Dbs } from "../src/modules/containers/RepoContainer";
-import { property } from "@loopback/repository";
 
 let app: CrownstoneCloud;
 let client: Client;
@@ -114,35 +112,23 @@ test("Create and get messages", async () => {
   await populate();
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "memberMessage",
-      everyoneInSphere: false,
-      everyoneInSphereIncludingOwner: false,
-    },
-    recipients: [member.id],
+      content: "memberMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      recipients: [member.id, guest.id],
   });
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "guestMessage",
-      everyoneInSphere: false,
-      everyoneInSphereIncludingOwner: false,
-    },
-    recipients: [guest.id],
+      content: "guestMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      recipients: [guest.id],
   });
 
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "everyoneMessageIncAdmin",
-      everyoneInSphere: true,
-      everyoneInSphereIncludingOwner: true,
-    },
+      content: "everyoneMessageIncAdmin", everyoneInSphere: true, everyoneInSphereIncludingOwner: true},
   });
 
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "everyoneMessageExAdmin",
-      everyoneInSphere: true,
-      everyoneInSphereIncludingOwner: false,
-    },
+      content: "everyoneMessageExAdmin", everyoneInSphere: true, everyoneInSphereIncludingOwner: false},
   });
 
   await client
@@ -166,10 +152,7 @@ test("Check reading and app-deleting the message", async () => {
   let message;
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "memberMessage",
-      everyoneInSphere: false,
-      everyoneInSphereIncludingOwner: false,
-    },
+      content: "memberMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
     recipients: [member.id],
   })
     .expect(({body}) => { message = body; });

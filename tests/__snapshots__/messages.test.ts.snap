@@ -60,6 +60,9 @@ Array [
       Object {
         "id": "dbId:UserRepository:2",
       },
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
     ],
     "sphereId": "dbId:SphereRepository:1",
     "triggerEvent": "enter",

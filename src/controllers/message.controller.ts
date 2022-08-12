@@ -90,16 +90,21 @@ export class MessageEndpoints extends SphereItem {
         everyoneInSphere: false, everyoneInSphereIncludingOwner: false,
       },
       include:[
-        {relation: 'recipients', scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
+        {relation: 'recipients', scope: {fields: {id:true}}},
         {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
         {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
       ]
-    })).filter(m => m.recipients.length > 0);
+    })).filter((message) => {
+      return message.recipients.some((recipient) => {
+        return recipient.id === userProfile[securityId];
+      });
+    });
 
     // you're the owner of the message, want to send it to everyone, including yourself
     let messagesForEveryoneAndOwner = await this.sphereRepo.messages(sphereId).find({
       where: {everyoneInSphereIncludingOwner: true, ownerId: userProfile[securityId]},
       include:[
+        {relation: 'recipients', scope: {fields: {id:true}}},
         {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}}},
         {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}}},
       ]
@@ -109,6 +114,7 @@ export class MessageEndpoints extends SphereItem {
     let messagesForEveryExceptOwner = await this.sphereRepo.messages(sphereId).find({
       where: {everyoneInSphere: true, ownerId: {neq: userProfile[securityId]}},
       include:[
+        {relation: 'recipients', scope: {fields: {id:true}}},
         {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}}},
         {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}}},
       ]
