@@ -18,8 +18,8 @@ import {Authorization} from "../security/authorization-strategies/authorization-
 /**
  * This controller will echo the state of the hub.
  */
-export class StoneController extends SphereItem {
-  modelName = "Stone";
+export class StoneEndpoints extends SphereItem {
+  authorizationModelName = "Stone";
 
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,

@@ -14,15 +14,10 @@ import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
-import {Message} from "../models/message.model";
 
 
-// const MessageWithRecipients = new ModelDefinition('MessageWithRecipients')
-//   .addProperty('message', Message)
-//   .addProperty('recipients', {type: 'array', itemType: 'string'});
-
-export class SphereController extends SphereItem {
-  modelName = "Sphere";
+export class SphereEndpoints extends SphereItem {
+  authorizationModelName = "Sphere";
 
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
@@ -62,6 +57,27 @@ export class SphereController extends SphereItem {
   //   }
   //   return message;
   // }
+
+  @post('/spheres/{id}/message')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async sendMessage(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') sphereId: string,
+    // @requestBody({required: true}) messageData: typeof MessageWithRecipients,
+  ): Promise<void> {
+    // messageData.ownerId = userProfile[securityId];
+    //
+    // let message = await this.sphereRepo.messages(sphereId).create(messageData.message);
+    //
+    // if (messageData.recipients) {
+    //   for (let userId of messageData.recipients) {
+    //     await Dbs.message.addRecipient(message.id, userId);
+    //   }
+    // }
+    // return message;
+    console.log("hurray")
+  }
 
 
 

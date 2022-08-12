@@ -1,4 +1,4 @@
 export class SphereItem {
-  modelName : string;
+  authorizationModelName : string;
   __sphereItem = true;
 }

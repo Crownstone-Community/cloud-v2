@@ -15,7 +15,7 @@ import {SyncRequestResponse} from "../declarations/syncTypes";
 /**
  * This controller will echo the state of the hub.
  */
-export class SyncController {
+export class SyncEndpoints {
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
   ) {}

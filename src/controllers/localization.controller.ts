@@ -18,8 +18,8 @@ import {SphereAccessUtil} from "../util/SphereAccessUtil";
 
 
 
-export class LocalizationController extends SphereItem {
-  modelName = "Sphere"; // we use the sphere model name since the provided ID in the endpoint is the sphere ID. This is used for authorization.
+export class LocalizationEndpoints extends SphereItem {
+  authorizationModelName = "Sphere"; // we use the sphere model name since the provided ID in the endpoint is the sphere ID. This is used for authorization.
 
   constructor(
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
@@ -67,7 +67,7 @@ export class LocalizationController extends SphereItem {
   }
 
 
-  @get('/fingerprints/')
+  @get('/DEV_fingerprints/')
   @authenticate(SecurityTypes.accessToken)
   async getFingerprints(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription

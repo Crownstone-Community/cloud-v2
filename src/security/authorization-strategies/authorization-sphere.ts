@@ -9,26 +9,48 @@ import {Dbs} from "../../modules/containers/RepoContainer";
 import {securityId} from "@loopback/security";
 import {AccessLevels} from "../../models/sphere-access.model";
 
+type AuthorizationModel = "Sphere" | "Stone" | "Fingerprint" | "Message";
+
 export const Authorization = {
-  sphereAccess: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
-    AccessLevels.admin,
-    AccessLevels.member,
-    AccessLevels.guest,
-    AccessLevels.basic,
-    AccessLevels.hub,
-  ]}},
-  sphereMember: (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
-      AccessLevels.admin,
-      AccessLevels.member,
-      AccessLevels.hub,
-    ]}},
-  sphereAdmin:  (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
-      AccessLevels.admin,
-    ]}},
-  sphereHub:    (scopes?: string[]) => { return { scopes: scopes ?? [], allowedRoles: [
-      AccessLevels.admin,
-      AccessLevels.hub,
-    ]}},
+  sphereAccess: (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
+    return {
+      scopes: config?.scopes ?? [],
+      authorizationModel: authorizationModel,
+      allowedRoles: [
+        AccessLevels.admin,
+        AccessLevels.member,
+        AccessLevels.guest,
+        AccessLevels.basic,
+        AccessLevels.hub,
+      ]
+    }},
+  sphereMember: (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
+    return {
+      scopes: config?.scopes ?? [],
+      authorizationModel: authorizationModel,
+      allowedRoles: [
+        AccessLevels.admin,
+        AccessLevels.member,
+        AccessLevels.hub,
+      ]
+    }},
+  sphereAdmin:  (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
+    return {
+      scopes: config?.scopes ?? [],
+      authorizationModel: authorizationModel,
+      allowedRoles: [
+        AccessLevels.admin,
+      ]
+    }},
+  sphereHub:    (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
+    return {
+      scopes: config?.scopes ?? [],
+      authorizationModel: authorizationModel,
+      allowedRoles: [
+        AccessLevels.admin,
+        AccessLevels.hub,
+      ]
+    }},
 }
 
 export class MyAuthorizationProvider implements Provider<Authorizer> {
@@ -47,18 +69,23 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
     // TODO: Add OAUTH scope checking
     let userId     = context.principals[0][securityId];
     let controller = context.invocationContext.target;
+
     if ((controller as any).__sphereItem !== true) {
       console.error("Tried to set sphere authorization on a controller that is not extending SphereItem.");
       return AuthorizationDecision.DENY;
     }
 
-    let modelName = (controller as any).modelName;
-    if (modelName === undefined) {
+    let authorizationModelName      = (controller as any).authorizationModelName;
+    let authorizationOverrideName   = (metadata as any).authorizationModel  ?? null;
+    let effectiveAuthorizationName  = authorizationOverrideName ?? authorizationModelName;
+
+    if (effectiveAuthorizationName === undefined) {
       console.error("Model name is required for SphereItems");
       return AuthorizationDecision.DENY;
     }
+
     let itemId = context.invocationContext.args[0];
-    let accessLevel = await getAccessLevel(userId, itemId, modelName);
+    let accessLevel = await getAccessLevel(userId, itemId, effectiveAuthorizationName);
     if (accessLevel === null) {
       return AuthorizationDecision.DENY;
     }
@@ -72,10 +99,10 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
   }
 }
 
-async function getAccessLevel(userId: string, itemId: string, modelName: string) : Promise<string | null> {
+async function getAccessLevel(userId: string, itemId: string, authorizationModelName: string) : Promise<string | null> {
   let item : any = null;
   try {
-    switch (modelName) {
+    switch (authorizationModelName) {
       case "Stone":
         item = await Dbs.stone.findById(itemId, {fields: {sphereId: true}});
         break;

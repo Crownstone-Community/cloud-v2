@@ -46,7 +46,7 @@ export const CredentialsRequestBody = {
 /**
  * This controller will echo the state of the hub.
  */
-export class UserController {
+export class UserEndpoints {
   constructor(
     @inject("UserService") public userService: UserService,
     @repository(UserRepository) protected userRepo: UserRepository,
