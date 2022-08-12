@@ -46,6 +46,10 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     this.recipients = this.createHasManyThroughRepositoryFactoryFor('recipients', userRepoGetter, messageRecipientUserRepoGetter);
     this.deletedBy  = this.createHasManyThroughRepositoryFactoryFor('deletedBy',  userRepoGetter, messageDeletedByUserRepoGetter);
     this.readBy     = this.createHasManyThroughRepositoryFactoryFor('readBy',     userRepoGetter, messageReadByUserGetter);
+
+    this.registerInclusionResolver('recipients', this.recipients.inclusionResolver);
+    this.registerInclusionResolver('deletedBy',  this.deletedBy.inclusionResolver);
+    this.registerInclusionResolver('readBy',     this.readBy.inclusionResolver);
   }
 
 
@@ -57,6 +61,34 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     }
 
     await Dbs.messageRecipientUser.create({
+      userId:    userId,
+      messageId: messageId,
+      sphereId:  sphereId,
+    });
+  }
+
+  async markAsRead(sphereId: string, messageId: string, userId: string) {
+    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
+
+    if (sphereUsers.length == 0) {
+      throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
+    }
+
+    await Dbs.messageReadByUser.create({
+      userId:    userId,
+      messageId: messageId,
+      sphereId:  sphereId,
+    });
+  }
+
+  async markAsDeleted(sphereId: string, messageId: string, userId: string) {
+    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
+
+    if (sphereUsers.length == 0) {
+      throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
+    }
+
+    await Dbs.messageDeletedByUser.create({
       userId:    userId,
       messageId: messageId,
       sphereId:  sphereId,

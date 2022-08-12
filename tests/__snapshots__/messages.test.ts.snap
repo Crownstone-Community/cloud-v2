@@ -1,0 +1,91 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check reading and app-deleting the message 1`] = `
+Array [
+  Object {
+    "content": "memberMessage",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "deletedBy": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+    ],
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "readBy": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+    ],
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
+exports[`Create and get messages 1`] = `
+Array [
+  Object {
+    "content": "everyoneMessageIncAdmin",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": true,
+    "id": "dbId:MessageV2Repository:3",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
+exports[`Create and get messages 2`] = `
+Array [
+  Object {
+    "content": "memberMessage",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "everyoneMessageIncAdmin",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": true,
+    "id": "dbId:MessageV2Repository:3",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "everyoneMessageExAdmin",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:4",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;

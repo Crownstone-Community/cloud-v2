@@ -9,7 +9,7 @@ import {Dbs} from "../../modules/containers/RepoContainer";
 import {securityId} from "@loopback/security";
 import {AccessLevels} from "../../models/sphere-access.model";
 
-type AuthorizationModel = "Sphere" | "Stone" | "Fingerprint" | "Message";
+type AuthorizationModel = "Sphere" | "Stone" | "Message";
 
 export const Authorization = {
   sphereAccess: (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
@@ -99,10 +99,13 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
   }
 }
 
-async function getAccessLevel(userId: string, itemId: string, authorizationModelName: string) : Promise<string | null> {
+async function getAccessLevel(userId: string, itemId: string, authorizationModelName: AuthorizationModel) : Promise<string | null> {
   let item : any = null;
   try {
     switch (authorizationModelName) {
+      case "Message":
+        item = await Dbs.messageV2.findById(itemId, {fields: {sphereId: true}});
+        break;
       case "Stone":
         item = await Dbs.stone.findById(itemId, {fields: {sphereId: true}});
         break;

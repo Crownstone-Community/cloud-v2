@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {param, post, requestBody} from '@loopback/rest';
+import {del, get, param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -14,12 +14,6 @@ import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
-import {MessageV2} from "../models/messageV2.model";
-import {Dbs} from "../modules/containers/RepoContainer";
-
-const MessageWithRecipients = new ModelDefinition('MessageWithRecipients')
-  .addProperty('message', MessageV2)
-  .addProperty('recipients', {type: 'array', itemType: 'string'});
 
 
 export class SphereEndpoints extends SphereItem {
@@ -41,27 +35,6 @@ export class SphereEndpoints extends SphereItem {
   ): Promise<SyncRequestResponse> {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {spheres:[sphereId]})
     return result;
-  }
-
-
-  @post('/spheres/{id}/message')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async sendMessage(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') sphereId: string,
-    @requestBody({required: true}) messageData: typeof MessageWithRecipients,
-  ): Promise<MessageV2> {
-    messageData.ownerId = userProfile[securityId];
-
-    let message = await this.sphereRepo.messages(sphereId).create(messageData.message);
-
-    if (messageData.recipients) {
-      for (let userId of messageData.recipients) {
-        await Dbs.messageV2.addRecipient(sphereId, message.id, userId);
-      }
-    }
-    return message;
   }
 
 

@@ -50,7 +50,9 @@ async function populate() {
   location = await createLocation(sphere.id, 'location', 0);
 
   stone.locationId = location.id;
-  await dbs.stone.update(stone)
+  await dbs.stone.update(stone);
+
+  // sets the token for the admin user for the auth function.
   token  = await getToken(client, admin);
 }
 
