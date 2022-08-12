@@ -18,6 +18,8 @@ import {MessageDeletedByUser} from "../../models/messageSubModels/message-delete
 import {MessageRecipientUserRepository} from "./message-recipient-user.repository";
 import {MessageDeletedByUserRepository} from "./message-deletedBy-user.repository";
 import {MessageReadByUserRepository} from "./message-readBy-user.repository";
+import {Dbs} from "../../modules/containers/RepoContainer";
+import {HttpErrors} from "@loopback/rest";
 
 
 export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typeof MessageV2.prototype.id > {
@@ -44,6 +46,21 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     this.recipients = this.createHasManyThroughRepositoryFactoryFor('recipients', userRepoGetter, messageRecipientUserRepoGetter);
     this.deletedBy  = this.createHasManyThroughRepositoryFactoryFor('deletedBy',  userRepoGetter, messageDeletedByUserRepoGetter);
     this.readBy     = this.createHasManyThroughRepositoryFactoryFor('readBy',     userRepoGetter, messageReadByUserGetter);
+  }
+
+
+  async addRecipient(sphereId: string, messageId: string, userId: string) {
+    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
+
+    if (sphereUsers.length == 0) {
+      throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
+    }
+
+    await Dbs.messageRecipientUser.create({
+      userId:    userId,
+      messageId: messageId,
+      sphereId:  sphereId,
+    });
   }
 
 }

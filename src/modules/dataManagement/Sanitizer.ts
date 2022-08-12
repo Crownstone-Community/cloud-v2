@@ -15,7 +15,7 @@ export class DataSanitizer {
     // @ts-ignore
     let deletedExpiredTokenCount      = await deleteGetCount(Dbs.crownstoneToken,{expiredAt: {lt: Date.now()}});
     let deletedOrphanedTokenCount     = await deleteGetCount(Dbs.crownstoneToken,{userId: {nin: userIds}, principalType:"user"});
-    let deletedOauthTokenCount        = await deleteGetCount(Dbs.oauthToken,{userId: {nin: userIds}});
+    let deletedOauthTokenCount        = await deleteGetCount(Dbs.oauthToken,      {userId: {nin: userIds}});
 
     let deletedDevicesCount           = await deleteGetCount(Dbs.device,{ownerId: {nin: userIds}});
     let existingDeviceIds             = await idArray(Dbs.device.find({fields:{id:true}}));
@@ -51,6 +51,11 @@ export class DataSanitizer {
     let deletedSphereAccessHubCount   = await deleteGetCount(Dbs.sphereAccess,{userId: {nin: existingHubIds}, role:AccessLevels.hub});
 
     let deletedSphereKeyCount         = await deleteGetCount(Dbs.sphereKeys,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesV2Count            = await deleteGetCount(Dbs.messageV2,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesRecipientUserCount = await deleteGetCount(Dbs.messageRecipientUser,{sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesReadByUserCount    = await deleteGetCount(Dbs.messageReadByUser,   {sphereId: {nin: spheresWithOwnerIds}});
+    let deletedMessagesDeleteByUserCount  = await deleteGetCount(Dbs.messageDeletedByUser,{sphereId: {nin: spheresWithOwnerIds}});
+
     let deletedMessagesCount          = await deleteGetCount(Dbs.message,{sphereId: {nin: spheresWithOwnerIds}});
     let deletedMessagesStateCount     = await deleteGetCount(Dbs.messageState,{sphereId: {nin: spheresWithOwnerIds}});
     let deletedMessagesUserCount      = await deleteGetCount(Dbs.messageUser,{sphereId: {nin: spheresWithOwnerIds}});
@@ -65,8 +70,6 @@ export class DataSanitizer {
 
     let deletedFsFileCount            = await deleteGetCount(Dbs.fsFiles,{id: {nin: allFileIds}});
     let deletedFsChunksCount          = await deleteGetCount(Dbs.fsChunks,{files_id: {nin: allFileIds}});
-
-
 
     let sanitationResult = {
       tokens: {
@@ -98,9 +101,13 @@ export class DataSanitizer {
         },
         sphereKeys: deletedSphereKeyCount,
         messages: {
-          messages: deletedMessagesCount,
-          messageStates: deletedMessagesStateCount,
-          messageUsers: deletedMessagesUserCount,
+          messages:               deletedMessagesCount,
+          messageStates:          deletedMessagesStateCount,
+          messageUsers:           deletedMessagesUserCount,
+          messagesV2:             deletedMessagesV2Count,
+          messagesRecipientUsers: deletedMessagesRecipientUserCount,
+          messagesReadByUsers:    deletedMessagesReadByUserCount,
+          messagesDeleteByUsers:  deletedMessagesDeleteByUserCount,
         },
         toons: deletedToonCount,
         trackingNumbers: deletedSphereTrackingNrCount

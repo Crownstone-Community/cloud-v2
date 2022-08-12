@@ -34,6 +34,8 @@ import {HttpErrors} from "@loopback/rest";
 import {Dbs} from "../../modules/containers/RepoContainer";
 import {FingerprintV2} from "../../models/fingerprint-v2.model";
 import {FingerprintV2Repository} from "./fingerprint-v2.repository";
+import {MessageV2Repository} from "./messageV2.repository";
+import {MessageV2} from "../../models/messageV2.model";
 
 
 export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sphere.prototype.id > {
@@ -41,7 +43,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
   public locations:       HasManyRepositoryFactory<Location,      typeof Location.prototype.id>;
   public scenes:          HasManyRepositoryFactory<Scene,         typeof Scene.prototype.id>;
   public fingerprints:    HasManyRepositoryFactory<FingerprintV2, typeof FingerprintV2.prototype.id>;
-  public messages:        HasManyRepositoryFactory<Message,       typeof Message.prototype.id>;
+  public messages:        HasManyRepositoryFactory<MessageV2,     typeof MessageV2.prototype.id>;
   public hubs:            HasManyRepositoryFactory<Hub,           typeof Hub.prototype.id>;
   public sphereFeatures:  HasManyRepositoryFactory<SphereFeature, typeof SphereFeature.prototype.id>;
   public trackingNumbers: HasManyRepositoryFactory<SphereTrackingNumber, typeof SphereTrackingNumber.prototype.id>;
@@ -58,7 +60,7 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     @repository(LocationRepository)      protected locationRepo:      LocationRepository,
     @repository(SceneRepository)         protected sceneRepo:         SceneRepository,
     @repository(FingerprintV2Repository) protected fingerprintRepo:   FingerprintV2Repository,
-    @repository(MessageRepository)       protected messageRepo:       MessageRepository,
+    @repository(MessageV2Repository)     protected messageRepo:       MessageV2Repository,
     @repository(HubRepository)           protected hubRepo:           HubRepository,
     @repository(SphereFeatureRepository) protected sphereFeatureRepo: SphereFeatureRepository,
     @repository(SphereTrackingNumberRepository) protected sphereTrackingNumberRepo: SphereTrackingNumberRepository,

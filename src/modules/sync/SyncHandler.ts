@@ -337,7 +337,7 @@ class Syncer {
     let locationData        = ignore.locations    ? [] : await Dbs.location.find(filter);
     let fingerprintData     = ignore.fingerprints ? [] : await Dbs.fingerprintV2.find(filter);
 
-    let messageData         = ignore.messages     ? [] : await Dbs.message.find(filter);
+    let messageData         = ignore.messages     ? [] : await Dbs.messageV2.find(filter);
 
     let hubData             = ignore.hubs         ? [] : await Dbs.hub.find(filter);
     let sceneData           = ignore.scenes       ? [] : await Dbs.scene.find(filter);

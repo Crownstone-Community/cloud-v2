@@ -31,7 +31,11 @@ import {DeviceLocationMapRepository}    from "../../repositories/data/device-loc
 import {DeviceSphereMapRepository}      from "../../repositories/data/device-sphere-map.repository";
 import {FsChunksRepository}             from "../../repositories/files/fs.chunks.repository";
 import {FsFilesRepository}              from "../../repositories/files/fs.files.repository";
-import { FingerprintV2Repository } from "../../repositories/data/fingerprint-v2.repository";
+import { FingerprintV2Repository }      from "../../repositories/data/fingerprint-v2.repository";
+import {MessageV2Repository}            from "../../repositories/data/messageV2.repository";
+import {MessageRecipientUserRepository} from "../../repositories/data/message-recipient-user.repository";
+import {MessageDeletedByUserRepository} from "../../repositories/data/message-deletedBy-user.repository";
+import {MessageReadByUserRepository}    from "../../repositories/data/message-readBy-user.repository";
 
 export interface RepositoryContainer {
   appInstallation:      AppInstallationRepository,
@@ -50,6 +54,10 @@ export interface RepositoryContainer {
   fsFiles:              FsFilesRepository,
   hub:                  HubRepository,
   location:             LocationRepository,
+  messageV2:            MessageV2Repository,
+  messageRecipientUser: MessageRecipientUserRepository,
+  messageReadByUser:    MessageReadByUserRepository,
+  messageDeletedByUser: MessageDeletedByUserRepository,
   message:              MessageRepository,
   messageState:         MessageStateRepository,
   messageUser:          MessageUserRepository,
@@ -87,6 +95,10 @@ export let Dbs : RepositoryContainer = {
   firmware:             null,
   hub:                  null,
   location:             null,
+  messageV2:            null,
+  messageRecipientUser: null,
+  messageReadByUser:    null,
+  messageDeletedByUser: null,
   message:              null,
   messageState:         null,
   messageUser:          null,
@@ -123,6 +135,10 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.fsFiles              = await app.getRepository( FsFilesRepository );
   Dbs.hub                  = await app.getRepository( HubRepository );
   Dbs.location             = await app.getRepository( LocationRepository );
+  Dbs.messageV2            = await app.getRepository( MessageV2Repository );
+  Dbs.messageRecipientUser = await app.getRepository( MessageRecipientUserRepository );
+  Dbs.messageReadByUser    = await app.getRepository( MessageReadByUserRepository );
+  Dbs.messageDeletedByUser = await app.getRepository( MessageDeletedByUserRepository );
   Dbs.message              = await app.getRepository( MessageRepository );
   Dbs.messageState         = await app.getRepository( MessageStateRepository );
   Dbs.messageUser          = await app.getRepository( MessageUserRepository );

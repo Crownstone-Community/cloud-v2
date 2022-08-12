@@ -13,6 +13,7 @@ import {Hub} from "./hub.model";
 import {SphereAccess} from "./sphere-access.model";
 import {SphereTrackingNumber} from "./sphere-tracking-number.model";
 import {FingerprintV2} from "./fingerprint-v2.model";
+import {MessageV2} from "./messageV2.model";
 
 @model()
 export class Sphere extends AddTimestamps(BaseEntity) {
@@ -50,8 +51,8 @@ export class Sphere extends AddTimestamps(BaseEntity) {
   @hasMany(() => Scene, {keyTo: 'sphereId'})
   scenes: Scene[];
 
-  @hasMany(() => Message, {keyTo: 'sphereId'})
-  messages: Message[];
+  @hasMany(() => MessageV2, {keyTo: 'sphereId'})
+  messages: MessageV2[];
 
   @hasMany(() => Hub, {keyTo: 'sphereId'})
   hubs: Hub[];

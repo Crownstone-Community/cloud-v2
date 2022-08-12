@@ -209,7 +209,10 @@ export class DataDownloader {
         // get sphere keys (you have access to)
         this.addJson(await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]), 'keys', ['spheres', sphere.name]);
         // get messages (sent by you)
-        this.addJson(await find(Dbs.message,{where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}}), 'messages', ['spheres', sphere.name]);
+        let messages   = await find(Dbs.message,  {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
+        let messagesV2 = await find(Dbs.messageV2,{where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}})
+
+        this.addJson({...messages, ...messagesV2}, 'messages', ['spheres', sphere.name]);
 
         await Util.wait(250);
       }

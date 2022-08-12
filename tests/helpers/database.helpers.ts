@@ -68,6 +68,14 @@ import { StoneBehaviour }       from "../../src/models/stoneSubModels/stone-beha
 import { StoneKey }             from "../../src/models/stoneSubModels/stone-key.model";
 import { StoneSwitchState }     from "../../src/models/stoneSubModels/stone-switch-state.model";
 import {FingerprintV2Repository} from "../../src/repositories/data/fingerprint-v2.repository";
+import {MessageV2Repository} from "../../src/repositories/data/messageV2.repository";
+import {MessageRecipientUserRepository} from "../../src/repositories/data/message-recipient-user.repository";
+import {MessageDeletedByUserRepository} from "../../src/repositories/data/message-deletedBy-user.repository";
+import {MessageReadByUserRepository} from "../../src/repositories/data/message-readBy-user.repository";
+import {MessageV2} from "../../src/models/messageV2.model";
+import {MessageDeletedByUser} from "../../src/models/messageSubModels/message-deletedBy-user.model";
+import {MessageReadByUser} from "../../src/models/messageSubModels/message-readBy-user.model";
+import {MessageRecipientUser} from "../../src/models/messageSubModels/message-recipient-user.model";
 
 interface DatabaseDump {
   appInstallation     : AppInstallation[],
@@ -84,9 +92,13 @@ interface DatabaseDump {
   fsFiles             : FsFiles[],
   hub                 : Hub[],
   location            : Location[],
+  messageV2           : MessageV2[],
   message             : Message[],
   messageState        : MessageState[],
   messageUser         : MessageUser[],
+  messageRecipientUser: MessageRecipientUser[],
+  messageReadByUser   : MessageReadByUser[],
+  messageDeletedByUser: MessageDeletedByUser[],
   oauthToken          : OauthToken[],
   scene               : Scene[],
   sphere              : Sphere[],
@@ -124,6 +136,10 @@ function initRepositories() : RepositoryContainer {
   let message:              MessageRepository;
   let messageState:         MessageStateRepository;
   let messageUser:          MessageUserRepository;
+  let messageV2:            MessageV2Repository;
+  let messageRecipientUser: MessageRecipientUserRepository;
+  let messageDeletedByUser: MessageDeletedByUserRepository;
+  let messageReadByUser:    MessageReadByUserRepository;
   let scene:                SceneRepository;
   let sphereAccess:         SphereAccessRepository;
   let sphereFeature:        SphereFeatureRepository;
@@ -148,6 +164,10 @@ function initRepositories() : RepositoryContainer {
   let abilityGetter      = () : Promise<StoneAbilityRepository> => { return new Promise((resolve, _) => { resolve(stoneAbility) })}
   let sphereAccessGetter = () : Promise<SphereAccessRepository> => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
   let messageGetter      = () : Promise<MessageRepository>      => { return new Promise((resolve, _) => { resolve(message) })}
+  let messageV2Getter    = () : Promise<MessageV2Repository>      => { return new Promise((resolve, _) => { resolve(messageV2) })}
+  let messageRecipientUserGetter = () : Promise<MessageRecipientUserRepository> => { return new Promise((resolve, _) => { resolve(messageRecipientUser) })}
+  let messageReadByUserGetter    = () : Promise<MessageReadByUserRepository>    => { return new Promise((resolve, _) => { resolve(messageReadByUser) })}
+  let messageDeletedByUserGetter = () : Promise<MessageDeletedByUserRepository> => { return new Promise((resolve, _) => { resolve(messageDeletedByUser) })}
   let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository>  => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
   let fingerprintGetter  = () : Promise<FingerprintRepository> => { return new Promise((resolve, _) => { resolve(fingerprint) })}
   let fsFilesGetter      = () : Promise<FsFilesRepository> => { return new Promise((resolve, _) => { resolve(fsFiles) })}
@@ -172,9 +192,14 @@ function initRepositories() : RepositoryContainer {
   fsFiles              = new FsFilesRepository(testdb);
   fsChunks             = new FsChunksRepository(testdb, fsFilesGetter);
   location             = new LocationRepository(testdb, sphereGetter, fingerprintV2);
-  messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
+  messageRecipientUser = new MessageRecipientUserRepository(testdb, sphereGetter, messageV2Getter, userGetter);
+  messageReadByUser    = new MessageReadByUserRepository(testdb, sphereGetter, messageV2Getter, userGetter);
+  messageDeletedByUser = new MessageDeletedByUserRepository(testdb, sphereGetter, messageV2Getter, userGetter);
   messageUser          = new MessageUserRepository(testdb, sphereGetter, messageGetter, userGetter);
+  messageUser          = new MessageUserRepository(testdb, sphereGetter, messageGetter, userGetter);
+  messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
   message              = new MessageRepository(testdb, sphereGetter, userGetter, messageUserGetter, messageState);
+  messageV2            = new MessageV2Repository(testdb, sphereGetter, userGetter, messageRecipientUserGetter, messageDeletedByUserGetter, messageReadByUserGetter);
   scene                = new SceneRepository(testdb, sphereGetter);
   sphereAccess         = new SphereAccessRepository(testdb, sphereGetter);
   sphereFeature        = new SphereFeatureRepository(testdb, sphereGetter);
@@ -188,7 +213,7 @@ function initRepositories() : RepositoryContainer {
   stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
-  sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, fingerprintV2, message, hub, sphereFeature, sphereTrackingNumber, toon);
+  sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, fingerprintV2, messageV2, hub, sphereFeature, sphereTrackingNumber, toon);
   user                 = new UserRepository(testdb, sphereAccessGetter, sphereGetter, device);
 
 
@@ -208,6 +233,10 @@ function initRepositories() : RepositoryContainer {
     fsFiles,
     hub,
     location,
+    messageRecipientUser,
+    messageReadByUser,
+    messageDeletedByUser,
+    messageV2,
     message,
     messageState,
     messageUser,

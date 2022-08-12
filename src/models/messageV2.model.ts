@@ -26,13 +26,13 @@ export class MessageV2 extends AddTimestamps(BaseEntity) {
   @property({type: 'boolean', default: false})
   everyoneInSphereIncludingOwner: boolean;
 
-  @hasMany(() => User, {through: {model: () => MessageRecipientUser}})
+  @hasMany(() => User, {through: {model: () => MessageRecipientUser, keyFrom:'messageId'}, })
   recipients: User[];
 
-  @hasMany(() => User, {through: {model: () => MessageDeletedByUser}})
+  @hasMany(() => User, {through: {model: () => MessageDeletedByUser, keyFrom:'messageId'}})
   deletedBy: User[];
 
-  @hasMany(() => User, {through: {model: () => MessageReadByUser}})
+  @hasMany(() => User, {through: {model: () => MessageReadByUser, keyFrom:'messageId'}})
   readBy: User[];
 
   @belongsTo(() => Location, {name:'triggerLocation'})
