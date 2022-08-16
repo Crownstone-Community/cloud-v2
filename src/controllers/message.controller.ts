@@ -14,11 +14,9 @@ import {MessageV2} from "../models/messageV2.model";
 import {Dbs} from "../modules/containers/RepoContainer";
 import {ModelDefinition, repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
-
-
-const MessageWithRecipients = new ModelDefinition('MessageWithRecipients')
-  .addProperty('message',   MessageV2)
-  .addProperty('recipients', {type: 'array', itemType: 'string'});
+import {
+  MessageWithRecipients,
+} from "../models/endpointModels/message-with-recipients.model";
 
 
 export class MessageEndpoints extends SphereItem {
@@ -36,7 +34,7 @@ export class MessageEndpoints extends SphereItem {
   async sendMessage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
-    @requestBody({required: true}) messageData: typeof MessageWithRecipients,
+    @requestBody({required: true}) messageData: MessageWithRecipients,
   ): Promise<MessageV2> {
     messageData.message.ownerId = userProfile[securityId];
 
@@ -80,11 +78,14 @@ export class MessageEndpoints extends SphereItem {
 
   @get('/spheres/{id}/messages')
   @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
+  @authorize(Authorization.sphereAccess())
   async getMessages(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
   ): Promise<MessageV2[]> {
+
+
+
     // messages that you're one of the recipients of
     let messagesForMe = (await this.sphereRepo.messages(sphereId).find({where: {
         everyoneInSphere: false, everyoneInSphereIncludingOwner: false,
@@ -94,33 +95,29 @@ export class MessageEndpoints extends SphereItem {
         {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
         {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
       ]
-    })).filter((message) => {
-      return message.recipients.some((recipient) => {
-        return recipient.id === userProfile[securityId];
-      });
-    });
+    })).filter(message => {
+      return (
+        // only add message if we are one of the recipients
+        message.recipients.some(recipient => recipient.id === userProfile[securityId]) &&
+        // do not add our own messages, these are added below.
+        // This is not added to the query since that does not work reliably on mongodb.
+        message.ownerId != userProfile[securityId]
+      )
+    })
 
-    // you're the owner of the message, want to send it to everyone, including yourself
-    let messagesForEveryoneAndOwner = await this.sphereRepo.messages(sphereId).find({
-      where: {everyoneInSphereIncludingOwner: true, ownerId: userProfile[securityId]},
+    let messagesFromMeOrForEveryone = (await this.sphereRepo.messages(sphereId).find({
+      where: {
+        or: [{ownerId: userProfile[securityId]}, {everyoneInSphere: true}, {everyoneInSphereIncludingOwner: true}],
+      },
       include:[
         {relation: 'recipients', scope: {fields: {id:true}}},
-        {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}}},
-        {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}}},
+        {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
+        {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
       ]
-    });
+    }));
 
-    // you're not the owner of the message, and it is sent to everyone.
-    let messagesForEveryExceptOwner = await this.sphereRepo.messages(sphereId).find({
-      where: {everyoneInSphere: true, ownerId: {neq: userProfile[securityId]}},
-      include:[
-        {relation: 'recipients', scope: {fields: {id:true}}},
-        {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}}},
-        {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}}},
-      ]
-    });
-
-    return messagesForMe.concat(messagesForEveryoneAndOwner, messagesForEveryExceptOwner);
+    // return messagesForMe.concat(messagesForEveryoneAndOwner, messagesForEveryExceptOwner);
+    return messagesForMe.concat(messagesFromMeOrForEveryone);
   }
 
 

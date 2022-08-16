@@ -45,3 +45,4 @@ export class MessageV2 extends AddTimestamps(BaseEntity) {
   sphereId: string;
 
 }
+

@@ -31,8 +31,88 @@ Array [
 ]
 `;
 
-exports[`Create and get messages 1`] = `
+exports[`Create and get messages by the sender 1`] = `
 Array [
+  Object {
+    "content": "adminMessage",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": true,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
+exports[`Create and get messages sent to self without duplicates: Admins direct messages 1`] = `
+Array [
+  Object {
+    "content": "adminDirect:Message",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:1",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
+exports[`Create and get messages: Admins messages 1`] = `
+Array [
+  Object {
+    "content": "member&guest:Message",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "guest:Message",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:2",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
   Object {
     "content": "everyoneMessageIncAdmin",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -44,13 +124,86 @@ Array [
     "triggerEvent": "enter",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
+  Object {
+    "content": "everyoneMessageExOwner",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:4",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
 ]
 `;
 
-exports[`Create and get messages 2`] = `
+exports[`Create and get messages: messages for guest 1`] = `
 Array [
   Object {
-    "content": "memberMessage",
+    "content": "member&guest:Message",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:1",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:2",
+      },
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "guest:Message",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": false,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:2",
+    "ownerId": "dbId:UserRepository:1",
+    "recipients": Array [
+      Object {
+        "id": "dbId:UserRepository:3",
+      },
+    ],
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "everyoneMessageIncAdmin",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": true,
+    "id": "dbId:MessageV2Repository:3",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "content": "everyoneMessageExOwner",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "everyoneInSphere": true,
+    "everyoneInSphereIncludingOwner": false,
+    "id": "dbId:MessageV2Repository:4",
+    "ownerId": "dbId:UserRepository:1",
+    "sphereId": "dbId:SphereRepository:1",
+    "triggerEvent": "enter",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
+exports[`Create and get messages: messages for member 1`] = `
+Array [
+  Object {
+    "content": "member&guest:Message",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "everyoneInSphere": false,
     "everyoneInSphereIncludingOwner": false,
@@ -80,7 +233,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
-    "content": "everyoneMessageExAdmin",
+    "content": "everyoneMessageExOwner",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "everyoneInSphere": true,
     "everyoneInSphereIncludingOwner": false,

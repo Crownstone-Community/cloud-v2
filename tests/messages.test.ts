@@ -112,12 +112,12 @@ test("Create and get messages", async () => {
   await populate();
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "memberMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "member&guest:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
       recipients: [member.id, guest.id],
   });
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "guestMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "guest:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
       recipients: [guest.id],
   });
 
@@ -128,21 +128,60 @@ test("Create and get messages", async () => {
 
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "everyoneMessageExAdmin", everyoneInSphere: true, everyoneInSphereIncludingOwner: false},
+      content: "everyoneMessageExOwner", everyoneInSphere: true, everyoneInSphereIncludingOwner: false},
   });
 
   await client
     .get(auth(`/spheres/${sphere.id}/messages`))
     .expect(({ body }) => {
-      expect(body).toMatchSnapshot();
+      expect(body).toMatchSnapshot('Admins messages');
     });
 
-  token = await getToken(client, member);
+  let memberToken = await getToken(client, member);
+
+  await client
+    .get(auth(`/spheres/${sphere.id}/messages`, memberToken))
+    .expect(({ body }) => {
+      expect(body).toMatchSnapshot('messages for member');
+    });
+
+  let guestToken = await getToken(client, guest);
+
+  await client
+    .get(auth(`/spheres/${sphere.id}/messages`, guestToken))
+    .expect(({ body }) => {
+      expect(body).toMatchSnapshot('messages for guest');
+    });
+});
+
+test("Create and get messages sent to self without duplicates", async () => {
+  await populate();
+  await client.post(auth(`/spheres/${sphere.id}/message`)).send({
+    message: {
+      content: "adminDirect:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      recipients: [admin.id],
+  });
 
   await client
     .get(auth(`/spheres/${sphere.id}/messages`))
     .expect(({ body }) => {
-      expect(body).toMatchSnapshot();
+      expect(body).toHaveLength(1)
+      expect(body).toMatchSnapshot('Admins direct messages');
+    });
+});
+
+
+test("Create and get messages by the sender", async () => {
+  await populate();
+  await client.post(auth(`/spheres/${sphere.id}/message`)).send({
+    message: {content: "adminMessage", everyoneInSphere: true, everyoneInSphereIncludingOwner: true},
+    recipients: [],
+  });
+
+  await client
+    .get(auth(`/spheres/${sphere.id}/messages`))
+    .expect(({ body }) => {
+      expect(body.length).toBe(1);  // only the admin message is returned
     });
 });
 
