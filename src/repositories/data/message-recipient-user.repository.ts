@@ -11,9 +11,9 @@ import {MessageV2Repository} from "./messageV2.repository";
 
 
 export class MessageRecipientUserRepository extends TimestampedCrudRepository<MessageRecipientUser,typeof MessageRecipientUser.prototype.id > {
-  public readonly sphere:  BelongsToAccessor<Sphere,  typeof Sphere.prototype.id>;
+  public readonly sphere:  BelongsToAccessor<Sphere,    typeof Sphere.prototype.id>;
   public readonly message: BelongsToAccessor<MessageV2, typeof MessageV2.prototype.id>;
-  public readonly user:   BelongsToAccessor<User,    typeof User.prototype.id>;
+  public readonly user:    BelongsToAccessor<User,      typeof User.prototype.id>;
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,

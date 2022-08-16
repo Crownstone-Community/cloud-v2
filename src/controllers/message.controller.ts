@@ -84,40 +84,17 @@ export class MessageEndpoints extends SphereItem {
     @param.path.string('id') sphereId: string,
   ): Promise<MessageV2[]> {
 
-
-
     // messages that you're one of the recipients of
-    let messagesForMe = (await this.sphereRepo.messages(sphereId).find({where: {
-        everyoneInSphere: false, everyoneInSphereIncludingOwner: false,
-      },
+    let allMessagesInSphere = (await this.sphereRepo.messages(sphereId).find({
       include:[
-        {relation: 'recipients', scope: {fields: {id:true}}},
-        {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
-        {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
-      ]
-    })).filter(message => {
-      return (
-        // only add message if we are one of the recipients
-        message.recipients.some(recipient => recipient.id === userProfile[securityId]) &&
-        // do not add our own messages, these are added below.
-        // This is not added to the query since that does not work reliably on mongodb.
-        message.ownerId != userProfile[securityId]
-      )
-    })
-
-    let messagesFromMeOrForEveryone = (await this.sphereRepo.messages(sphereId).find({
-      where: {
-        or: [{ownerId: userProfile[securityId]}, {everyoneInSphere: true}, {everyoneInSphereIncludingOwner: true}],
-      },
-      include:[
-        {relation: 'recipients', scope: {fields: {id:true}}},
-        {relation: 'deletedBy',  scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
-        {relation: 'readBy',     scope: {where: {id: userProfile[securityId]}, fields: {id:true}}},
+        {relation:'recipients', scope:{fields: {userId: true, messageId: true}}},
+        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true}, where:{userId: userProfile[securityId]}}},
+        {relation:'readBy',     scope:{fields: {userId: true, messageId: true}, where:{userId: userProfile[securityId]}}},
       ]
     }));
 
-    // return messagesForMe.concat(messagesForEveryoneAndOwner, messagesForEveryExceptOwner);
-    return messagesForMe.concat(messagesFromMeOrForEveryone);
+    console.log("allMessagesInSphere", allMessagesInSphere);
+    return filterForMyMessages(allMessagesInSphere, userProfile[securityId]);
   }
 
 
@@ -137,7 +114,26 @@ export class MessageEndpoints extends SphereItem {
     }
 
   }
+}
+
+export function filterForMyMessages(messages: MessageV2[], userId: userId): MessageV2[] {
+  if (!messages) { return; }
 
 
+  return messages.filter(message => {
+    if (message.everyoneInSphere === false && message.everyoneInSphereIncludingOwner === false) {
+      console.log('message.recipients', message.recipients)
+      if (!message.recipients || message.recipients.length == 0) { return false; }
 
+      let messagesForMe = message.recipients.some(recipient => {
+        console.log("CHECKING", recipient.userId, recipient.userId === userId, userId);
+        return recipient.userId === userId
+      });
+      console.log("messagesForMe", messagesForMe, userId);
+      return messagesForMe;
+    }
+    else {
+      return true;
+    }
+  });
 }

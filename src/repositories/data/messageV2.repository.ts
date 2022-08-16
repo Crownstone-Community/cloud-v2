@@ -1,6 +1,6 @@
 import {
   BelongsToAccessor,
-  Getter,
+  Getter, HasManyRepositoryFactory,
   HasManyThroughRepositoryFactory,
   juggler,
   repository
@@ -26,26 +26,25 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
   public readonly sphere: BelongsToAccessor<Sphere, typeof Sphere.prototype.id>;
   public readonly owner:  BelongsToAccessor<User,   typeof User.prototype.id>;
 
-  public recipients: HasManyThroughRepositoryFactory<User, typeof User.prototype.id, MessageRecipientUser, typeof MessageV2.prototype.id>;
-  public deletedBy:  HasManyThroughRepositoryFactory<User, typeof User.prototype.id, MessageDeletedByUser, typeof MessageV2.prototype.id>;
-  public readBy:     HasManyThroughRepositoryFactory<User, typeof User.prototype.id, MessageReadByUser,    typeof MessageV2.prototype.id>;
-
+  public recipients: HasManyRepositoryFactory<MessageRecipientUser, typeof MessageRecipientUser.prototype.id>;
+  public deletedBy:  HasManyRepositoryFactory<MessageDeletedByUser, typeof MessageDeletedByUser.prototype.id>;
+  public readBy:     HasManyRepositoryFactory<MessageReadByUser,    typeof MessageReadByUser.prototype.id>;
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
     @repository.getter('SphereRepository')               sphereRepoGetter:               Getter<SphereRepository>,
     @repository.getter('UserRepository')                 userRepoGetter:                 Getter<UserRepository>,
-    @repository.getter('MessageRecipientUserRepository') messageRecipientUserRepoGetter: Getter<MessageRecipientUserRepository>,
-    @repository.getter('MessageDeletedByUserRepository') messageDeletedByUserRepoGetter: Getter<MessageDeletedByUserRepository>,
-    @repository.getter('MessageReadByUserRepository')    messageReadByUserGetter:        Getter<MessageReadByUserRepository>,
+    @repository('MessageRecipientUserRepository') messageRecipientUserRepo: MessageRecipientUserRepository,
+    @repository('MessageDeletedByUserRepository') messageDeletedByUserRepo: MessageDeletedByUserRepository,
+    @repository('MessageReadByUserRepository')    messageReadByUser:        MessageReadByUserRepository,
     ) {
     super(MessageV2, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
     this.owner  = this.createBelongsToAccessorFor('owner',  userRepoGetter);
 
-    this.recipients = this.createHasManyThroughRepositoryFactoryFor('recipients', userRepoGetter, messageRecipientUserRepoGetter);
-    this.deletedBy  = this.createHasManyThroughRepositoryFactoryFor('deletedBy',  userRepoGetter, messageDeletedByUserRepoGetter);
-    this.readBy     = this.createHasManyThroughRepositoryFactoryFor('readBy',     userRepoGetter, messageReadByUserGetter);
+    this.recipients = this.createHasManyRepositoryFactoryFor('recipients', async () => messageRecipientUserRepo);
+    this.deletedBy  = this.createHasManyRepositoryFactoryFor('deletedBy',  async () => messageDeletedByUserRepo);
+    this.readBy     = this.createHasManyRepositoryFactoryFor('readBy',     async () => messageReadByUser);
 
     this.registerInclusionResolver('recipients', this.recipients.inclusionResolver);
     this.registerInclusionResolver('deletedBy',  this.deletedBy.inclusionResolver);
@@ -68,8 +67,13 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
   }
 
   async markAsRead(sphereId: string, messageId: string, userId: string) {
-    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
+    let alreadyExisting = await Dbs.messageReadByUser.findOne({where:{userId:userId, messageId:messageId}, fields:{id:true}});
+    if (alreadyExisting !== null) {
+      // already existing, do nothing
+      return;
+    }
 
+    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
     if (sphereUsers.length == 0) {
       throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
     }
@@ -82,8 +86,13 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
   }
 
   async markAsDeleted(sphereId: string, messageId: string, userId: string) {
-    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
+    let alreadyExisting = await Dbs.messageDeletedByUser.findOne({where:{userId:userId, messageId:messageId}, fields:{id:true}});
+    if (alreadyExisting !== null) {
+      // already existing, do nothing
+      return;
+    }
 
+    let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
     if (sphereUsers.length == 0) {
       throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
     }

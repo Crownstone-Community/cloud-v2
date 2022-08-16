@@ -165,14 +165,11 @@ function initRepositories() : RepositoryContainer {
   let sphereAccessGetter = () : Promise<SphereAccessRepository> => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
   let messageGetter      = () : Promise<MessageRepository>      => { return new Promise((resolve, _) => { resolve(message) })}
   let messageV2Getter    = () : Promise<MessageV2Repository>      => { return new Promise((resolve, _) => { resolve(messageV2) })}
-  let messageRecipientUserGetter = () : Promise<MessageRecipientUserRepository> => { return new Promise((resolve, _) => { resolve(messageRecipientUser) })}
-  let messageReadByUserGetter    = () : Promise<MessageReadByUserRepository>    => { return new Promise((resolve, _) => { resolve(messageReadByUser) })}
-  let messageDeletedByUserGetter = () : Promise<MessageDeletedByUserRepository> => { return new Promise((resolve, _) => { resolve(messageDeletedByUser) })}
-  let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository>  => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
-  let fingerprintGetter  = () : Promise<FingerprintRepository> => { return new Promise((resolve, _) => { resolve(fingerprint) })}
-  let fsFilesGetter      = () : Promise<FsFilesRepository> => { return new Promise((resolve, _) => { resolve(fsFiles) })}
-  let messageUserGetter  = () : Promise<MessageUserRepository> => { return new Promise((resolve, _) => { resolve(messageUser) })}
-  let userGetter         = () : Promise<UserRepository>        => { return new Promise((resolve, _) => { resolve(user) })}
+  let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository> => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
+  let fingerprintGetter  = () : Promise<FingerprintRepository>  => { return new Promise((resolve, _) => { resolve(fingerprint) })}
+  let fsFilesGetter      = () : Promise<FsFilesRepository>      => { return new Promise((resolve, _) => { resolve(fsFiles) })}
+  let messageUserGetter  = () : Promise<MessageUserRepository>  => { return new Promise((resolve, _) => { resolve(messageUser) })}
+  let userGetter         = () : Promise<UserRepository>         => { return new Promise((resolve, _) => { resolve(user) })}
 
 
   hub                  = new HubRepository(testdb, sphereGetter, stoneGetter, locationGetter);
@@ -199,7 +196,7 @@ function initRepositories() : RepositoryContainer {
   messageUser          = new MessageUserRepository(testdb, sphereGetter, messageGetter, userGetter);
   messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
   message              = new MessageRepository(testdb, sphereGetter, userGetter, messageUserGetter, messageState);
-  messageV2            = new MessageV2Repository(testdb, sphereGetter, userGetter, messageRecipientUserGetter, messageDeletedByUserGetter, messageReadByUserGetter);
+  messageV2            = new MessageV2Repository(testdb, sphereGetter, userGetter, messageRecipientUser, messageDeletedByUser, messageReadByUser);
   scene                = new SceneRepository(testdb, sphereGetter);
   sphereAccess         = new SphereAccessRepository(testdb, sphereGetter);
   sphereFeature        = new SphereFeatureRepository(testdb, sphereGetter);
