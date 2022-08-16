@@ -14,5 +14,4 @@ export class Sync_Messages extends Sync_Base<MessageV2, RequestItemCoreType> {
 
   updateEventCallback(messageId: string, cloudMessage: MessageV2) {
   }
-
 }

@@ -32,7 +32,7 @@ export class Sync_SphereComponents {
     this.fingerprints    = new Sync_Fingerprints(sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.hubs            = new Sync_Hubs(        sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.locations       = new Sync_Locations(   sphereId, accessRole, requestSphere, replySphere, creationMap);
-    // this.messages        = new Sync_Messages(    sphereId, accessRole, requestSphere, replySphere, creationMap);
+    this.messages        = new Sync_Messages(    sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.scenes          = new Sync_Scenes(      sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.stones          = new Sync_Stones(      sphereId, accessRole, requestSphere, replySphere, creationMap);
     this.users           = new Sync_SphereUsers( sphereId, accessRole, requestSphere, replySphere, creationMap);

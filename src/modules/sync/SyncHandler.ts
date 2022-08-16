@@ -20,6 +20,8 @@ import {Sync_SphereComponents} from "./syncers/Sync_Constructor";
 import {EventSphereCache} from "../sse/events/EventConstructor";
 import {SphereAccessUtil} from "../../util/SphereAccessUtil";
 import {Util} from "../../util/Util";
+import {filterForMyMessages, preprocessMessageTimes} from "../../controllers/message.controller";
+import {MessageV2} from "../../models/messageV2.model";
 
 
 const admin  = true;
@@ -46,7 +48,7 @@ class Syncer {
    * @param sphereId
    * @param status
    */
-  async downloadSphere(sphereId: string, status: SyncState, ignore: SyncIgnoreMap, domain : SyncDomain) : Promise<SyncRequestResponse_Sphere> {
+  async downloadSphere(userId: string, sphereId: string, status: SyncState, ignore: SyncIgnoreMap, domain : SyncDomain) : Promise<SyncRequestResponse_Sphere> {
     let includeArray = [];
 
     if (!ignore.features) {
@@ -59,7 +61,11 @@ class Syncer {
       includeArray.push({relation:'locations'});
     }
     if (!ignore.messages) {
-      includeArray.push({relation:'messages'});
+      includeArray.push({relation:'messages', scope: { include: [
+        {relation:'recipients', scope:{fields: {userId: true, messageId: true, id: true, updatedAt: true}}},
+        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+        {relation:'readBy',     scope:{fields: {userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+      ]}});
     }
     if (!ignore.hubs) {
       includeArray.push({relation:'hubs'});
@@ -85,7 +91,16 @@ class Syncer {
       includeArray.push({relation:'toons'});
     }
 
-    let sphereData = await Dbs.sphere.findById(sphereId,{include: includeArray});
+
+
+    let sphereData;
+    try {
+      sphereData = await Dbs.sphere.findById(sphereId, {include: includeArray});
+    }
+    catch (err) {
+      console.log("Error getting sphere data", err);
+      return {};
+    }
 
     /**
      * This function is a helper to insert the children of a sphere into a sphere.
@@ -119,6 +134,13 @@ class Syncer {
         sphereItem.data.data[key] = sphereData[key];
       }
     }
+
+    // filter messages for this user
+    if (!ignore.messages) {
+      sphereData.messages = filterForMyMessages(sphereData.messages, userId);
+    }
+
+    injectSphereSimpleItem(sphereData, 'fingerprints',    sphereItem);
     injectSphereSimpleItem(sphereData, 'hubs',            sphereItem);
     injectSphereSimpleItem(sphereData, 'features',        sphereItem);
     injectSphereSimpleItem(sphereData, 'messages',        sphereItem);
@@ -247,7 +269,7 @@ class Syncer {
         !domain || !domain.spheres ||
          domain.spheres &&
         (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
-        reply.spheres[sphereId] = await this.downloadSphere(sphereId, "VIEW", ignore, domain);
+        reply.spheres[sphereId] = await this.downloadSphere(userId, sphereId, "VIEW", ignore, domain);
       }
 
       if (domain?.stones && domain.stones.length > 0) {
@@ -292,8 +314,6 @@ class Syncer {
       earlyAccessLevel:   true, // used for bootloaders and firmwares.
       updatedAt:          true,
       sphereId:           true,
-      messageDeliveredId: true,
-      messageId:          true,
       stoneId:            true,
       abilityId:          true
     };
@@ -323,7 +343,20 @@ class Syncer {
     // rest of the database for the spheres that we actually got back.
     sphereIds = getIds(sphereData);
     let filter : any = {where: {and: [{sphereId: {inq: sphereIds }}]}, fields: filterFields};
-    // we make a copy
+    // we make a copy and modify the filter for specific models.
+    let messageFilter = Util.deepCopy(filter);
+    messageFilter.fields = {
+      id:                 true,
+      updatedAt:          true,
+      sphereId:           true,
+      everyoneInSphere:   true,
+      everyoneInSphereIncludingOwner: true
+    }
+    messageFilter['include'] = [
+      {relation:'recipients', scope:{fields: {id: true, userId: true, messageId: true}}},
+      {relation:'deletedBy',  scope:{fields: {id: true, userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+      {relation:'readBy',     scope:{fields: {id: true, userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+    ]
     let stoneFilter = Util.deepCopy(filter);
 
     // Set the filter requirements for stone domain filters.
@@ -337,7 +370,14 @@ class Syncer {
     let locationData        = ignore.locations    ? [] : await Dbs.location.find(filter);
     let fingerprintData     = ignore.fingerprints ? [] : await Dbs.fingerprintV2.find(filter);
 
-    let messageData         = ignore.messages     ? [] : await Dbs.messageV2.find(filter);
+    let messageData         = ignore.messages     ? [] : await Dbs.messageV2.find(messageFilter);
+    if (!ignore.messages) {
+      messageData = filterForMyMessages(messageData, userId);
+    }
+    let messageRecipientData = // CREATE MAP from messageData
+    let messageReadByData    = // CREATE MAP from messageData
+    let messageDeletedByData = // CREATE MAP from messageData
+
 
     let hubData             = ignore.hubs         ? [] : await Dbs.hub.find(filter);
     let sceneData           = ignore.scenes       ? [] : await Dbs.scene.find(filter);
@@ -351,7 +391,7 @@ class Syncer {
 
     let sphereUsers         = ignore.sphereUsers     ? {} : await SphereAccessUtil.getSphereUsers(sphereIds);
 
-    // this is cheap to do with empty arrays do we dont check for ignore here.
+    // this is cheap to do with empty arrays do we don't check for ignore here.
     let cloud_spheres           = getUniqueIdMap(sphereData);
     let cloud_features          = getNestedIdMap(featureData,         'sphereId');
     let cloud_locations         = getNestedIdMap(locationData,        'sphereId');
@@ -410,9 +450,9 @@ class Syncer {
           await SphereSyncer.features.processRequest(cloud_features[sphereId]);
         }
 
-        // if (!ignore.messages) {
-        //   await SphereSyncer.messages.processRequest(cloud_messages[sphereId]);
-        // }
+        if (!ignore.messages) {
+          await SphereSyncer.messages.processRequest(cloud_messages[sphereId]);
+        }
 
         if (!ignore.fingerprints) {
           await SphereSyncer.fingerprints.processRequest(cloud_fingerprints[sphereId]);
@@ -448,7 +488,7 @@ class Syncer {
       for (let i = 0; i < sphereIds.length; i++) {
         let cloudSphereId = sphereIds[i];
         if (request.spheres[cloudSphereId] === undefined) {
-          reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
+          reply.spheres[cloudSphereId] = await this.downloadSphere(userId, cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
         }
       }
     }
@@ -456,7 +496,7 @@ class Syncer {
       // there are no spheres for the user, give the user all the spheres.
       for (let i = 0; i < sphereIds.length; i++) {
         let cloudSphereId = sphereIds[i];
-        reply.spheres[cloudSphereId] = await this.downloadSphere(cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
+        reply.spheres[cloudSphereId] = await this.downloadSphere(userId, cloudSphereId, "NEW_DATA_AVAILABLE", ignore, domain);
       }
     }
 
@@ -614,7 +654,6 @@ class Syncer {
     }
   }
 }
-
 
 
 export const SyncHandler = new Syncer();

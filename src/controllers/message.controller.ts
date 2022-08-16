@@ -88,13 +88,15 @@ export class MessageEndpoints extends SphereItem {
     let allMessagesInSphere = (await this.sphereRepo.messages(sphereId).find({
       include:[
         {relation:'recipients', scope:{fields: {userId: true, messageId: true}}},
-        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true}, where:{userId: userProfile[securityId]}}},
-        {relation:'readBy',     scope:{fields: {userId: true, messageId: true}, where:{userId: userProfile[securityId]}}},
+        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true, updatedAt: true}, where:{userId: userProfile[securityId]}}},
+        {relation:'readBy',     scope:{fields: {userId: true, messageId: true, updatedAt: true}, where:{userId: userProfile[securityId]}}},
       ]
     }));
 
-    console.log("allMessagesInSphere", allMessagesInSphere);
-    return filterForMyMessages(allMessagesInSphere, userProfile[securityId]);
+    // filter for messages that you have access to. This cannot be done in the query since neq with mongoIds is not working.
+    let myMessages = filterForMyMessages(allMessagesInSphere, userProfile[securityId]);
+
+    return myMessages
   }
 
 
@@ -106,7 +108,7 @@ export class MessageEndpoints extends SphereItem {
     @param.path.string('id') messageId: string,
   ): Promise<void> {
     let message = await Dbs.messageV2.findById(messageId);
-    if (message.ownerId === userProfile[securityId]) {
+    if (message.ownerId == userProfile[securityId]) {
       await Dbs.messageV2.deleteById(messageId);
     }
     else {
@@ -114,22 +116,37 @@ export class MessageEndpoints extends SphereItem {
     }
 
   }
+
+
+  @del('/sphere/{id}/allMessages')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereAdmin())
+  async deleteSphereMessages(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') sphereId: string,
+    @param.query.string('AreYouSure', {required:true}) areYouSure: string,
+  ) : Promise<void> {
+    if (areYouSure !== "I_AM_SURE") {
+      throw new HttpErrors.BadRequest("AreYouSure argument must be I_AM_SURE")
+    }
+
+    await Dbs.messageV2.deleteAll({sphereId: sphereId});
+    await Dbs.messageRecipientUser.deleteAll({sphereId: sphereId});
+    await Dbs.messageReadByUser.deleteAll({sphereId: sphereId});
+    await Dbs.messageDeletedByUser.deleteAll({sphereId: sphereId});
+  }
 }
 
 export function filterForMyMessages(messages: MessageV2[], userId: userId): MessageV2[] {
   if (!messages) { return; }
 
-
   return messages.filter(message => {
     if (message.everyoneInSphere === false && message.everyoneInSphereIncludingOwner === false) {
-      console.log('message.recipients', message.recipients)
       if (!message.recipients || message.recipients.length == 0) { return false; }
 
       let messagesForMe = message.recipients.some(recipient => {
-        console.log("CHECKING", recipient.userId, recipient.userId === userId, userId);
         return recipient.userId === userId
       });
-      console.log("messagesForMe", messagesForMe, userId);
       return messagesForMe;
     }
     else {

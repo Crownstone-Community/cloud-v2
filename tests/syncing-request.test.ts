@@ -12,7 +12,15 @@ makeUtilDeterministic();
 import {CrownstoneCloud} from "../src/application";
 import {Client, createRestAppClient} from '@loopback/testlab';
 import {clearTestDatabase, createApp, databaseDump, getRepositories} from "./helpers";
-import {createHub, createLocation, createSphere, createStone, createUser, resetUsers} from "./builders/createUserData";
+import {
+  createHub,
+  createLocation,
+  createMessage,
+  createSphere,
+  createStone,
+  createUser,
+  resetUsers
+} from "./builders/createUserData";
 import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
 import {SyncHandler} from "../src/modules/sync/SyncHandler";
 import {CloudUtil} from "../src/util/CloudUtil";
@@ -510,6 +518,21 @@ test("Sync REQUEST keys", async () => {
       expect(body.keys).toBeDefined()
       expect(body.keys.data.length).toBe(1)
       expect(body.keys.data[0].sphereKeys.length).toBe(3)
+    })
+
+});
+
+
+
+test("Sync REQUEST messages", async () => {
+  await populate();
+  await createMessage(admin.id, sphere.id, "HelloAdmin", [admin.id, member.id]);
+
+  let request2 = {sync: {type: 'REQUEST',scope:['messages']}, spheres: {[sphere.id]: {}},}
+
+  await client.post(auth("/sync")).send(request2)
+    .expect(({body}) => {
+      console.log("BODY2", JSON.stringify(body, null, 2));
     })
 
 });

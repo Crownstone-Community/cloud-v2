@@ -1,6 +1,5 @@
 import {TimestampedCrudRepository} from "../../../repositories/bases/timestamped-crud-repository";
 import {getReply} from "./ReplyHelpers";
-import {EventHandler} from "../../sse/EventHandler";
 import {processCreationMap} from "./SyncUtil";
 import {ValidationErrorCode} from "../../../util/errors/ValidationError";
 
@@ -72,7 +71,7 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
         // create item in cloud.
         try {
           // this will search for any ids that are in this model which might refer to local ids of previously created models.
-          // example: locationId inside of the stone data. This method will change the local locationId to the new cloudId
+          // example: locationId is inside of the stone data. This method will change the local locationId to the new cloudId
           // if that location was made in this sync session.
           let updatedData = processCreationMap(creationMap, clientItem.data);
 
@@ -104,6 +103,7 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
           replySource[fieldname][itemId].data.status = "IN_SYNC";
         }
       }
+
 
       if (syncClientItemCallback) {
         await syncClientItemCallback(replySource[fieldname][itemId], clientItem, itemId, cloudId);

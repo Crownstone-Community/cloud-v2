@@ -17,7 +17,7 @@ import {Client}                from "@loopback/testlab";
 import {keyTypes}              from "../../src/enums";
 import {StoneKey}              from "../../src/models/stoneSubModels/stone-key.model";
 import {StoneSwitchState}      from "../../src/models/stoneSubModels/stone-switch-state.model";
-import {DataSanitizer} from "../../src/modules/dataManagement/Sanitizer";
+import {MessageV2} from "../../src/models/messageV2.model";
 
 
 
@@ -46,6 +46,33 @@ export async function createUser(email?, password?, updatedAt?, profilePictureId
   let user = await dbs.user.create({email: email, password: hashedPassword, updatedAt: updatedAt, profilePicId: profilePictureId })
   USERS[user.id] = {item: user, email: email, password: hashedPassword}
   return user;
+}
+
+export async function createMessage(userId, sphereId, content = 'helloWorld', recipients = []) : Promise<MessageV2> {
+  let dbs = getRepositories()
+  if (recipients.length == 0) {
+    let message = await dbs.messageV2.create({
+      content: content,
+      ownerId: userId,
+      sphereId,
+      everyoneInSphere: true,
+      everyoneInSphereIncludingOwner: true
+    })
+    return message;
+  }
+
+  let message = await dbs.messageV2.create({
+    content: content,
+    ownerId: userId,
+    sphereId,
+    everyoneInSphere: false,
+    everyoneInSphereIncludingOwner: false
+  })
+  for (let recipient of recipients) {
+    await dbs.messageRecipientUser.create({sphereId, messageId: message.id, userId: recipient})
+  }
+
+  return message;
 }
 
 export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> {
