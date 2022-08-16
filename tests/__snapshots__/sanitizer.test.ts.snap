@@ -140,6 +140,7 @@ Object {
   "spheres": Object {
     "access": Object {
       "hubs": 0,
+      "spheres": 0,
       "users": 0,
     },
     "hubs": 0,
@@ -172,6 +173,99 @@ Object {
     "oauthTokens": 0,
   },
 }
+`;
+
+exports[`Check if deleted spheres are removed from user's sphere access 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:1",
+    "invitePending": false,
+    "role": "admin",
+    "sphereAuthorizationToken": "TOKEN:2011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:1",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:2",
+    "invitePending": false,
+    "role": "member",
+    "sphereAuthorizationToken": "TOKEN:2012xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:2",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:3",
+    "invitePending": false,
+    "role": "hub",
+    "sphereAuthorizationToken": "TOKEN:2013xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:HubRepository:1",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:4",
+    "invitePending": false,
+    "role": "admin",
+    "sphereId": "RemovedSphereId",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:1",
+  },
+]
+`;
+
+exports[`Check if deleted spheres are removed from user's sphere access 2`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:4",
+    "invitePending": false,
+    "role": "admin",
+    "sphereId": "RemovedSphereId",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:1",
+  },
+]
+`;
+
+exports[`Check if deleted spheres are removed from user's sphere access 3`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:1",
+    "invitePending": false,
+    "role": "admin",
+    "sphereAuthorizationToken": "TOKEN:2011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:1",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:2",
+    "invitePending": false,
+    "role": "member",
+    "sphereAuthorizationToken": "TOKEN:2012xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:UserRepository:2",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": "dbId:SphereAccessRepository:3",
+    "invitePending": false,
+    "role": "hub",
+    "sphereAuthorizationToken": "TOKEN:2013xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "sphereId": "dbId:SphereRepository:1",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+    "userId": "dbId:HubRepository:1",
+  },
+]
 `;
 
 exports[`Delete member and admin in sphere and run sanitation. Database should be cleared. 1`] = `

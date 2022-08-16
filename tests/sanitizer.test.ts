@@ -192,3 +192,27 @@ test("Now with 2 spheres, delete member and admin in sphere2 and run sanitation.
 
   expect(database1Snapshot).toStrictEqual(secondDump);
 });
+
+
+
+test("Check if deleted spheres are removed from user's sphere access", async () => {
+  let result = await createMockSphereDatabase(client, "sphere1");
+  // sanitize away any duplicate things before this test starts.
+  await DataSanitizer.sanitize();
+
+  // add a link to a removed sphere
+  await Dbs.sphereAccess.create({userId: result.users.admin.id, sphereId: "RemovedSphereId", role:"admin"});
+  expect(await Dbs.sphereAccess.find()).toMatchSnapshot();
+
+  let initialDump = await databaseDump();
+
+  await DataSanitizer.sanitize();
+
+  let secondDump = await databaseDump();
+  let diff = Util.whatHasBeenChanged(initialDump, secondDump);
+
+  expect(diff.deleted.sphereAccess).toMatchSnapshot();
+
+  expect(await Dbs.sphereAccess.find()).toMatchSnapshot();
+});
+

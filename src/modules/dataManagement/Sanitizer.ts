@@ -37,6 +37,8 @@ export class DataSanitizer {
     let deletedStoneCount             = await deleteGetCount(Dbs.stone,{sphereId: {nin: spheresWithOwnerIds}});
 
     let stoneIds                      = await idArray(Dbs.stone.find({fields:{id: true}}));
+    let sphereIds                     = await idArray(Dbs.sphere.find({fields:{id: true}}));
+    let deletedOrphanedSphereAccessCount = await deleteGetCount(Dbs.sphereAccess,{sphereId: {nin: sphereIds}});
 
     let deletedStoneBehavioursCount   = await deleteGetCount(Dbs.stoneBehaviour,{stoneId: {nin: stoneIds}});
     let deletedStoneAbilitiesCount    = await deleteGetCount(Dbs.stoneAbility,{stoneId: {nin: stoneIds}});
@@ -86,7 +88,7 @@ export class DataSanitizer {
       },
       fingerprints: deletedFingerprintCount,
       spheres: {
-        access: { users: deletedSphereAccessCount, hubs: deletedSphereAccessHubCount},
+        access: { users: deletedSphereAccessCount, hubs: deletedSphereAccessHubCount, spheres: deletedOrphanedSphereAccessCount},
         spheres: deletedSphereCount,
         locations: deletedLocationsCount,
         scenes: deletedSceneCount,

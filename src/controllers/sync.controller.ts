@@ -25,7 +25,7 @@ export class SyncEndpoints {
   @authenticate(SecurityTypes.accessToken)
   async sync(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @requestBody({required: true}) syncData: any
+    @requestBody({required: true}) syncData: SyncRequest
   ): Promise<SyncRequestResponse> {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData)
     return result;
