@@ -52,6 +52,21 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     this.registerInclusionResolver('readBy',     this.readBy.inclusionResolver);
   }
 
+  async create(entity: MessageV2, options?: Options): Promise<MessageV2> {
+    let recipients = entity.recipients;
+    delete entity.recipients;
+
+    let newMessage = await super.create(entity, options);
+
+    if (recipients) {
+      for (let recipient of recipients) {
+        await this.addRecipient(newMessage.sphereId, newMessage.id, recipient as any);
+      }
+    }
+
+    return newMessage
+  }
+
 
   async addRecipient(sphereId: string, messageId: string, userId: string) : Promise<MessageRecipientUser>{
     let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})

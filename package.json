@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "jest",
+    "removeUnusedSnapshots": "jest -u",
     "build": "lb-tsc",
     "dev": "lb-tsc --watch",
     "start": "node execute.js"

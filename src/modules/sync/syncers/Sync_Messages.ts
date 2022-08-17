@@ -52,18 +52,28 @@ export class Sync_Messages extends Sync_Base<MessageV2, RequestItemCoreType> {
    * @param clientId
    * @param cloudId
    */
-  async syncClientItemCallback(messageReply: any, clientItem: SyncRequestMessageData, messageId: string, messageCloudId: string) {
+  async syncClientItemCallback(messageReply: any, clientItem: SyncRequestMessageData, messageId: string, cloudMessageId: string) {
     if (messageReply.data.status === "NOT_AVAILABLE") { return; }
 
     let readBySyncer = new Sync_message_readBy(
-      this.userId, this.sphereId, messageCloudId, this.accessRole, clientItem, messageReply, this.creationMap
+      this.userId, this.sphereId, cloudMessageId, this.accessRole, clientItem, messageReply, this.creationMap
     );
-    await readBySyncer.processRequest(this.cloud_readByUsers[messageCloudId])
+    await readBySyncer.processRequest(this.cloud_readByUsers[cloudMessageId])
 
     let deletedBySyncer = new Sync_message_deletedBy(
-      this.userId, this.sphereId, messageCloudId, this.accessRole, clientItem, messageReply, this.creationMap
+      this.userId, this.sphereId, cloudMessageId, this.accessRole, clientItem, messageReply, this.creationMap
     );
-    await deletedBySyncer.processRequest(this.cloud_deletedByUsers[messageCloudId])
+    await deletedBySyncer.processRequest(this.cloud_deletedByUsers[cloudMessageId])
+
+
+    // inject recipients into the message
+    if (messageReply.data.status === "CREATED_IN_CLOUD" || messageReply.data.status === "UPDATED_IN_CLOUD") {
+      this.cloud_recipientUsers[cloudMessageId] = await Dbs.messageRecipientUser.find({where:{messageId: cloudMessageId}, fields: { userId: true, messageId: true }});
+    }
+    if (this.cloud_recipientUsers[cloudMessageId] && messageReply?.data?.data) {
+      messageReply.data.data.recipients = this.cloud_recipientUsers[cloudMessageId];
+    }
+
 
   }
 
@@ -94,9 +104,13 @@ export class Sync_Messages extends Sync_Base<MessageV2, RequestItemCoreType> {
    * @param cloudMessageId
    */
   async syncCloudItemCallback(messageReply: any, cloudMessage: MessageV2, cloudMessageId: string) {
-    if (this.cloud_recipientUsers[cloudMessageId]) {
+    if (messageReply.data.status === "CREATED_IN_CLOUD") {
+      this.cloud_recipientUsers[cloudMessageId] = await Dbs.messageRecipientUser.find({where:{messageId: cloudMessageId}, fields:{sphereId: false, id: false}});
+    }
+    if (this.cloud_recipientUsers[cloudMessageId] && messageReply?.data?.data) {
       messageReply.data.data.recipients = this.cloud_recipientUsers[cloudMessageId];
     }
+
 
     messageReply.deletedBy = this.cloud_deletedByUsers[cloudMessageId] ?? {};
     messageReply.readBy    = this.cloud_readByUsers[cloudMessageId]    ?? {};

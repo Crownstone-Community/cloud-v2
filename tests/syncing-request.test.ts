@@ -553,9 +553,9 @@ test("Sync REQUEST messages", async () => {
           [message.id]: {
             data: {updatedAt: message.updatedAt},
             deletedBy: {'newId': {
-              new: true,
-              data: {userId: admin.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
-            }},
+                new: true,
+                data: {userId: admin.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
+              }},
           }
         }
       }
@@ -572,15 +572,47 @@ test("Sync REQUEST messages", async () => {
           [message.id]: {
             data: {updatedAt: message.updatedAt},
             deletedBy: {'newId': {
-              new: true,
-              data: {userId: member.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
-            }},
+                new: true,
+                data: {userId: member.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
+              }},
           }
         }
       }
     }
   };
   await client.post(auth("/sync", adminToken)).send(request5).expect(({body}) => { expect(body).toMatchSnapshot('check if we can mark a deleted state for someone else') })
+});
+
+
+
+
+
+
+
+
+test("Sync REQUEST messages, create message via sync", async () => {
+  await populate();
+  // check if we can mark a deleted state for someone else:
+  let request6 = {
+    sync: {type: 'REQUEST', scope: ['messages']},
+    spheres: {
+      [sphere.id]: {
+        messages: {
+          ['newMessageId1']: {
+            new: true,
+            data: {content:'hello', everyoneInSphere:false, recipients:[guest.id]},
+          }
+        }
+      }
+    }
+  };
+  await client.post(auth("/sync")).send(request6).expect(({body}) => {
+    let messages = body.spheres[sphere.id].messages;
+    expect(messages.newMessageId1.data.status).toBe("CREATED_IN_CLOUD");
+    expect(messages.newMessageId1.data.data.recipients).toBeDefined();
+    expect(body).toMatchSnapshot();
+  })
+
 
 });
 
