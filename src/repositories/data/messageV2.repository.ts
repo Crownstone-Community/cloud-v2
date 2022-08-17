@@ -20,7 +20,7 @@ import {MessageDeletedByUserRepository} from "./message-deletedBy-user.repositor
 import {MessageReadByUserRepository} from "./message-readBy-user.repository";
 import {Dbs} from "../../modules/containers/RepoContainer";
 import {HttpErrors} from "@loopback/rest";
-import {Options} from "@loopback/repository/src/common-types";
+import {DataObject, Options} from "@loopback/repository/src/common-types";
 
 
 export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typeof MessageV2.prototype.id > {
@@ -52,7 +52,7 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     this.registerInclusionResolver('readBy',     this.readBy.inclusionResolver);
   }
 
-  async create(entity: MessageV2, options?: Options): Promise<MessageV2> {
+  async create(entity: DataObject<MessageV2>, options?: Options): Promise<MessageV2> {
     let recipients = entity.recipients;
     delete entity.recipients;
 
