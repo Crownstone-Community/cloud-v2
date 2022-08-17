@@ -40,11 +40,16 @@ export class MessageEndpoints extends SphereItem {
   ): Promise<MessageV2> {
     messageData.message.ownerId = userProfile[securityId];
 
+    let recipients = [];
     let message = await this.sphereRepo.messages(sphereId).create(messageData.message);
     if (messageData.recipients) {
       for (let userId of messageData.recipients) {
-        await Dbs.messageV2.addRecipient(sphereId, message.id, userId);
+        recipients.push(await Dbs.messageV2.addRecipient(sphereId, message.id, userId));
       }
+    }
+
+    if (recipients.length > 0) {
+      message.recipients = recipients;
     }
 
     return message;

@@ -53,14 +53,14 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
   }
 
 
-  async addRecipient(sphereId: string, messageId: string, userId: string) {
+  async addRecipient(sphereId: string, messageId: string, userId: string) : Promise<MessageRecipientUser>{
     let sphereUsers = await Dbs.sphere.users(sphereId).find({where:{id:userId}, fields:{id:true}})
 
     if (sphereUsers.length == 0) {
       throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
     }
 
-    await Dbs.messageRecipientUser.create({
+    return await Dbs.messageRecipientUser.create({
       userId:    userId,
       messageId: messageId,
       sphereId:  sphereId,
