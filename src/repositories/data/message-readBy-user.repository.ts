@@ -8,6 +8,8 @@ import {UserRepository} from "../users/user.repository";
 import {MessageReadByUser} from "../../models/messageSubModels/message-readBy-user.model";
 import {MessageV2} from "../../models/messageV2.model";
 import {MessageV2Repository} from "./messageV2.repository";
+import {DataObject, Options} from "@loopback/repository/src/common-types";
+import {HttpErrors} from "@loopback/rest";
 
 
 export class MessageReadByUserRepository extends TimestampedCrudRepository<MessageReadByUser,typeof MessageReadByUser.prototype.id > {
@@ -24,5 +26,14 @@ export class MessageReadByUserRepository extends TimestampedCrudRepository<Messa
     this.sphere  = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
     this.message = this.createBelongsToAccessorFor('message', messageRepoGetter);
     this.user    = this.createBelongsToAccessorFor('user', userRepoGetter);
+  }
+
+  async create(entity: DataObject<MessageReadByUser>, options?: Options): Promise<MessageReadByUser> {
+    // generate uid
+    if ((await this.findOne({where: {messageId: entity.messageId, userId: entity.userId}})) !== null) {
+      throw new HttpErrors.Conflict(`User ${entity.userId} already marked this message as read.`);
+    }
+
+    return super.create(entity, options);
   }
 }

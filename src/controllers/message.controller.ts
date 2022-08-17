@@ -17,6 +17,8 @@ import {SphereRepository} from "../repositories/data/sphere.repository";
 import {
   MessageWithRecipients,
 } from "../models/endpointModels/message-with-recipients.model";
+import {MessageReadByUser} from "../models/messageSubModels/message-readBy-user.model";
+import {MessageDeletedByUser} from "../models/messageSubModels/message-deletedBy-user.model";
 
 
 export class MessageEndpoints extends SphereItem {
@@ -39,7 +41,6 @@ export class MessageEndpoints extends SphereItem {
     messageData.message.ownerId = userProfile[securityId];
 
     let message = await this.sphereRepo.messages(sphereId).create(messageData.message);
-
     if (messageData.recipients) {
       for (let userId of messageData.recipients) {
         await Dbs.messageV2.addRecipient(sphereId, message.id, userId);
@@ -56,9 +57,9 @@ export class MessageEndpoints extends SphereItem {
   async markAsRead(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') messageId: string,
-  ): Promise<void> {
+  ): Promise<MessageReadByUser> {
     let message = await Dbs.messageV2.findById(messageId, {fields:{sphereId: true}});
-    await Dbs.messageV2.markAsRead(message.sphereId, messageId, userProfile[securityId]);
+    return await Dbs.messageV2.markAsRead(message.sphereId, messageId, userProfile[securityId]);
   }
 
 
@@ -69,9 +70,9 @@ export class MessageEndpoints extends SphereItem {
   async markAsDeleted(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') messageId: string,
-  ): Promise<void> {
+  ): Promise<MessageDeletedByUser> {
     let message = await Dbs.messageV2.findById(messageId, {fields:{sphereId: true}});
-    await Dbs.messageV2.markAsDeleted(message.sphereId, messageId, userProfile[securityId]);
+    return await Dbs.messageV2.markAsDeleted(message.sphereId, messageId, userProfile[securityId]);
   }
 
 
@@ -87,9 +88,9 @@ export class MessageEndpoints extends SphereItem {
     // messages that you're one of the recipients of
     let allMessagesInSphere = (await this.sphereRepo.messages(sphereId).find({
       include:[
-        {relation:'recipients', scope:{fields: {userId: true, messageId: true}}},
-        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true, updatedAt: true}, where:{userId: userProfile[securityId]}}},
-        {relation:'readBy',     scope:{fields: {userId: true, messageId: true, updatedAt: true}, where:{userId: userProfile[securityId]}}},
+        {relation:'recipients', scope:{fields: { userId: true, messageId: true }}},
+        {relation:'deletedBy',  scope:{fields: { createdAt:false }, where:{userId: userProfile[securityId]}}},
+        {relation:'readBy',     scope:{fields: { createdAt:false }, where:{userId: userProfile[securityId]}}},
       ]
     }));
 
@@ -141,16 +142,14 @@ export function filterForMyMessages(messages: MessageV2[], userId: userId): Mess
   if (!messages) { return; }
 
   return messages.filter(message => {
-    if (message.everyoneInSphere === false && message.everyoneInSphereIncludingOwner === false) {
-      if (!message.recipients || message.recipients.length == 0) { return false; }
+    if (message.ownerId === userId)        { return true; };
+    if (message.everyoneInSphere === true) { return true; }
 
-      let messagesForMe = message.recipients.some(recipient => {
-        return recipient.userId === userId
-      });
-      return messagesForMe;
-    }
-    else {
-      return true;
-    }
+    // check if we're in the recipients list
+    if (!message.recipients || message.recipients.length == 0) { return false; }
+    let messagesForMe = message.recipients.some(recipient => {
+      return recipient.userId === userId
+    });
+    return messagesForMe;
   });
 }

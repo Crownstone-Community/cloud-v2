@@ -13,7 +13,7 @@ type SyncCategory = 'bootloaders'     |
                     'toons'           |
                     'user'
 
-type DataCategory = SyncCategory | 'abilities' | 'properties' | 'behaviours' | 'users'
+type DataCategory = SyncCategory | 'abilities' | 'properties' | 'behaviours' | 'users' | 'readBy' | 'deletedBy'
 
 interface SyncIgnoreMap {
   bootloaders:     boolean,
@@ -94,6 +94,15 @@ interface SyncRequestStoneData {
     [behaviourId: string]: RequestItemCoreType
   }
 }
+
+
+interface SyncRequestMessageData {
+  new?: boolean,
+  data: UpdatedAt,
+  readBy?:    {[readById:string]:    RequestItemCoreType},
+  deletedBy?: {[deletedById:string]: RequestItemCoreType},
+}
+
 
 interface SyncRequestAbilityData {
   new?: boolean,

@@ -24,7 +24,7 @@ export class MessageV2 extends AddTimestamps(BaseEntity) {
   everyoneInSphere: boolean;
 
   @property({type: 'boolean', default: false})
-  everyoneInSphereIncludingOwner: boolean;
+  includeSenderInEveryone: boolean;
 
   @hasMany(() => MessageRecipientUser, {keyTo: 'messageId'})
   recipients: MessageRecipientUser[];

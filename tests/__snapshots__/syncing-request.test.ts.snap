@@ -1,5 +1,194 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+
+exports[`Sync REQUEST messages: check if the message is in sync 1`] = `
+Object {
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "messages": Object {
+        "dbId:MessageV2Repository:1": Object {
+          "data": Object {
+            "status": "IN_SYNC",
+          },
+          "deletedBy": Object {},
+          "readBy": Object {
+            "dbId:MessageReadByUserRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "id": "dbId:MessageReadByUserRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                  "userId": "dbId:UserRepository:1",
+                },
+                "status": "NEW_DATA_AVAILABLE",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Sync REQUEST messages: check if we can mark a deleted state 1`] = `
+Object {
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "messages": Object {
+        "dbId:MessageV2Repository:1": Object {
+          "data": Object {
+            "status": "IN_SYNC",
+          },
+          "deletedBy": Object {
+            "newId": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "id": "dbId:MessageDeletedByUserRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                  "userId": "dbId:UserRepository:1",
+                },
+                "status": "CREATED_IN_CLOUD",
+              },
+            },
+          },
+          "readBy": Object {
+            "dbId:MessageReadByUserRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "id": "dbId:MessageReadByUserRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                  "userId": "dbId:UserRepository:1",
+                },
+                "status": "NEW_DATA_AVAILABLE",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Sync REQUEST messages: check if we can mark a deleted state for someone else 1`] = `
+Object {
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "messages": Object {
+        "dbId:MessageV2Repository:1": Object {
+          "data": Object {
+            "status": "IN_SYNC",
+          },
+          "deletedBy": Object {
+            "dbId:MessageDeletedByUserRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "id": "dbId:MessageDeletedByUserRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                  "userId": "dbId:UserRepository:1",
+                },
+                "status": "NEW_DATA_AVAILABLE",
+              },
+            },
+            "newId": Object {
+              "data": Object {
+                "error": Object {
+                  "code": 409,
+                  "msg": "User dbId:UserRepository:1 already marked this message as deleted.",
+                },
+                "status": "ERROR",
+              },
+            },
+          },
+          "readBy": Object {
+            "dbId:MessageReadByUserRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "id": "dbId:MessageReadByUserRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                  "userId": "dbId:UserRepository:1",
+                },
+                "status": "NEW_DATA_AVAILABLE",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Sync REQUEST messages: check if we get the message as new data 1`] = `
+Object {
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "messages": Object {
+        "dbId:MessageV2Repository:1": Object {
+          "data": Object {
+            "data": Object {
+              "content": "HelloAdmin",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "everyoneInSphere": false,
+              "id": "dbId:MessageV2Repository:1",
+              "includeSenderInEveryone": false,
+              "ownerId": "dbId:UserRepository:1",
+              "recipients": Array [
+                Object {
+                  "userId": "dbId:UserRepository:1",
+                },
+                Object {
+                  "userId": "dbId:UserRepository:2",
+                },
+              ],
+              "sphereId": "dbId:SphereRepository:1",
+              "triggerEvent": "enter",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "NEW_DATA_AVAILABLE",
+          },
+          "deletedBy": Object {},
+          "readBy": Object {
+            "dbId:MessageReadByUserRepository:1": Object {
+              "id": "dbId:MessageReadByUserRepository:1",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+              "userId": "dbId:UserRepository:1",
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Sync REQUEST messages: check if we only get our own messages 1`] = `
+Object {
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "messages": Object {
+        "dbId:MessageV2Repository:1": Object {
+          "data": Object {
+            "status": "NOT_AVAILABLE",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
 exports[`Sync REQUEST with just hub scope and empty data 1`] = `
 Object {
   "spheres": Object {

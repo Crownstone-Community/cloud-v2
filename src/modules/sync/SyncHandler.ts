@@ -20,14 +20,12 @@ import {Sync_SphereComponents} from "./syncers/Sync_Constructor";
 import {EventSphereCache} from "../sse/events/EventConstructor";
 import {SphereAccessUtil} from "../../util/SphereAccessUtil";
 import {Util} from "../../util/Util";
-import {filterForMyMessages, preprocessMessageTimes} from "../../controllers/message.controller";
+import {filterForMyMessages} from "../../controllers/message.controller";
 import {MessageV2} from "../../models/messageV2.model";
+import {MessageRecipientUser} from "../../models/messageSubModels/message-recipient-user.model";
+import {MessageDeletedByUser} from "../../models/messageSubModels/message-deletedBy-user.model";
+import {MessageReadByUser} from "../../models/messageSubModels/message-readBy-user.model";
 
-
-const admin  = true;
-const member = true;
-const guest  = true;
-const hub    = true;
 
 let sphereRelationsMap : {[id:string]:boolean} = {
   features:        true,
@@ -62,9 +60,9 @@ class Syncer {
     }
     if (!ignore.messages) {
       includeArray.push({relation:'messages', scope: { include: [
-        {relation:'recipients', scope:{fields: {userId: true, messageId: true, id: true, updatedAt: true}}},
-        {relation:'deletedBy',  scope:{fields: {userId: true, messageId: true, updatedAt:true}, where:{userId}}},
-        {relation:'readBy',     scope:{fields: {userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+        {relation:'recipients', scope:{fields: { userId: true, messageId: true }}},
+        {relation:'deletedBy',  scope:{fields: { createdAt:false }, where:{userId}}},
+        {relation:'readBy',     scope:{fields: { createdAt:false }, where:{userId}}},
       ]}});
     }
     if (!ignore.hubs) {
@@ -350,12 +348,12 @@ class Syncer {
       updatedAt:          true,
       sphereId:           true,
       everyoneInSphere:   true,
-      everyoneInSphereIncludingOwner: true
+      includeSenderInEveryone: true
     }
     messageFilter['include'] = [
-      {relation:'recipients', scope:{fields: {id: true, userId: true, messageId: true}}},
-      {relation:'deletedBy',  scope:{fields: {id: true, userId: true, messageId: true, updatedAt:true}, where:{userId}}},
-      {relation:'readBy',     scope:{fields: {id: true, userId: true, messageId: true, updatedAt:true}, where:{userId}}},
+      {relation:'recipients', scope:{fields: { userId: true, messageId: true }}},
+      {relation:'deletedBy',  scope:{fields: { createdAt:false }, where:{userId}}},
+      {relation:'readBy',     scope:{fields: { createdAt:false }, where:{userId}}},
     ]
     let stoneFilter = Util.deepCopy(filter);
 
@@ -374,10 +372,9 @@ class Syncer {
     if (!ignore.messages) {
       messageData = filterForMyMessages(messageData, userId);
     }
-    let messageRecipientData = // CREATE MAP from messageData
-    let messageReadByData    = // CREATE MAP from messageData
-    let messageDeletedByData = // CREATE MAP from messageData
-
+    let messageRecipientData : nestedIdArray<MessageRecipientUser> = mapMessageProperties(messageData, 'recipients');
+    let messageDeletedByData : nestedIdMap<MessageDeletedByUser> = mapMessageMapProperties(messageData, 'deletedBy');
+    let messageReadByData    : nestedIdMap<MessageReadByUser>    = mapMessageMapProperties(messageData, 'readBy');
 
     let hubData             = ignore.hubs         ? [] : await Dbs.hub.find(filter);
     let sceneData           = ignore.scenes       ? [] : await Dbs.scene.find(filter);
@@ -435,7 +432,7 @@ class Syncer {
 
         let accessRole = accessMap[sphereId];
 
-        let SphereSyncer = new Sync_SphereComponents(sphereId, accessRole, creationMap, requestSphere, replySphere);
+        let SphereSyncer = new Sync_SphereComponents(userId, sphereId, accessRole, creationMap, requestSphere, replySphere);
 
         // The order of syncing is important since some models might reference others
         // for example: a stone model has a field with locationId.
@@ -451,6 +448,7 @@ class Syncer {
         }
 
         if (!ignore.messages) {
+          SphereSyncer.messages.loadChildData(messageRecipientData, messageReadByData, messageDeletedByData);
           await SphereSyncer.messages.processRequest(cloud_messages[sphereId]);
         }
 
@@ -596,7 +594,7 @@ class Syncer {
           }
         }
 
-        let SphereSyncer = new Sync_SphereComponents(sphereId, accessRole, {}, requestSphere, replySphere);
+        let SphereSyncer = new Sync_SphereComponents(userId, sphereId, accessRole, {}, requestSphere, replySphere);
         await SphereSyncer.hubs.processReply();
 
         await SphereSyncer.locations.processReply();
@@ -653,6 +651,27 @@ class Syncer {
       throw new HttpErrors.BadRequest("Sync type required. Must be either REQUEST, REPLY or FULL")
     }
   }
+}
+
+function mapMessageProperties<T>(messages: MessageV2[], property : 'recipients' | 'readBy' | 'deletedBy') : nestedIdArray<T>{
+  let result : any = {};
+  for (let message of messages) {
+    if (message[property] && message[property].length > 0) {
+      result[message.id] = message[property];
+    }
+  }
+  return result;
+}
+
+function mapMessageMapProperties<T>(messages: MessageV2[], property : 'recipients' | 'readBy' | 'deletedBy') : nestedIdMap<T>{
+  let result : any = {};
+  for (let message of messages) {
+    for (let prop of (message[property] ?? [])) {
+      if (result[message.id] === undefined) { result[message.id] = {}; }
+      result[message.id][prop.id] = prop;
+    }
+  }
+  return result;
 }
 
 

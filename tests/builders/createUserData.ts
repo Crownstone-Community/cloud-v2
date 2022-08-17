@@ -56,7 +56,7 @@ export async function createMessage(userId, sphereId, content = 'helloWorld', re
       ownerId: userId,
       sphereId,
       everyoneInSphere: true,
-      everyoneInSphereIncludingOwner: true
+      includeSenderInEveryone: true
     })
     return message;
   }
@@ -66,13 +66,23 @@ export async function createMessage(userId, sphereId, content = 'helloWorld', re
     ownerId: userId,
     sphereId,
     everyoneInSphere: false,
-    everyoneInSphereIncludingOwner: false
+    includeSenderInEveryone: false
   })
   for (let recipient of recipients) {
     await dbs.messageRecipientUser.create({sphereId, messageId: message.id, userId: recipient})
   }
 
   return message;
+}
+
+export async function readMessage(userId, sphereId, messageId): Promise<void> {
+  let dbs = getRepositories()
+  await dbs.messageReadByUser.create({sphereId, messageId, userId})
+}
+
+export async function deleteByMessage(userId, sphereId, messageId): Promise<void> {
+  let dbs = getRepositories()
+  await dbs.messageDeletedByUser.create({sphereId, messageId, userId})
 }
 
 export async function createSphere(userId, name?, updatedAt?) : Promise<Sphere> {

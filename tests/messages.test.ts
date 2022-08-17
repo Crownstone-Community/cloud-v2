@@ -112,24 +112,25 @@ test("Create and get messages", async () => {
   await populate();
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "member&guest:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "member&guest:Message", everyoneInSphere: false, includeSenderInEveryone: false},
       recipients: [member.id, guest.id],
   });
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "guest:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "guest:Message", everyoneInSphere: false, includeSenderInEveryone: false},
       recipients: [guest.id],
   });
 
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "everyoneMessageIncAdmin", everyoneInSphere: true, everyoneInSphereIncludingOwner: true},
+      content: "everyoneMessageIncAdmin", everyoneInSphere: true, includeSenderInEveryone: true},
   });
 
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "everyoneMessageExOwner", everyoneInSphere: true, everyoneInSphereIncludingOwner: false},
+      content: "everyoneMessageExOwner", everyoneInSphere: true, includeSenderInEveryone: false},
   });
+
 
   await client
     .get(auth(`/spheres/${sphere.id}/messages`))
@@ -158,7 +159,7 @@ test("Create and get messages sent to self without duplicates", async () => {
   await populate();
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "adminDirect:Message", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "adminDirect:Message", everyoneInSphere: false, includeSenderInEveryone: false},
       recipients: [admin.id],
   });
 
@@ -174,7 +175,7 @@ test("Create and get messages sent to self without duplicates", async () => {
 test("Create and get messages by the sender", async () => {
   await populate();
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
-    message: {content: "adminMessage", everyoneInSphere: true, everyoneInSphereIncludingOwner: true},
+    message: {content: "adminMessage", everyoneInSphere: true, includeSenderInEveryone: true},
     recipients: [],
   });
 
@@ -191,7 +192,7 @@ test("Check reading and app-deleting the message", async () => {
   let message;
   await client.post(auth(`/spheres/${sphere.id}/message`)).send({
     message: {
-      content: "memberMessage", everyoneInSphere: false, everyoneInSphereIncludingOwner: false},
+      content: "memberMessage", everyoneInSphere: false, includeSenderInEveryone: false},
     recipients: [member.id],
   })
     .expect(({body}) => { message = body; });

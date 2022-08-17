@@ -40,19 +40,6 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
     EventHandler.dataChange.sendStoneUpdatedEventByIds(this.sphereId, stoneId);
   }
 
-  async syncClientItemReplyCallback(stoneReply: any, clientItem: SyncRequestStoneData, stoneCloudId: string) {
-    let behaviourSyncer = new Sync_Stone_Behaviours(
-      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap
-    );
-    await behaviourSyncer.processReply();
-
-    let abilitySyncer = new Sync_Stone_Abilities(
-      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
-    );
-    await abilitySyncer.processReply();
-  }
-
-
   /**
    * After syncing the stone's data, this will allow us the sync the model's children.
    * @param replyAtPoint | the branch in the reply belonging to this stone ( sphereReply.stones[stoneId] )
@@ -72,6 +59,19 @@ export class Sync_Stones extends Sync_Base<Stone, SyncRequestStoneData> {
       this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
     );
     await abilitySyncer.processRequest(this.cloud_abilities[stoneId])
+  }
+
+
+  async syncClientItemReplyCallback(stoneReply: any, clientItem: SyncRequestStoneData, stoneCloudId: string) {
+    let behaviourSyncer = new Sync_Stone_Behaviours(
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap
+    );
+    await behaviourSyncer.processReply();
+
+    let abilitySyncer = new Sync_Stone_Abilities(
+      this.sphereId, stoneCloudId, this.accessRole, clientItem, stoneReply, this.creationMap, this.cloud_abilityProperties
+    );
+    await abilitySyncer.processReply();
   }
 
 

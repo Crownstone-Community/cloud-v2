@@ -18,7 +18,7 @@ import {
   createMessage,
   createSphere,
   createStone,
-  createUser,
+  createUser, readMessage,
   resetUsers
 } from "./builders/createUserData";
 import {auth, getToken, setAuthToUser} from "./rest-helpers/rest.helpers";
@@ -526,16 +526,66 @@ test("Sync REQUEST keys", async () => {
 
 test("Sync REQUEST messages", async () => {
   await populate();
-  await createMessage(admin.id, sphere.id, "HelloAdmin", [admin.id, member.id]);
+  let message = await createMessage(admin.id, sphere.id, "HelloAdmin", [admin.id, member.id]);
+  await readMessage(admin.id, sphere.id, message.id );
 
-  let request2 = {sync: {type: 'REQUEST',scope:['messages']}, spheres: {[sphere.id]: {}},}
+  let adminToken = await getToken(client, admin);
+  let guestToken = await getToken(client, guest);
 
-  await client.post(auth("/sync")).send(request2)
-    .expect(({body}) => {
-      console.log("BODY2", JSON.stringify(body, null, 2));
-    })
+  // check if we get the message as new data.
+  let request = {sync: {type: 'REQUEST',scope:['messages']}, spheres: {[sphere.id]: {}}}
+  await client.post(auth("/sync", adminToken)).send(request).expect(({body}) => { expect(body).toMatchSnapshot('check if we get the message as new data'); })
+
+  // check if the message is in sync
+  let request2 = {sync: {type: 'REQUEST',scope:['messages']}, spheres: {[sphere.id]: {messages:{[message.id]:{data: {updatedAt: message.updatedAt}}}}}}
+  await client.post(auth("/sync", adminToken)).send(request2).expect(({body}) => { expect(body).toMatchSnapshot('check if the message is in sync'); })
+
+  // check if we only get our own messages
+  let request3 = {sync: {type: 'REQUEST',scope:['messages']}, spheres: {[sphere.id]: {messages:{[message.id]:{data: {updatedAt: message.updatedAt}}}}}}
+  await client.post(auth("/sync", guestToken)).send(request3).expect(({body}) => { expect(body).toMatchSnapshot('check if we only get our own messages'); })
+
+  // check if we can mark a deleted state:
+  let request4 = {
+    sync: {type: 'REQUEST', scope: ['messages']},
+    spheres: {
+      [sphere.id]: {
+        messages: {
+          [message.id]: {
+            data: {updatedAt: message.updatedAt},
+            deletedBy: {'newId': {
+              new: true,
+              data: {userId: admin.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
+            }},
+          }
+        }
+      }
+    }
+  };
+  await client.post(auth("/sync", adminToken)).send(request4).expect(({body}) => { expect(body).toMatchSnapshot('check if we can mark a deleted state'); })
+
+  // check if we can mark a deleted state for someone else:
+  let request5 = {
+    sync: {type: 'REQUEST', scope: ['messages']},
+    spheres: {
+      [sphere.id]: {
+        messages: {
+          [message.id]: {
+            data: {updatedAt: message.updatedAt},
+            deletedBy: {'newId': {
+              new: true,
+              data: {userId: member.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
+            }},
+          }
+        }
+      }
+    }
+  };
+  await client.post(auth("/sync", adminToken)).send(request5).expect(({body}) => { expect(body).toMatchSnapshot('check if we can mark a deleted state for someone else') })
 
 });
+
+
+
 
 
 

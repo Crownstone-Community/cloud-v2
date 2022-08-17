@@ -67,7 +67,7 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
     });
   }
 
-  async markAsRead(sphereId: string, messageId: string, userId: string) {
+  async markAsRead(sphereId: string, messageId: string, userId: string) : Promise<MessageReadByUser> {
     let alreadyExisting = await Dbs.messageReadByUser.findOne({where:{userId:userId, messageId:messageId}, fields:{id:true}});
     if (alreadyExisting !== null) {
       // already existing, do nothing
@@ -79,14 +79,14 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
       throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
     }
 
-    await Dbs.messageReadByUser.create({
+    return await Dbs.messageReadByUser.create({
       userId:    userId,
       messageId: messageId,
       sphereId:  sphereId,
     });
   }
 
-  async markAsDeleted(sphereId: string, messageId: string, userId: string) {
+  async markAsDeleted(sphereId: string, messageId: string, userId: string) : Promise<MessageDeletedByUser>  {
     let alreadyExisting = await Dbs.messageDeletedByUser.findOne({where:{userId:userId, messageId:messageId}, fields:{id:true}});
     if (alreadyExisting !== null) {
       // already existing, do nothing
@@ -98,7 +98,7 @@ export class MessageV2Repository extends TimestampedCrudRepository<MessageV2,typ
       throw new HttpErrors.NotFound(`User with id ${userId} not found in sphere with id ${sphereId}`);
     }
 
-    await Dbs.messageDeletedByUser.create({
+    return await Dbs.messageDeletedByUser.create({
       userId:    userId,
       messageId: messageId,
       sphereId:  sphereId,
