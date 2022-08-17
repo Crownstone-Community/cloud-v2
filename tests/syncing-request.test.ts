@@ -553,9 +553,9 @@ test("Sync REQUEST messages", async () => {
           [message.id]: {
             data: {updatedAt: message.updatedAt},
             deletedBy: {'newId': {
-                new: true,
-                data: {userId: admin.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
-              }},
+              new: true,
+              data: {userId: admin.id, updatedAt: new Date(message.updatedAt).valueOf() + 100}
+            }},
           }
         }
       }
@@ -572,9 +572,9 @@ test("Sync REQUEST messages", async () => {
           [message.id]: {
             data: {updatedAt: message.updatedAt},
             deletedBy: {'newId': {
-                new: true,
-                data: {userId: member.id}, updatedAt: new Date(message.updatedAt).valueOf() + 100
-              }},
+              new: true,
+              data: {userId: member.id, updatedAt: new Date(message.updatedAt).valueOf() + 100}
+            }},
           }
         }
       }

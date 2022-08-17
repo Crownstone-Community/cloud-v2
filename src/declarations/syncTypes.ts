@@ -10,12 +10,13 @@ import {SphereFeature} from "../models/sphere-feature.model";
 import {SphereTrackingNumber} from "../models/sphere-tracking-number.model";
 import {DataObject} from "@loopback/repository/src/common-types";
 import {Location} from "../models/location.model";
-import {Message} from "../models/message.model";
 import {Stone} from "../models/stone.model";
 import {Entity} from "@loopback/repository";
 import {SphereKeys} from "../models/sphere-key.model";
 import {FingerprintV2} from "../models/fingerprint-v2.model";
 import {MessageV2} from "../models/messageV2.model";
+import {MessageDeletedByUser} from "../models/messageSubModels/message-deletedBy-user.model";
+import {MessageReadByUser} from "../models/messageSubModels/message-readBy-user.model";
 
 
 interface FirmwareBootloaderList {
@@ -55,9 +56,7 @@ export interface SyncRequestResponse_Sphere {
     }
   },
   messages?:  {
-    [messageId: string] : {
-      data: SyncResponseItemCore<MessageV2>
-    }
+    [messageId: string] : SyncMessageResponse,
   },
   scenes?:  {
     [sceneId: string] : {
@@ -82,6 +81,12 @@ export interface SyncRequestResponse_Sphere {
       data: SyncResponseCustomItemCore<SphereUserData>
     }
   }
+}
+
+interface SyncMessageResponse {
+  data?:      SyncResponseItemCore<MessageV2>,
+  readBy?:    SyncResponseItemCore<MessageReadByUser>,
+  deletedBy?: SyncResponseItemCore<MessageDeletedByUser>,
 }
 
 interface SyncResponseItemCore<T extends Entity> {
