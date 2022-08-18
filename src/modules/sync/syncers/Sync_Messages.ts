@@ -4,8 +4,6 @@ import {MessageRecipientUser} from "../../../models/messageSubModels/message-rec
 import {MessageDeletedByUser} from "../../../models/messageSubModels/message-deletedBy-user.model";
 import {MessageReadByUser} from "../../../models/messageSubModels/message-readBy-user.model";
 import {MessageV2} from "../../../models/messageV2.model";
-import {Sync_Stone_Behaviours} from "./stone-modules/Sync_Stone_Behaviours";
-import {Sync_Stone_Abilities} from "./stone-modules/Sync_Stone_Abilities";
 import {Sync_message_readBy} from "./message-modules/Sync_message_readBy";
 import {Sync_message_deletedBy} from "./message-modules/Sync_message_deletedBy";
 
@@ -110,7 +108,6 @@ export class Sync_Messages extends Sync_Base<MessageV2, RequestItemCoreType> {
     if (this.cloud_recipientUsers[cloudMessageId] && messageReply?.data?.data) {
       messageReply.data.data.recipients = this.cloud_recipientUsers[cloudMessageId];
     }
-
 
     messageReply.deletedBy = this.cloud_deletedByUsers[cloudMessageId] ?? {};
     messageReply.readBy    = this.cloud_readByUsers[cloudMessageId]    ?? {};

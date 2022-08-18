@@ -45,8 +45,7 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
 
   // create an object in the reply that we can write to.
   replySource[fieldname] = {};
-  // if there is no item in the cloud, cloud_hubs can be undefined.
-  let cloudItemIds = Object.keys(cloud_items_in_sphere);
+
   if (clientSource[fieldname]) {
     // we will first iterate over all hubs in the user request.
     // this handles:
@@ -74,10 +73,15 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
           // example: locationId is inside of the stone data. This method will change the local locationId to the new cloudId
           // if that location was made in this sync session.
           let updatedData = processCreationMap(creationMap, clientItem.data);
-
           // @ts-ignore
           let newItem = await db.create({...updatedData, ...creationAddition});
           cloudId = newItem.id;
+
+          // if the creation has returned an already existing item due to uniqueness constrains, we have to take it out of the
+          // cloudItems list.
+          if (cloud_items_in_sphere[cloudId] !== undefined) {
+            delete cloud_items_in_sphere[cloudId];
+          }
           creationMap[itemId] = cloudId;
           eventCallback(clientItem, newItem);
           replySource[fieldname][itemId] = { data: { status: "CREATED_IN_CLOUD", data: newItem }}
@@ -104,15 +108,16 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
         }
       }
 
-
       if (syncClientItemCallback) {
         await syncClientItemCallback(replySource[fieldname][itemId], clientItem, itemId, cloudId);
       }
     }
 
+
     // now we will iterate over all items in the cloud
     // this handles:
     //  - cloud has item that the user does not know.
+    let cloudItemIds = Object.keys(cloud_items_in_sphere);
     for (let j = 0; j < cloudItemIds.length; j++) {
       let cloudItemId = cloudItemIds[j];
       if (clientSource[fieldname][cloudItemId] === undefined) {
@@ -126,6 +131,7 @@ export async function processSyncCollection<T extends UpdatedAt, U extends Reque
   }
   else {
     // there are no items for the user, give the user all the items.
+    let cloudItemIds = Object.keys(cloud_items_in_sphere);
     for (let j = 0; j < cloudItemIds.length; j++) {
       let cloudItemId = cloudItemIds[j];
       replySource[fieldname][cloudItemId] = { data: await getReply(null, cloud_items_in_sphere[cloudItemId],() => { return db.findById(cloudItemId) })};
