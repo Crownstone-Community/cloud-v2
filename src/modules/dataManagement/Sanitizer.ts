@@ -124,7 +124,7 @@ export class DataSanitizer {
 
     let duration = Date.now() - beginTime;
     console.log("Sanitation: Sanitation took",duration,"ms and deleted", getTotalCount(sanitationResult), "entries.");
-    console.log("Sanitation: Deleted items per segment:\n", JSON.stringify(sanitationResult, null, 2));
+    // console.log("Sanitation: Deleted items per segment:\n", JSON.stringify(sanitationResult, null, 2));
 
     return sanitationResult;
   }

@@ -206,6 +206,12 @@ test("Check reading and app-deleting the message", async () => {
   expect(await Dbs.messageReadByUser.find()).toHaveLength(1);
   expect(await Dbs.messageDeletedByUser.find()).toHaveLength(0);
 
+  await client
+    .get(auth(`/spheres/${sphere.id}/messages`))
+    .expect(({ body }) => {
+      expect(body).toMatchSnapshot();
+    });
+
   await client.post(auth(`/messages/${message.id}/markAsDeleted`));
 
   expect(await Dbs.messageDeletedByUser.find()).toHaveLength(1);

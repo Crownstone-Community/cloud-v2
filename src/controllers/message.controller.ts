@@ -147,7 +147,9 @@ export function filterForMyMessages(messages: MessageV2[], userId: userId): Mess
   if (!messages) { return; }
 
   return messages.filter(message => {
-    if (message.ownerId === userId)        { return true; };
+    if (message.deletedBy)                 { return false; }
+
+    if (message.ownerId === userId)        { return true; }
     if (message.everyoneInSphere === true) { return true; }
 
     // check if we're in the recipients list

@@ -5,14 +5,6 @@ Array [
   Object {
     "content": "memberMessage",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "deletedBy": Array [
-      Object {
-        "id": "dbId:MessageDeletedByUserRepository:1",
-        "sphereId": "dbId:SphereRepository:1",
-        "updatedAt": "1970-01-01T00:00:00.000Z",
-        "userId": "dbId:UserRepository:2",
-      },
-    ],
     "everyoneInSphere": false,
     "id": "dbId:MessageV2Repository:1",
     "includeSenderInEveryone": false,
@@ -36,6 +28,8 @@ Array [
   },
 ]
 `;
+
+exports[`Check reading and app-deleting the message 2`] = `Array []`;
 
 exports[`Create and get messages sent to self without duplicates: Admins direct messages 1`] = `
 Array [

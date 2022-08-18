@@ -562,6 +562,7 @@ test("Sync REQUEST messages", async () => {
     }
   };
   await client.post(auth("/sync", adminToken)).send(request4).expect(({body}) => { expect(body).toMatchSnapshot('check if we can mark a deleted state'); })
+  let message2 = await createMessage(admin.id, sphere.id, "HelloAdmin2", [admin.id, member.id]);
 
   // check if we can mark a deleted state for someone else:
   let request5 = {
@@ -569,18 +570,23 @@ test("Sync REQUEST messages", async () => {
     spheres: {
       [sphere.id]: {
         messages: {
-          [message.id]: {
-            data: {updatedAt: message.updatedAt},
+          [message2.id]: {
+            data: {updatedAt: message2.updatedAt},
             deletedBy: {'newId': {
               new: true,
-              data: {userId: member.id, updatedAt: new Date(message.updatedAt).valueOf() + 100}
+              data: {userId: member.id, updatedAt: new Date(message2.updatedAt).valueOf() + 100}
             }},
           }
         }
       }
     }
   };
-  await client.post(auth("/sync", adminToken)).send(request5).expect(({body}) => { expect(body).toMatchSnapshot('check if we can mark a deleted state for someone else') })
+  await client.post(auth("/sync", adminToken)).send(request5).expect(({body}) => {
+    // the user is not allowed to delete messages of other users, the ID is forced to be the same as the userId from the syncing user.
+    expect(body?.spheres?.[sphere.id]?.messages?.[message2.id]?.deletedBy?.['newId']?.data?.data?.userId).toBe(admin.id)
+
+    expect(body).toMatchSnapshot('check if we can mark a deleted state for someone else')
+  })
 });
 
 
