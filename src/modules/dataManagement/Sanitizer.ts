@@ -173,7 +173,7 @@ async function deleteGetCount(model: any, query: any) : Promise<number> {
   let startTime = Date.now();
   let count = (await model.deleteAll(query)).count;
   let duration = Date.now() - startTime;
-  console.log("Sanitation: Deleting", count, "items from", modelName, "took", duration, "ms");
+  // console.log("Sanitation: Deleting", count, "items from", modelName, "took", duration, "ms");
   return count;
 }
 
