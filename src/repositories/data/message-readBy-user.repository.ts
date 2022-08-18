@@ -29,9 +29,10 @@ export class MessageReadByUserRepository extends TimestampedCrudRepository<Messa
   }
 
   async create(entity: DataObject<MessageReadByUser>, options?: Options): Promise<MessageReadByUser> {
-    // generate uid
-    if ((await this.findOne({where: {messageId: entity.messageId, userId: entity.userId}})) !== null) {
-      throw new HttpErrors.Conflict(`User ${entity.userId} already marked this message as read.`);
+    let exisingData = await this.findOne({where: {messageId: entity.messageId, userId: entity.userId}});
+
+    if (exisingData !== null) {
+      return exisingData;
     }
 
     return super.create(entity, options);

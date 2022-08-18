@@ -9,7 +9,6 @@ import {MessageV2} from "../../models/messageV2.model";
 import {MessageV2Repository} from "./messageV2.repository";
 import {MessageDeletedByUser} from "../../models/messageSubModels/message-deletedBy-user.model";
 import {DataObject, Options} from "@loopback/repository/src/common-types";
-import {HttpErrors} from "@loopback/rest";
 
 
 export class MessageDeletedByUserRepository extends TimestampedCrudRepository<MessageDeletedByUser,typeof MessageDeletedByUser.prototype.id > {
@@ -29,9 +28,10 @@ export class MessageDeletedByUserRepository extends TimestampedCrudRepository<Me
   }
 
   async create(entity: DataObject<MessageDeletedByUser>, options?: Options): Promise<MessageDeletedByUser> {
-    // generate uid
-    if ((await this.findOne({where: {messageId: entity.messageId, userId: entity.userId}})) !== null) {
-      throw new HttpErrors.Conflict(`User ${entity.userId} already marked this message as deleted.`);
+    let exisingData = await this.findOne({where: {messageId: entity.messageId, userId: entity.userId}});
+
+    if (exisingData !== null) {
+      return exisingData;
     }
 
     return super.create(entity, options);
