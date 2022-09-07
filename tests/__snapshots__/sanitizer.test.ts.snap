@@ -270,6 +270,7 @@ Array [
 
 exports[`Delete member and admin in sphere and run sanitation. Database should be cleared. 1`] = `
 Object {
+  "app": Array [],
   "appInstallation": Array [],
   "bootloader": Array [],
   "crownstoneToken": Array [],

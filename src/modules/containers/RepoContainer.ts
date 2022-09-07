@@ -36,8 +36,10 @@ import {MessageV2Repository}            from "../../repositories/data/messageV2.
 import {MessageRecipientUserRepository} from "../../repositories/data/message-recipient-user.repository";
 import {MessageDeletedByUserRepository} from "../../repositories/data/message-deletedBy-user.repository";
 import {MessageReadByUserRepository}    from "../../repositories/data/message-readBy-user.repository";
+import {AppRepository} from "../../repositories/data/app.repository";
 
 export interface RepositoryContainer {
+  app:                  AppRepository,
   appInstallation:      AppInstallationRepository,
   bootloader:           BootloaderRepository,
   oauthToken:           OauthTokenRepository,
@@ -79,6 +81,7 @@ export interface RepositoryContainer {
 
 
 export let Dbs : RepositoryContainer = {
+  app:                  null,
   appInstallation:      null,
   bootloader:           null,
   oauthToken:           null,
@@ -119,6 +122,7 @@ export let Dbs : RepositoryContainer = {
 };
 
 export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
+  Dbs.app                  = await app.getRepository( AppRepository );
   Dbs.appInstallation      = await app.getRepository( AppInstallationRepository );
   Dbs.bootloader           = await app.getRepository( BootloaderRepository );
   Dbs.oauthToken           = await app.getRepository( OauthTokenRepository );

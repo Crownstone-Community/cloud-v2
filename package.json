@@ -40,6 +40,8 @@
     "mongodb": "^4.8.1",
     "node-fetch": "^3.2.10",
     "node-uuid": "^1.4.8",
+    "node-apn": "^3.0.0",
+    "node-gcm": "^1.0.5",
     "passport": "^0.6.0",
     "passport-accesstoken": "^0.1.0",
     "passport-http-bearer": "^1.0.1",

@@ -76,6 +76,7 @@ import {MessageV2} from "../../src/models/messageV2.model";
 import {MessageDeletedByUser} from "../../src/models/messageSubModels/message-deletedBy-user.model";
 import {MessageReadByUser} from "../../src/models/messageSubModels/message-readBy-user.model";
 import {MessageRecipientUser} from "../../src/models/messageSubModels/message-recipient-user.model";
+import {AppRepository} from "../../src/repositories/data/app.repository";
 
 interface DatabaseDump {
   appInstallation     : AppInstallation[],
@@ -118,6 +119,7 @@ interface DatabaseDump {
 
 
 function initRepositories() : RepositoryContainer {
+  let app:                  AppRepository;
   let sphere:               SphereRepository;
   let bootloader:           BootloaderRepository;
   let oauthToken:           OauthTokenRepository;
@@ -179,6 +181,7 @@ function initRepositories() : RepositoryContainer {
   oauthToken           = new OauthTokenRepository(testdb);
 
   appInstallation      = new AppInstallationRepository(testdb, deviceGetter);
+  app                  = new AppRepository(testdb);
   devicePreferences    = new DevicePreferencesRepository(testdb, deviceGetter);
   fingerprintLinker    = new FingerprintLinkerRepository(testdb, sphereGetter, locationGetter, deviceGetter, fingerprintGetter);
   deviceSphereMap      = new DeviceSphereMapRepository(testdb, userGetter, deviceGetter, sphereGetter);
@@ -215,6 +218,7 @@ function initRepositories() : RepositoryContainer {
 
 
   return {
+    app,
     appInstallation,
     bootloader,
     crownstoneToken,
