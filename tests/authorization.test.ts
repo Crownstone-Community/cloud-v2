@@ -1,6 +1,8 @@
 import {CONFIG} from "../src/config";
 CONFIG.emailValidationRequired = false;
 CONFIG.generateCustomIds = true;
+import {mockNotifications} from "./mocks/Notifications.mock";
+mockNotifications();
 
 import {makeUtilDeterministic, resetMockDatabaseIds, resetMockRandom, setDate} from "./mocks/CloudUtil.mock";
 makeUtilDeterministic();

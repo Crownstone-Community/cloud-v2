@@ -1,4 +1,3 @@
-import {Sphere} from "../../models/sphere.model";
 import {Device} from "../../models/device.model";
 import {Dbs} from "../containers/RepoContainer";
 import {AppInstallation} from "../../models/app-installation.model";
@@ -7,7 +6,7 @@ import {Notifications_Gcm} from "../../models/subModels/gcm.model";
 import {Notifications_apns} from "../../models/subModels/apns.model";
 
 const gcm = require('node-gcm');
-const apn = require('apn');
+const apn = require('node-apn');
 
 interface NotificationMessage {
   data:   any,     // there has to be a command in here and all data required to do something with the notification.
