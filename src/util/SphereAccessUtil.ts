@@ -3,12 +3,26 @@ import {AccessLevels} from "../models/sphere-access.model";
 
 
 export const SphereAccessUtil = {
+
+
   getSphereUsers: async function(sphereIds: string[]) : Promise<{ [sphereId: string]: SphereUsers }> {
     let result : {[sphereId: string]: SphereUsers} = {};
     for (let sphereId of sphereIds) {
       result[sphereId] = await SphereAccessUtil.getSphereUsersForSphere(sphereId);
     }
     return result;
+  },
+
+
+  getSphereUserIds: async function(sphereId: sphereId) : Promise<userId[]> {
+    let entries = await Dbs.sphereAccess.find({where:{sphereId, invitePending: false}, fields: {userId: true, role:true}});
+    let userIds = [];
+    for (let entry of entries) {
+      if (entry.role !== "hub") {
+        userIds.push(entry.userId);
+      }
+    }
+    return userIds;
   },
 
 

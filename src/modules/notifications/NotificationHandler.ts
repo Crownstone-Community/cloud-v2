@@ -11,8 +11,8 @@ const apn = require('apn');
 
 interface NotificationMessage {
   data:   any,     // there has to be a command in here and all data required to do something with the notification.
-  type:   string,  // type of notification ['setSwitchStateRemotely','message', ...]
-  title:  string   // title of the notification.
+  type?:   string,  // type of notification ['setSwitchStateRemotely','message', ...]
+  title?:  string   // title of the notification.
   badge?: number   // badge number for ios
   silent: boolean,
   silentIOS?: boolean,
@@ -109,16 +109,6 @@ class NotificationHandlerClass {
     this._notifyUsers(userIdArray, messageData, excludeDeviceId);
   }
 
-  // notifyUsers(arrayOfUserObjects, messageData, excludeUserId, excludeDeviceId) {
-    // let userIdArray = [];
-    // for (let i = 0; i < arrayOfUserObjects.length; i++) {
-    //   if (arrayOfUserObjects[i].id === excludeUserId) { continue; }
-    //
-    //   userIdArray.push({id:arrayOfUserObjects[i].id});
-    // }
-    //
-    // this._notifyUsers(userIdArray, messageData, excludeDeviceId);
-  // }
 
   async _notifyUsers(userIdArray: {id: string}[], messageData: NotificationMessage, excludeDeviceId: string = null) {
     if (userIdArray.length === 0) {
@@ -313,5 +303,4 @@ async function getTokensFromUsers(users: User[] | {id: string}[], excludeDeviceI
 }
 
 
-
-module.exports = new NotificationHandlerClass();
+export const NotificationHandler = new NotificationHandlerClass();

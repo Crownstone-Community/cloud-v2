@@ -12,13 +12,12 @@ import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 import {MessageV2} from "../models/messageV2.model";
 import {Dbs} from "../modules/containers/RepoContainer";
-import {ModelDefinition, repository} from "@loopback/repository";
+import {repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
-import {
-  MessageWithRecipients,
-} from "../models/endpointModels/message-with-recipients.model";
+import {MessageWithRecipients} from "../models/endpointModels/message-with-recipients.model";
 import {MessageReadByUser} from "../models/messageSubModels/message-readBy-user.model";
 import {MessageDeletedByUser} from "../models/messageSubModels/message-deletedBy-user.model";
+import {NotificationUtil} from "../modules/notifications/NotificationUtil";
 
 
 export class MessageEndpoints extends SphereItem {
@@ -48,9 +47,18 @@ export class MessageEndpoints extends SphereItem {
       }
     }
 
+
+
     if (recipients.length > 0) {
       message.recipients = recipients;
+      NotificationUtil.messageForUserIds(recipients.map((recipient) => { return recipient.userId; }), message);
     }
+    else {
+      // if there are no specific recipients, the entire sphere is a recipient.
+      NotificationUtil.messageForSphere(sphereId, message);
+    }
+
+
 
     return message;
   }
