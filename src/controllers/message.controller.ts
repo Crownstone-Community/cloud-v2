@@ -20,7 +20,7 @@ import {MessageDeletedByUser} from "../models/messageSubModels/message-deletedBy
 import {NotificationUtil} from "../modules/notifications/NotificationUtil";
 
 
-export class MessageEndpoints extends SphereItem {
+export class Messages extends SphereItem {
   authorizationModelName = "Sphere";
 
   constructor(

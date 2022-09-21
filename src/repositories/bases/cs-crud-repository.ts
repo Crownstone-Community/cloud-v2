@@ -22,7 +22,6 @@ export class CsCrudRepository< E extends Entity, ID> extends DefaultCrudReposito
       return super.createAll(entities, options);
     }
 
-
     __handleId(entity: DataObject<E>) {
       if (CONFIG.generateCustomIds) {
         // @ts-ignore

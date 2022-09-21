@@ -10,3 +10,6 @@ export const keyTypes = {
     DEVICE_UART_KEY:      "UART_DEVICE_KEY",
 };
 
+export const sphereFeatures : Record<string, SphereFeature_t> = {
+    ENERGY_COLLECTION_PERMISSION: "ENERGY_COLLECTION_PERMISSION",
+}

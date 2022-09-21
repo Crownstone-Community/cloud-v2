@@ -37,6 +37,8 @@ import {MessageRecipientUserRepository} from "../../repositories/data/message-re
 import {MessageDeletedByUserRepository} from "../../repositories/data/message-deletedBy-user.repository";
 import {MessageReadByUserRepository}    from "../../repositories/data/message-readBy-user.repository";
 import {AppRepository} from "../../repositories/data/app.repository";
+import {EnergyDataRepository} from "../../repositories/data/stone-energy-data.repository";
+import {EnergyDataProcessedRepository} from "../../repositories/data/stone-energy-data-processed.repository";
 
 export interface RepositoryContainer {
   app:                  AppRepository,
@@ -75,6 +77,8 @@ export interface RepositoryContainer {
   stoneBehaviour:       StoneBehaviourRepository,
   stoneSwitchState:     StoneSwitchStateRepository,
   stoneKeys:            StoneKeyRepository,
+  stoneEnergy:          EnergyDataRepository;
+  stoneEnergyProcessed: EnergyDataProcessedRepository;
   toon:                 ToonRepository,
   user:                 UserRepository,
 }
@@ -117,6 +121,8 @@ export let Dbs : RepositoryContainer = {
   stoneBehaviour:       null,
   stoneSwitchState:     null,
   stoneKeys:            null,
+  stoneEnergy:          null,
+  stoneEnergyProcessed: null,
   toon:                 null,
   user:                 null,
 };
@@ -158,6 +164,8 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.stoneBehaviour       = await app.getRepository( StoneBehaviourRepository );
   Dbs.stoneSwitchState     = await app.getRepository( StoneSwitchStateRepository );
   Dbs.stoneKeys            = await app.getRepository( StoneKeyRepository );
+  Dbs.stoneEnergy          = await app.getRepository( EnergyDataRepository );
+  Dbs.stoneEnergyProcessed = await app.getRepository( EnergyDataProcessedRepository );
   Dbs.toon                 = await app.getRepository( ToonRepository );
   Dbs.user                 = await app.getRepository( UserRepository );
 }

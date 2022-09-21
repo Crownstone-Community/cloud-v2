@@ -36,7 +36,12 @@ export async function setAuthToUser(client : supertest.SuperTest<supertest.Test>
   return await getToken(client, user);
 }
 
-export function auth(url, token?) {
+export function auth(url:string, token?) {
   token ??= lastSeenToken;
-  return url + "?access_token=" + token
+  if (url.includes("?")) {
+    return url + "&access_token=" + token
+  }
+  else {
+    return url + "?access_token=" + token
+  }
 }

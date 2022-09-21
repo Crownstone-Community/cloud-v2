@@ -18,7 +18,7 @@ import {Authorization} from "../security/authorization-strategies/authorization-
 /**
  * This controller will echo the state of the hub.
  */
-export class StoneEndpoints extends SphereItem {
+export class Stones extends SphereItem {
   authorizationModelName = "Stone";
 
   constructor(
@@ -27,18 +27,7 @@ export class StoneEndpoints extends SphereItem {
     super();
   }
 
-  // Perform a sync operation within a sphere
-  @post('/stones/{id}/sync')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereAccess())
-  async sync(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id') id: string,
-    @requestBody({required: true}) syncData: any
-  ): Promise<SyncRequestResponse> {
-    let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {stones:[id]})
-    return result;
-  }
+
 
   // Delete a stone
   @del('/stones/{id}')

@@ -1,22 +1,21 @@
-// Uncomment these imports to begin using these cool features!
-
-// import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {del, get, param, post, requestBody} from '@loopback/rest';
+import {get, param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
-import {ModelDefinition, repository} from "@loopback/repository";
+import {repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
+import {Dbs} from "../modules/containers/RepoContainer";
+import {sphereFeatures} from "../enums";
 
 
-export class SphereEndpoints extends SphereItem {
+export class Spheres extends SphereItem {
   authorizationModelName = "Sphere";
 
   constructor(
@@ -36,7 +35,5 @@ export class SphereEndpoints extends SphereItem {
     let result = await SyncHandler.handleSync(userProfile[securityId], syncData, {spheres:[sphereId]})
     return result;
   }
-
-
 
 }

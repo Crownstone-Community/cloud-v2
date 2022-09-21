@@ -21,13 +21,13 @@ export class SphereFeature extends AddTimestamps(BaseEntity) {
   until: Date
 
   @property({type:'string', required: true})
-  name: string
+  name: SphereFeature_t
 
   @property({type:'string'})
   data: string
 
   @property({type:'boolean', required: true})
-  enabled: string
+  enabled: boolean
 
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;

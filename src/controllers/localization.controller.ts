@@ -18,7 +18,7 @@ import {SphereAccessUtil} from "../util/SphereAccessUtil";
 
 
 
-export class LocalizationEndpoints extends SphereItem {
+export class Localization extends SphereItem {
   authorizationModelName = "Sphere"; // we use the sphere model name since the provided ID in the endpoint is the sphere ID. This is used for authorization.
 
   constructor(
@@ -67,14 +67,14 @@ export class LocalizationEndpoints extends SphereItem {
   }
 
 
-  @get('/DEV_fingerprints/')
-  @authenticate(SecurityTypes.accessToken)
-  async getFingerprints(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription
-  ): Promise<FingerprintV2[]> {
-    let sphereIds = await SphereAccessUtil.getSphereIdsForUser(userProfile[securityId], "guest");
-    let result    = await Dbs.fingerprintV2.find({where:{sphereId: {inq: sphereIds}}});
-    return result;
-  }
+  // @get('/DEV_fingerprints/')
+  // @authenticate(SecurityTypes.accessToken)
+  // async getFingerprints(
+  //   @inject(SecurityBindings.USER) userProfile : UserProfileDescription
+  // ): Promise<FingerprintV2[]> {
+  //   let sphereIds = await SphereAccessUtil.getSphereIdsForUser(userProfile[securityId], "guest");
+  //   let result    = await Dbs.fingerprintV2.find({where:{sphereId: {inq: sphereIds}}});
+  //   return result;
+  // }
 
 }

@@ -28,7 +28,7 @@ import {MessageReadByUser} from "../../models/messageSubModels/message-readBy-us
 
 
 let sphereRelationsMap : {[id:string]:boolean} = {
-  features:        true,
+  // features:        true,
   messages:        true,
   hubs:            true,
   scenes:          true,
@@ -49,9 +49,9 @@ class Syncer {
   async downloadSphere(userId: string, sphereId: string, status: SyncState, ignore: SyncIgnoreMap, domain : SyncDomain) : Promise<SyncRequestResponse_Sphere> {
     let includeArray = [];
 
-    if (!ignore.features) {
-      includeArray.push({relation:'features'});
-    }
+    // if (!ignore.features) {
+    //   includeArray.push({relation:'features'});
+    // }
     if (!ignore.fingerprints) {
       includeArray.push({relation:'fingerprints'});
     }
@@ -60,10 +60,10 @@ class Syncer {
     }
     if (!ignore.messages) {
       includeArray.push({relation:'messages', scope: { include: [
-        {relation:'recipients', scope:{fields: { userId: true, messageId: true }}},
-        {relation:'deletedBy',  scope:{fields: { createdAt:false }, where:{userId}}},
-        {relation:'readBy',     scope:{fields: { createdAt:false }, where:{userId}}},
-      ]}});
+            {relation:'recipients', scope:{fields: { userId: true, messageId: true }}},
+            {relation:'deletedBy',  scope:{fields: { createdAt:false }, where:{userId}}},
+            {relation:'readBy',     scope:{fields: { createdAt:false }, where:{userId}}},
+          ]}});
     }
     if (!ignore.hubs) {
       includeArray.push({relation:'hubs'});
@@ -140,7 +140,7 @@ class Syncer {
 
     injectSphereSimpleItem(sphereData, 'fingerprints',    sphereItem);
     injectSphereSimpleItem(sphereData, 'hubs',            sphereItem);
-    injectSphereSimpleItem(sphereData, 'features',        sphereItem);
+    // injectSphereSimpleItem(sphereData, 'features',        sphereItem);
     injectSphereSimpleItem(sphereData, 'messages',        sphereItem);
     injectSphereSimpleItem(sphereData, 'locations',       sphereItem);
     injectSphereSimpleItem(sphereData, 'scenes',          sphereItem);
@@ -265,7 +265,7 @@ class Syncer {
       let sphereId = access[i].sphereId;
       if (
         !domain || !domain.spheres ||
-         domain.spheres &&
+        domain.spheres &&
         (domain.spheres.length === 0 || (domain.spheres.length > 0 && domain.spheres.indexOf(sphereId) !== -1))) {
         reply.spheres[sphereId] = await this.downloadSphere(userId, sphereId, "VIEW", ignore, domain);
       }
@@ -364,7 +364,7 @@ class Syncer {
     }
 
 
-    let featureData         = ignore.features     ? [] : await Dbs.sphereFeature.find(filter);
+    // let featureData         = ignore.features     ? [] : await Dbs.sphereFeature.find(filter);
     let locationData        = ignore.locations    ? [] : await Dbs.location.find(filter);
     let fingerprintData     = ignore.fingerprints ? [] : await Dbs.fingerprintV2.find(filter);
 
@@ -390,7 +390,7 @@ class Syncer {
 
     // this is cheap to do with empty arrays do we don't check for ignore here.
     let cloud_spheres           = getUniqueIdMap(sphereData);
-    let cloud_features          = getNestedIdMap(featureData,         'sphereId');
+    // let cloud_features          = getNestedIdMap(featureData,         'sphereId');
     let cloud_locations         = getNestedIdMap(locationData,        'sphereId');
     let cloud_fingerprints      = getNestedIdMap(fingerprintData,     'sphereId');
 
@@ -443,9 +443,9 @@ class Syncer {
           await SphereSyncer.locations.processRequest(cloud_locations[sphereId]);
         }
 
-        if (!ignore.features) {
-          await SphereSyncer.features.processRequest(cloud_features[sphereId]);
-        }
+        // if (!ignore.features) {
+        //   await SphereSyncer.features.processRequest(cloud_features[sphereId]);
+        // }
 
         if (!ignore.messages) {
           SphereSyncer.messages.loadChildData(messageRecipientData, messageReadByData, messageDeletedByData);

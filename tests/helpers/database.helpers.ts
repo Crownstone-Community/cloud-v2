@@ -77,44 +77,50 @@ import {MessageDeletedByUser} from "../../src/models/messageSubModels/message-de
 import {MessageReadByUser} from "../../src/models/messageSubModels/message-readBy-user.model";
 import {MessageRecipientUser} from "../../src/models/messageSubModels/message-recipient-user.model";
 import {AppRepository} from "../../src/repositories/data/app.repository";
+import {EnergyData} from "../../src/models/stoneSubModels/stone-energy-data.model";
+import {EnergyDataProcessed} from "../../src/models/stoneSubModels/stone-energy-data-processed.model";
+import {EnergyDataRepository} from "../../src/repositories/data/stone-energy-data.repository";
+import {EnergyDataProcessedRepository} from "../../src/repositories/data/stone-energy-data-processed.repository";
 
 interface DatabaseDump {
-  appInstallation     : AppInstallation[],
-  bootloader          : Bootloader[],
-  crownstoneToken     : CrownstoneToken[],
-  device              : Device[],
-  deviceLocationMap   : DeviceLocationMap[],
-  devicePreferences   : DevicePreferences[],
-  deviceSphereMap     : DeviceSphereMap[],
-  fingerprint         : Fingerprint[],
-  fingerprintLinker   : FingerprintLinker[],
-  firmware            : Firmware[],
-  fsChunks            : FsChunks[],
-  fsFiles             : FsFiles[],
-  hub                 : Hub[],
-  location            : Location[],
-  messageV2           : MessageV2[],
-  message             : Message[],
-  messageState        : MessageState[],
-  messageUser         : MessageUser[],
-  messageRecipientUser: MessageRecipientUser[],
-  messageReadByUser   : MessageReadByUser[],
-  messageDeletedByUser: MessageDeletedByUser[],
-  oauthToken          : OauthToken[],
-  scene               : Scene[],
-  sphere              : Sphere[],
-  sphereAccess        : SphereAccess[],
-  sphereFeature       : SphereFeature[],
-  sphereKeys          : SphereKeys[],
-  sphereTrackingNumber: SphereTrackingNumber[],
-  stone               : Stone[],
-  stoneAbility        : StoneAbility[],
-  stoneAbilityProperty: StoneAbilityProperty[],
-  stoneBehaviour      : StoneBehaviour[],
-  stoneKeys           : StoneKey[],
-  stoneSwitchState    : StoneSwitchState[],
-  toon                : Toon[],
-  user                : User[],
+  appInstallation          : AppInstallation[],
+  bootloader               : Bootloader[],
+  crownstoneToken          : CrownstoneToken[],
+  device                   : Device[],
+  deviceLocationMap        : DeviceLocationMap[],
+  devicePreferences        : DevicePreferences[],
+  deviceSphereMap          : DeviceSphereMap[],
+  fingerprint              : Fingerprint[],
+  fingerprintLinker        : FingerprintLinker[],
+  firmware                 : Firmware[],
+  fsChunks                 : FsChunks[],
+  fsFiles                  : FsFiles[],
+  hub                      : Hub[],
+  location                 : Location[],
+  messageV2                : MessageV2[],
+  message                  : Message[],
+  messageState             : MessageState[],
+  messageUser              : MessageUser[],
+  messageRecipientUser     : MessageRecipientUser[],
+  messageReadByUser        : MessageReadByUser[],
+  messageDeletedByUser     : MessageDeletedByUser[],
+  oauthToken               : OauthToken[],
+  scene                    : Scene[],
+  sphere                   : Sphere[],
+  sphereAccess             : SphereAccess[],
+  sphereFeature            : SphereFeature[],
+  sphereKeys               : SphereKeys[],
+  sphereTrackingNumber     : SphereTrackingNumber[],
+  stone                    : Stone[],
+  stoneAbility             : StoneAbility[],
+  stoneAbilityProperty     : StoneAbilityProperty[],
+  stoneBehaviour           : StoneBehaviour[],
+  stoneKeys                : StoneKey[],
+  stoneSwitchState         : StoneSwitchState[],
+  stoneEnergyData          : EnergyData[],
+  stoneEnergyDataProcessed : EnergyDataProcessed[],
+  toon                     : Toon[],
+  user                     : User[],
 }
 
 
@@ -152,7 +158,9 @@ function initRepositories() : RepositoryContainer {
   let stoneAbility:         StoneAbilityRepository;
   let stoneBehaviour:       StoneBehaviourRepository;
   let stoneSwitchState:     StoneSwitchStateRepository;
-  let stoneKeys:            StoneKeyRepository;;
+  let stoneKeys:            StoneKeyRepository;
+  let stoneEnergy:          EnergyDataRepository;
+  let stoneEnergyProcessed: EnergyDataProcessedRepository;
   let toon:                 ToonRepository;
   let user:                 UserRepository;
   let hub:                  HubRepository;
@@ -210,6 +218,8 @@ function initRepositories() : RepositoryContainer {
   stoneBehaviour       = new StoneBehaviourRepository(testdb, sphereGetter, stoneGetter);
   stoneSwitchState     = new StoneSwitchStateRepository(testdb, sphereGetter, stoneGetter);
   stoneKeys            = new StoneKeyRepository(testdb, sphereGetter, stoneGetter);
+  stoneEnergy          = new EnergyDataRepository(testdb, sphereGetter, stoneGetter);
+  stoneEnergyProcessed = new EnergyDataProcessedRepository(testdb, sphereGetter, stoneGetter);
   stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
@@ -254,9 +264,11 @@ function initRepositories() : RepositoryContainer {
     stoneBehaviour,
     stoneKeys,
     stoneSwitchState,
+    stoneEnergy,
+    stoneEnergyProcessed,
     toon,
     user
-  }
+  };
 }
 
 

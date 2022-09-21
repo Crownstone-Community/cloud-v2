@@ -9,7 +9,7 @@ import {UserProfileDescription} from "../security/authentication-strategies/acce
 import {SecurityTypes} from "../config";
 import {CrownstoneToken} from "../models/crownstone-token.model";
 import {UserService} from "../services";
-import {User} from "../models/user.model";
+import {User as UserModel} from "../models/user.model";
 import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
 import {SyncHandler} from "../modules/sync/SyncHandler";
@@ -46,7 +46,7 @@ export const CredentialsRequestBody = {
 /**
  * This controller will echo the state of the hub.
  */
-export class UserEndpoints {
+export class User {
   constructor(
     @inject("UserService") public userService: UserService,
     @repository(UserRepository) protected userRepo: UserRepository,
@@ -63,20 +63,10 @@ export class UserEndpoints {
   @authenticate(SecurityTypes.accessToken)
   async getUser(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-  ) : Promise<User> {
+  ) : Promise<UserModel> {
     return await this.userRepo.findById(userProfile[securityId])
   }
 
-  // returns a list of our objects
-  @post('/user/sync')
-  @authenticate(SecurityTypes.accessToken)
-  async sync(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @requestBody({required: true}) syncData: any
-  ): Promise<SyncRequestResponse> {
-    let result = await SyncHandler.handleSync(userProfile[securityId], syncData)
-    return result;
-  }
 
   @get('/user/allUserData')
   @authenticate(SecurityTypes.accessToken)

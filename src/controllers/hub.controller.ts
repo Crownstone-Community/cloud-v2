@@ -12,7 +12,7 @@ import {HubRepository} from "../repositories/users/hub.repository";
 /**
  * This controller will echo the state of the hub.
  */
-export class HubEndpoints {
+export class Hub {
   constructor(
     @inject("HubService") public hubService: HubService,
     @repository(HubRepository) protected userRepo: HubRepository,
