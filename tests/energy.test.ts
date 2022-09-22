@@ -34,7 +34,7 @@ let stone3, behaviour3, ability3, abilityProperty3;
 let location;
 let token;
 
-function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*60*1000 + a*1000}
+function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*5*60*1000 + a*1000}
 function gen(stone: any, value: number, timestamp: number) : Partial<EnergyUsageCollection> {
   return {
     stoneId: stone.id,
@@ -184,11 +184,11 @@ test("check processing energy data in normal situation", async () => {
 
   expect(processedPoints.length).toBe(5)
 
-  expect(processedPoints[0].energyUsage).toBe(Math.round((1000/63)*59+1000));
+  expect(processedPoints[0].energyUsage).toBe(Math.round((1000/303)*299+1000));
   expect(processedPoints[1].energyUsage).toBe(3000);
-  expect(processedPoints[2].energyUsage).toBe(Math.round((1000/184)*60 + 3000));
-  expect(processedPoints[3].energyUsage).toBe(Math.round((1000/184)*120 + 3000));
-  expect(processedPoints[4].energyUsage).toBe(Math.round((1000/184)*180 + 3000));
+  expect(processedPoints[2].energyUsage).toBe(Math.round((1000/904)*300 + 3000));
+  expect(processedPoints[3].energyUsage).toBe(Math.round((1000/904)*600 + 3000));
+  expect(processedPoints[4].energyUsage).toBe(Math.round((1000/904)*900 + 3000));
 
   for (let i = 0; i < energyPoints.length-1;i++) {
     expect(energyPoints[i].processed).toBe(true);
@@ -211,7 +211,7 @@ test("check reboot detection and handling", async () => {
   let processedPoints = await dbs.stoneEnergyProcessed.find()
   expect(processedPoints[0].energyUsage).toBe(1000);
   expect(processedPoints[1].energyUsage).toBe(1000);
-  expect(processedPoints[2].energyUsage).toBe(Math.round((3000/116)*56) + 1000);
+  expect(processedPoints[2].energyUsage).toBe(Math.round((3000/596)*296) + 1000); // diff/dt * 1periodDt
   expect(processedPoints[3].energyUsage).toBe(3000 + 1000);
   expect(await dbs.stoneEnergy.find()).toHaveLength(1)
 });
@@ -441,7 +441,6 @@ test("Aggregation of energy usage: month", async () => {
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id, stone.id);
 
-  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1m' }})).toHaveLength(0);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '5m' }})).toHaveLength(0);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1h' }})).toHaveLength(198);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1d' }})).toHaveLength(8);

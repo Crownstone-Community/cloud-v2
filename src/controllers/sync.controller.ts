@@ -3,14 +3,12 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {get, param, post, requestBody, SchemaObject} from '@loopback/rest';
+import {param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
 import {SyncHandler} from "../modules/sync/SyncHandler";
 import {SyncRequestResponse} from "../declarations/syncTypes";
-import {repository} from "@loopback/repository";
-import {SphereRepository} from "../repositories/data/sphere.repository";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 

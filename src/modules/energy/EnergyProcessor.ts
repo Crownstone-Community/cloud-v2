@@ -102,7 +102,7 @@ export class EnergyDataProcessor {
 
     for (let i = startFromIndex; i < energyData.length; i++) {
       let datapoint = energyData[i];
-      await processPair(lastDatapoint, datapoint, {calculateSamplePoint: minuteInterval, intervalMs: 60e3, interval: '1m'}, samples);
+      await processPair(lastDatapoint, datapoint, {calculateSamplePoint: fiveMinuteInterval, intervalMs: 5*60e3, interval: '5m'}, samples);
       lastDatapoint = datapoint;
     }
 
