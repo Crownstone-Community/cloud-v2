@@ -7,8 +7,8 @@ import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser} from "./builders/createUserData";
 import {CloudUtil} from "../src/util/CloudUtil";
 import {auth, getToken, login} from "./rest-helpers/rest.helpers";
-import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-collection";
 import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
+import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-collection.model";
 // import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 
 let app    : CrownstoneCloud;

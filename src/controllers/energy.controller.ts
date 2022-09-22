@@ -1,20 +1,33 @@
 import {inject} from "@loopback/context";
 import {SecurityBindings, UserProfile} from "@loopback/security";
-import {get, HttpErrors, param, post, requestBody} from '@loopback/rest';
+import {del, get, getModelSchemaRef, HttpErrors, param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
-import {repository} from "@loopback/repository";
+import {Count, repository} from "@loopback/repository";
 import {SphereRepository} from "../repositories/data/sphere.repository";
 import {SphereItem} from "./support/SphereItem";
 import {authorize} from "@loopback/authorization";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";
 import {Dbs} from "../modules/containers/RepoContainer";
 import {sphereFeatures} from "../enums";
-import {EnergyUsageCollection} from "../models/endpointModels/energy-usage-collection";
 import {EnergyDataProcessor} from "../modules/energy/EnergyProcessor";
+import {EnergyUsageCollection} from "../models/endpointModels/energy-usage-collection.model";
+import {EnergyDataProcessed} from "../models/stoneSubModels/stone-energy-data-processed.model";
 
 const FOREVER = new Date('2100-01-01 00:00:00');
+
+type storeReply = {
+  message: string,
+  count: number,
+}
+
+const energyUsageArray = {
+  type: 'array',
+  items: {
+    'x-ts-type': EnergyUsageCollection,
+  },
+};
 
 export class Energy extends SphereItem {
   authorizationModelName = "Sphere";
@@ -87,7 +100,6 @@ export class Energy extends SphereItem {
 
 
 
-
   // Allow the collection of power data
   @post('/spheres/{id}/energyUsage')
   @authenticate(SecurityTypes.accessToken)
@@ -95,8 +107,8 @@ export class Energy extends SphereItem {
   async collectEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
-    @requestBody({required: true}) eneryUsage: EnergyUsageCollection[]
-  ): Promise<void> {
+    @requestBody.array(getModelSchemaRef(EnergyUsageCollection)) energyUsage: EnergyUsageCollection[]
+  ): Promise<storeReply> {
     let currentState = await Dbs.sphereFeature.findOne({where:{name: sphereFeatures.ENERGY_COLLECTION_PERMISSION, sphereId: sphereId}});
     if (!currentState?.enabled) { throw new HttpErrors.Forbidden("Energy collection is not enabled for this sphere."); }
 
@@ -106,7 +118,7 @@ export class Energy extends SphereItem {
     for (let id of stoneIdArray) { stoneIds[id] = true; }
 
     let pointsToStore = [];
-    for (let usage of eneryUsage) {
+    for (let usage of energyUsage) {
       if (stoneIds[usage.stoneId] !== true) { continue; }
       pointsToStore.push({stoneId: usage.stoneId, sphereId: sphereId, timestamp: usage.timestamp, energyUsage: usage.energyUsage});
     }
@@ -115,8 +127,70 @@ export class Energy extends SphereItem {
 
     let processor = new EnergyDataProcessor();
     await processor.processMeasurements(sphereId);
+
+    return {message: "Energy usage stored", count: pointsToStore.length};
   }
 
+
+  // Allow the collection of power data
+  @get('/spheres/{id}/energyUsage')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async getEnergyUsage(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id') sphereId: string,
+    @param.query.date('date') date: Date,
+    @param.query.string('range') range: 'day' | 'week' | 'month' | 'year',
+  ): Promise<EnergyDataProcessed[]> {
+
+    if (range === "day") {
+      let start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      let end   = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1h'}});
+    }
+
+    if (range === 'week') {
+      // get the monday of the week of the date as start and a week later as end
+      let start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - (date.getDay()+6)%7);
+      let end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1d'}});
+    }
+
+    if (range === 'month') {
+      let start = new Date(date.getFullYear(), date.getMonth(), 1);
+      let end   = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1d'}});
+    }
+
+    if (range === 'year') {
+      let start = new Date(date.getFullYear(), 0, 1);
+      let end   = new Date(date.getFullYear() + 1, 0, 1);
+
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1M'}});
+    }
+
+    throw new HttpErrors.BadRequest("Invalid string for \"range\", should be one of these: day, week, month, year");
+  }
+
+  // Allow the collection of power data
+  @del('/stones/{id}/energyUsage')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereAdmin("Stone"))
+  async deleteEnergyUsage(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')    stoneId: string,
+    @param.query.date('from')   fromDate: Date,
+    @param.query.date('until')  untilDate: Date,
+  ): Promise<Count> {
+
+    let count          = await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, timestamp: {gte: fromDate, lt: untilDate}});
+    let processedCount = await Dbs.stoneEnergyProcessed.deleteAll({stoneId: stoneId, timestamp: {gte: fromDate, lt: untilDate}});
+
+    return {count: count.count + processedCount.count};
+  }
 
 
 

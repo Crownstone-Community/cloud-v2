@@ -13,3 +13,4 @@ export class EnergyUsageCollection extends Entity {
   timestamp: Date;
 
 }
+
