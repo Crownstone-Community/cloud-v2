@@ -822,7 +822,6 @@ Object {
       "data": Object {
         "status": "IN_SYNC",
       },
-      "features": Object {},
       "fingerprints": Object {},
       "hubs": Object {
         "dbId:HubRepository:1": Object {

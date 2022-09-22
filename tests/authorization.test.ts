@@ -4,7 +4,7 @@ CONFIG.generateCustomIds = true;
 import {mockNotifications} from "./mocks/Notifications.mock";
 mockNotifications();
 
-import {makeUtilDeterministic, resetMockDatabaseIds, resetMockRandom, setDate} from "./mocks/CloudUtil.mock";
+import {makeUtilDeterministic,} from "./mocks/CloudUtil.mock";
 makeUtilDeterministic();
 
 import {CrownstoneCloud} from "../src/application";
@@ -13,7 +13,6 @@ import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser} from "./builders/createUserData";
 import {CloudUtil} from "../src/util/CloudUtil";
 import {auth, getHubToken, getToken, login} from "./rest-helpers/rest.helpers";
-import {Dbs} from "../src/modules/containers/RepoContainer";
 
 let app    : CrownstoneCloud;
 let client : Client;

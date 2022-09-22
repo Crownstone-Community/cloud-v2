@@ -86,7 +86,7 @@ test("get encryption keys", async () => {
 
 test("Sync FULL", async () => {
   await populate();
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .expect(200)
     .send({sync: {type: "FULL"}})
     .expect(({body}) => {
@@ -100,7 +100,7 @@ test("Sync FULL with scope", async () => {
   let sphereId = sphere.id;
 
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send({sync: {type: "FULL", scope: ['spheres', 'hubs']}})
     .expect(({body}) => {
       expect(Object.keys(body)).toEqual(['spheres'])
@@ -120,7 +120,7 @@ test("Request sync users from sphere", async () => {
     }
   }}};
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send(payload)
     .expect(({body: result}) => {
       let userInResponse = result.spheres[sphere.id].users;
@@ -138,7 +138,7 @@ test("Request sync users from sphere", async () => {
   member.firstName = "bob";
   await Dbs.user.update(member);
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send(payload)
     .expect(({body: result}) => {
       let userInResponse = result.spheres[sphere.id].users;
@@ -151,7 +151,7 @@ test("Request sync users from sphere", async () => {
     }
   }}};
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send(payload2)
     .expect(({body: result}) => {
       let userInResponse = result.spheres[sphere.id].users;
@@ -164,7 +164,7 @@ test("Request sync users from sphere", async () => {
   accessData[0].role = "admin"
   await Dbs.sphereAccess.update(accessData[0]);
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send(payload2)
     .expect(({body: result}) => {
       let userInResponse = result.spheres[sphere.id].users;
@@ -184,7 +184,7 @@ test("Request sync users from sphere", async () => {
   accessData[0].invitePending = true;
   await Dbs.sphereAccess.update(accessData[0])
 
-  await client.post(auth("/user/sync"))
+  await client.post(auth("/sync"))
     .send(payload3)
     .expect(({body: result}) => {
       let userInResponse = result.spheres[sphere.id].users;

@@ -304,6 +304,8 @@ Object {
   "stoneAbility": Array [],
   "stoneAbilityProperty": Array [],
   "stoneBehaviour": Array [],
+  "stoneEnergy": Array [],
+  "stoneEnergyProcessed": Array [],
   "stoneKeys": Array [],
   "stoneSwitchState": Array [],
   "toon": Array [],

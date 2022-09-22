@@ -70,11 +70,6 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
     let userId     = context.principals[0][securityId];
     let controller = context.invocationContext.target;
 
-    if ((controller as any).__sphereItem !== true) {
-      console.error("Tried to set sphere authorization on a controller that is not extending SphereItem.");
-      return AuthorizationDecision.DENY;
-    }
-
     let authorizationModelName      = (controller as any).authorizationModelName;
     let authorizationOverrideName   = (metadata as any).authorizationModel  ?? null;
     let effectiveAuthorizationName  = authorizationOverrideName ?? authorizationModelName;

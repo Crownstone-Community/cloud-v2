@@ -78,7 +78,7 @@ test("Test request data phase", async () => {
       }
     }
   }
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("REQUEST_DATA");
       expect(body.spheres[sphere.id].stones[stone.id].data.data).toBeDefined();
@@ -98,7 +98,7 @@ test("Test request data phase", async () => {
     }
   }
 
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+  await client.post(auth("/sync")).send(replyPhaseRequest)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("UPDATED_IN_CLOUD");
     })
@@ -141,7 +141,7 @@ test("Test request data phase with value removal", async () => {
     }
   }
 
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+  await client.post(auth("/sync")).send(replyPhaseRequest)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("UPDATED_IN_CLOUD");
     })
@@ -167,7 +167,7 @@ test("Test request data location update", async () => {
     }
   }
 
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+  await client.post(auth("/sync")).send(replyPhaseRequest)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].locations[location.id].data.status).toBe("UPDATED_IN_CLOUD");
     })

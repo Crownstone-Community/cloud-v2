@@ -81,7 +81,7 @@ test("Test request data without permission", async () => {
     }
   }
 
-  await client.post(auth("/user/sync")).send(replyPhaseRequest)
+  await client.post(auth("/sync")).send(replyPhaseRequest)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].stones[stone.id].data.status).toBe("ACCESS_DENIED");
     })
@@ -113,11 +113,11 @@ test("Check if we can't alter other people's spheres", async () => {
   }
 
   await setAuthToUser(client, user2)
-  await client.post(auth("/user/sync")).send(request)
+  await client.post(auth("/sync")).send(request)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].data.status).toBe("NOT_AVAILABLE");
     })
-  await client.post(auth("/user/sync")).send(reply)
+  await client.post(auth("/sync")).send(reply)
     .expect(({body}) => {
       expect(body.spheres[sphere.id].data.status).toBe("ACCESS_DENIED");
     })
