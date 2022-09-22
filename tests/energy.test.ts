@@ -425,22 +425,29 @@ test("check correct handling of energyData without datapoints on intervals 2", a
 test("Aggregation of energy usage: month", async () => {
   await prepare();
 
-  let data = [];
-  for (let i = 0; i < 100; i++) {
-    get(data, stone, i, new Date(2022,0,4*i,0,0,0))
+  function getDate(i) {
+    return new Date(2022,1,1,3,40*i,3)
   }
-  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
+
+  let data = [];
+  let datapoints = 300;
+  // console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
+  for (let i = 0; i < datapoints; i++) {
+    get(data, stone, i*10000, getDate(i))
+  }
+
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id, stone.id);
 
-  let monthItems = await dbs.stoneEnergyProcessed.find({where:{interval:'1M'}, order:['timestamp ASC']});
-  expect(monthItems).toHaveLength(13);
-  // console.log('5m', (await dbs.stoneEnergyProcessed.find({where:{interval:'5m' }})).length);
-  // console.log('15m',(await dbs.stoneEnergyProcessed.find({where:{interval:'15m'}})).length);
-  // console.log('30m',(await dbs.stoneEnergyProcessed.find({where:{interval:'30m'}})).length);
-  // console.log('1h' ,(await dbs.stoneEnergyProcessed.find({where:{interval:'1h' }})).length);
-  // console.log('1d' ,(await dbs.stoneEnergyProcessed.find({where:{interval:'1d' }})).length);
-  console.log('1M' ,(await dbs.stoneEnergyProcessed.find({where:{interval:'1M'}, order:['timestamp ASC']})));
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1m' }})).toHaveLength(0);
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '5m' }})).toHaveLength(0);
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1h' }})).toHaveLength(198);
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1d' }})).toHaveLength(8);
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1M' }})).toHaveLength(0);
+  expect(await dbs.stoneEnergyProcessed.find({where:{interval:'fragment'}})).toHaveLength(1);
 })
+
+
 

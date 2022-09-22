@@ -69,9 +69,10 @@ type CrownstoneIdentifier = string; // maj_min as identifier representing the Cr
 type rssi = number;
 type FingerprintDataPointObject = Record<CrownstoneIdentifier, rssi>
 
+
 type SphereFeature_t = "ENERGY_COLLECTION_PERMISSION";
 
-type EnergyInterval = '1m' | '5m' | '10m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '1d' | '1w' | '1M';
+type EnergyInterval = '1m' | '5m' | '10m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '1d' | '1w' | '1M' | 'fragment';
 interface EnergyIntervalData {
   interpolationThreshold: number,
   isOnSamplePoint:        (timestamp: number) => boolean,

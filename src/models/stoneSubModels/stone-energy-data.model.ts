@@ -18,6 +18,9 @@ export class EnergyData extends Entity {
   timestamp: Date
 
   @property({ type:'boolean', index: true, default: false })
+  checked: boolean
+
+  @property({ type:'boolean', index: true, default: false })
   processed: boolean
 
   @belongsTo(() => Sphere, {name:'sphere'})
