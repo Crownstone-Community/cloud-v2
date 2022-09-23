@@ -115,7 +115,23 @@ export class EnergyDataProcessor {
     }
   }
 
-  async processAggregations(sphereId: string, stoneId: string) {
+
+  async processAggregations(sphereId: string) {
+    let stoneIdArray = (await Dbs.stone.find({where: {sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; });
+    // create map from array
+    for (let stoneId of stoneIdArray) {
+      // get last known 5 minute interval datapoint
+      let aggregationIntervals = Object.keys(EnergyIntervalDataSet);
+      for (let j = 0; j < aggregationIntervals.length; j++) {
+        // @ts-ignore
+        let intervalData = EnergyIntervalDataSet[aggregationIntervals[j]];
+        await this._processAggregations(sphereId, stoneId, intervalData)
+      }
+    }
+  }
+
+
+  async processStoneAggregations(sphereId: string, stoneId: string) {
     log.debug("Start processing Aggregations...")
     // get last known 5 minute interval datapoint
     let aggregationIntervals = Object.keys(EnergyIntervalDataSet);

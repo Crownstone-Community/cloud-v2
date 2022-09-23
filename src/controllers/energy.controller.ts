@@ -139,15 +139,14 @@ export class Energy extends SphereItem {
   async getEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
-    @param.query.date('date') date: Date,
+    @param.query.dateTime('date') date: Date,
     @param.query.string('range') range: 'day' | 'week' | 'month' | 'year',
   ): Promise<EnergyDataProcessed[]> {
 
     if (range === "day") {
       let start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       let end   = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-
-      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1h'}});
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, and:[{timestamp: {gte: start}}, {timestamp: {lt: end}}], interval: '1h'}, fields:['stoneId', 'energyUsage', 'timestamp', 'interval']} );
     }
 
     if (range === 'week') {
@@ -155,25 +154,26 @@ export class Energy extends SphereItem {
       let start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - (date.getDay()+6)%7);
       let end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
 
-      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1d'}});
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, and:[{timestamp: {gte: start}}, {timestamp: {lt: end}}], interval: '1d'}, fields:['stoneId', 'energyUsage', 'timestamp', 'interval']});
     }
 
     if (range === 'month') {
       let start = new Date(date.getFullYear(), date.getMonth(), 1);
       let end   = new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
-      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1d'}});
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, and:[{timestamp: {gte: start}}, {timestamp: {lt: end}}], interval: '1d'}, fields:['stoneId', 'energyUsage', 'timestamp', 'interval']});
     }
 
     if (range === 'year') {
       let start = new Date(date.getFullYear(), 0, 1);
       let end   = new Date(date.getFullYear() + 1, 0, 1);
 
-      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, timestamp: {gte: start, lt: end}, interval: '1M'}});
+      return await Dbs.stoneEnergyProcessed.find({where: {sphereId: sphereId, and:[{timestamp: {gte: start}}, {timestamp: {lt: end}}], interval: '1M'}, fields:['stoneId', 'energyUsage', 'timestamp', 'interval']});
     }
 
     throw new HttpErrors.BadRequest("Invalid string for \"range\", should be one of these: day, week, month, year");
   }
+
 
   // Allow the collection of power data
   @del('/stones/{id}/energyUsage')
@@ -182,11 +182,11 @@ export class Energy extends SphereItem {
   async deleteEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')    stoneId: string,
-    @param.query.date('from')   fromDate: Date,
-    @param.query.date('until')  untilDate: Date,
+    @param.query.dateTime('from')   fromDate: Date,
+    @param.query.dateTime('until')  untilDate: Date,
   ): Promise<Count> {
 
-    let count          = await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, timestamp: {gte: fromDate, lt: untilDate}});
+    let count          = await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, and: [{timestamp: {gte: fromDate}}, {timestamp: {lt: untilDate}}]});
     let processedCount = await Dbs.stoneEnergyProcessed.deleteAll({stoneId: stoneId, timestamp: {gte: fromDate, lt: untilDate}});
 
     return {count: count.count + processedCount.count};

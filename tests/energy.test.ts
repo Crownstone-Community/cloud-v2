@@ -35,6 +35,7 @@ let location;
 let token;
 
 function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*5*60*1000 + a*1000}
+
 function gen(stone: any, value: number, timestamp: number) : Partial<EnergyUsageCollection> {
   return {
     stoneId: stone.id,
@@ -431,7 +432,6 @@ test("Aggregation of energy usage: month", async () => {
 
   let data = [];
   let datapoints = 300;
-  // console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
   for (let i = 0; i < datapoints; i++) {
     get(data, stone, i*10000, getDate(i))
   }
@@ -439,7 +439,7 @@ test("Aggregation of energy usage: month", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
   let processor = new EnergyDataProcessor();
-  await processor.processAggregations(sphere.id, stone.id);
+  await processor.processStoneAggregations(sphere.id, stone.id);
 
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '5m' }})).toHaveLength(0);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1h' }})).toHaveLength(198);
@@ -450,3 +450,71 @@ test("Aggregation of energy usage: month", async () => {
 
 
 
+test("check getting of energy data, day, week", async () => {
+  await prepare();
+
+  function getDate(i) : Date {
+    return new Date(2022,1,1,3,40*i,3)
+  }
+
+  let data = [];
+  let datapoints = 800;
+  // console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
+  for (let i = 0; i < datapoints; i++) {
+    get(data, stone, i*10000, getDate(i))
+  }
+
+  console.time("Process")
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
+  console.timeEnd("Process")
+
+  let processor = new EnergyDataProcessor();
+  await processor.processStoneAggregations(sphere.id, stone.id);
+
+
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ getDate(150).toISOString() }&range=day`)).expect(({body}) => {
+    expect(body).toHaveLength(24);
+    expect(body[0].interval).toBe('1h');
+  });
+
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=week`)).expect(({body}) => {
+    expect(body).toHaveLength(7);
+    expect(body[0].interval).toBe('1d');
+    for (let i = 0; i < body.length;i++) {
+      expect(new Date(body[i].timestamp).getDay()).toBe((i+1)%7);
+    }
+  });
+});
+
+
+
+test("check getting of energy data, month, year", async () => {
+  await prepare();
+
+  function getDate(i) : Date {
+    return new Date(2022,-1,1,12*i,40*i,3)
+  }
+
+  let data = [];
+  let datapoints = 800;
+  console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
+  for (let i = 0; i < datapoints; i++) {
+    get(data, stone, i*10000, getDate(i))
+  }
+
+  console.time("Process")
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
+  console.timeEnd("Process")
+
+  let processor = new EnergyDataProcessor();
+  await processor.processStoneAggregations(sphere.id, stone.id);
+
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=month`)).expect(({body}) => {
+    expect(body).toHaveLength(28);
+    expect(body[0].interval).toBe('1d');
+  });
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=year`)).expect(({body}) => {
+    expect(body).toHaveLength(12);
+    expect(body[0].interval).toBe('1M');
+  });
+});
