@@ -446,7 +446,7 @@ test("Aggregation of energy usage: month", async () => {
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1d' }})).toHaveLength(8);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1M' }})).toHaveLength(0);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval:'fragment'}})).toHaveLength(1);
-})
+}, 10000)
 
 
 
@@ -484,7 +484,7 @@ test("check getting of energy data, day, week", async () => {
       expect(new Date(body[i].timestamp).getDay()).toBe((i+1)%7);
     }
   });
-});
+}, 10000);
 
 
 
@@ -518,4 +518,4 @@ test("check getting of energy data, month, year", async () => {
     expect(body).toHaveLength(12);
     expect(body[0].interval).toBe('1M');
   });
-});
+}, 10000);
