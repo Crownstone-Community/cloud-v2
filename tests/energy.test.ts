@@ -512,6 +512,7 @@ test("check getting of energy data, month, year", async () => {
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=month`)).expect(({body}) => {
     expect(body).toHaveLength(28);
     expect(body[0].interval).toBe('1d');
+    expect(body).toMatchSnapshot();
   });
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(12);

@@ -1,0 +1,174 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`check getting of energy data, month, year 1`] = `
+Array [
+  Object {
+    "energyUsage": 1174736,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-01-31T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1193684,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-01T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1212631,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-02T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1231578,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-03T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1250526,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-04T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1269473,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-05T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1288420,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-06T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1307368,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-07T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1326315,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-08T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1345263,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-09T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1364210,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-10T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1383157,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-11T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1402105,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-12T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1421052,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-13T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1439999,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-14T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1458947,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-15T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1477894,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-16T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1496841,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-17T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1515789,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-18T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1534736,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-19T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1553684,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-20T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1572631,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-21T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1591578,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-22T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1610526,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-23T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1629473,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-24T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1648420,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-25T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1667368,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-26T23:00:00.000Z",
+  },
+  Object {
+    "energyUsage": 1686315,
+    "interval": "1d",
+    "stoneId": "1",
+    "timestamp": "2022-02-27T23:00:00.000Z",
+  },
+]
+`;
