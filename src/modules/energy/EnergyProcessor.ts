@@ -99,19 +99,24 @@ export class EnergyDataProcessor {
       startFromIndex = 1;
       lastDatapoint = energyData[0];
     }
-
+    let idsToDelete = [lastDatapoint.id];
     for (let i = startFromIndex; i < energyData.length; i++) {
       let datapoint = energyData[i];
-      await processPair(lastDatapoint, datapoint, {calculateSamplePoint: fiveMinuteInterval, intervalMs: 5*60e3, interval: '5m'}, samples);
+      idsToDelete.push(datapoint.id);
+      processPair(lastDatapoint, datapoint, {calculateSamplePoint: fiveMinuteInterval, intervalMs: 5*60e3, interval: '5m'}, samples);
       lastDatapoint = datapoint;
     }
 
 
     if (samples.length > 0) {
+      // remove the lastDataPoint from the samples to be removed.
+      idsToDelete.pop();
+
       // all processed datapoints have been marked, except the last one, and possible the very first one. If we have samples, then the very first one has been used.
       // we mark it processed because of that.
       await Dbs.stoneEnergyProcessed.createAll(samples);
-      await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, checked:true, timestamp: {lt: lastDatapoint.timestamp}});
+      await Dbs.stoneEnergy.deleteAll({id:{inq: idsToDelete}});
+      await Dbs.stoneEnergy.update(lastDatapoint);
     }
   }
 
@@ -232,9 +237,9 @@ export async function processPair(
   intervalData: IntervalDescription,
   samples: DataObject<EnergyDataProcessed>[]) {
   if (previousPoint.checked === false) {
-    await processSinglePoint(previousPoint, intervalData, samples);
+    processSinglePoint(previousPoint, intervalData, samples);
   }
-  await processDataPairSingleNew(previousPoint, nextPoint, intervalData, samples);
+  processDataPairSingleNew(previousPoint, nextPoint, intervalData, samples);
 }
 
 
@@ -243,10 +248,10 @@ export async function processPair(
  * We only have to check if it is exactly at a sample interval.
  * @param previousPoint
  */
-async function processSinglePoint(
+function processSinglePoint(
   datapoint: EnergyData,
   intervalData: IntervalDescription,
-  samples: DataObject<EnergyDataProcessed>[]
+  samples: DataObject<EnergyDataProcessed>[],
 ) {
   let prevTime = datapoint.timestamp.valueOf();
   let correspondingSamplePoint = intervalData.calculateSamplePoint(prevTime);
@@ -262,10 +267,11 @@ async function processSinglePoint(
 
   datapoint.correctedEnergyUsage = datapoint.energyUsage;
   datapoint.checked = true;
-  await Dbs.stoneEnergy.update(datapoint).catch((e) => {log.error("Error persisting processed boolean on datapoint", e);})
+
+  // await Dbs.stoneEnergy.update(datapoint).catch((e) => {log.error("Error persisting processed boolean on datapoint", e);})
 }
 
-async function processDataPairSingleNew(
+function processDataPairSingleNew(
   previouslyProcessedPoint: EnergyData,
   nextDatapoint:            EnergyData,
   intervalData:             IntervalDescription,
@@ -302,13 +308,13 @@ async function processDataPairSingleNew(
     nextValue = previousValue;
   }
 
-  async function wrapUp(processed: boolean = false) {
+  function wrapUp(processed: boolean = false) {
     if (processed) {
       nextDatapoint.processed = true;
     }
     nextDatapoint.checked = true;
     nextDatapoint.correctedEnergyUsage = nextValue;
-    await Dbs.stoneEnergy.update(nextDatapoint).catch((e) => {log.error("Error persisting checked boolean on datapoint", e);})
+    // await Dbs.stoneEnergy.update(nextDatapoint).catch((e) => {log.error("Error persisting checked boolean on datapoint", e);})
   }
 
   // we sample every 1 minute, on the minute.
@@ -317,7 +323,7 @@ async function processDataPairSingleNew(
   //   - in this case, the previous and the current are both in the same bucket. Process
 
   if (previousTimestamp > nextSamplePoint) {
-    await wrapUp();
+    wrapUp();
     return;
   }
 
@@ -335,11 +341,11 @@ async function processDataPairSingleNew(
       if (previouslyProcessedPoint.processed === false) {
         samples.push({sphereId: previouslyProcessedPoint.sphereId, stoneId: previouslyProcessedPoint.stoneId, energyUsage: previousValue, timestamp: previouslyProcessedPoint.timestamp, interval: 'fragment'});
         previouslyProcessedPoint.processed = true;
-        await Dbs.stoneEnergy.update(previouslyProcessedPoint).catch((e) => {log.error("Error persisting checked boolean on datapoint", e);})
+        // await Dbs.stoneEnergy.update(previouslyProcessedPoint).catch((e) => {log.error("Error persisting checked boolean on datapoint", e);})
       }
       // console.log("Orphaned datapoint. ", previouslyProcessedPoint);
     }
-    await wrapUp(storeProcessedPoint);
+    wrapUp(storeProcessedPoint);
     log.debug("Gap is too large. Mark as checked.");
     return;
   }
@@ -378,7 +384,7 @@ async function processDataPairSingleNew(
     storedProcessedPoint = true;
   }
 
-  await wrapUp(storedProcessedPoint);
+  wrapUp(storedProcessedPoint);
 }
 
 

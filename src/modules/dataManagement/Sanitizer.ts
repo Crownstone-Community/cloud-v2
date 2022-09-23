@@ -45,6 +45,8 @@ export class DataSanitizer {
     let deletedStoneAbilityPropsCount = await deleteGetCount(Dbs.stoneAbilityProperty,{stoneId: {nin: stoneIds}});
     let deletedSwitchStateCount       = await deleteGetCount(Dbs.stoneSwitchState,{stoneId: {nin: stoneIds}});
     let deletedStoneKeysCount         = await deleteGetCount(Dbs.stoneKeys,{stoneId: {nin: stoneIds}});
+    let deletedStoneEnergyCount       = await deleteGetCount(Dbs.stoneEnergy,{stoneId: {nin: stoneIds}});
+    let deletedStoneEnergyProcessedCount = await deleteGetCount(Dbs.stoneEnergyProcessed,{stoneId: {nin: stoneIds}});
 
     let deletedHubCount               = await deleteGetCount(Dbs.hub,{sphereId: {nin: spheresWithOwnerIds}});
 
@@ -99,7 +101,9 @@ export class DataSanitizer {
           abilities: deletedStoneAbilitiesCount,
           abilityProperties: deletedStoneAbilityPropsCount,
           switchStates: deletedSwitchStateCount,
-          keys: deletedStoneKeysCount
+          keys: deletedStoneKeysCount,
+          energyData: deletedStoneEnergyCount,
+          energyDataProcessed: deletedStoneEnergyProcessedCount,
         },
         sphereKeys: deletedSphereKeyCount,
         messages: {

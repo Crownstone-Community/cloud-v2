@@ -161,6 +161,8 @@ Object {
       "abilities": 0,
       "abilityProperties": 0,
       "behaviours": 0,
+      "energyData": 0,
+      "energyDataProcessed": 0,
       "keys": 0,
       "stones": 0,
       "switchStates": 0,
