@@ -47,6 +47,38 @@ function get(arr: any[], stone, value, timestamp) {
   arr.push(gen(stone, value, timestamp))
 }
 
+function getRange(date, range) : {start: Date, end: Date } {
+  if (range === "day") {
+    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    let end   = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+    return {start, end};
+  }
+
+
+  if (range === 'week') {
+    // get the monday of the week of the date as start and a week later as end
+    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - (date.getDay()+6)%7);
+    let end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+    return {start, end};
+  }
+
+
+  if (range === 'month') {
+    let start = new Date(date.getFullYear(), date.getMonth(), 1);
+    let end   = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+    return {start, end};
+  }
+
+
+  if (range === 'year') {
+    let start = new Date(date.getFullYear(), 0, 1);
+    let end   = new Date(date.getFullYear() + 1, 0, 1);
+    return {start, end};
+  }
+}
+
+
+
 async function populate() {
   // fill with a bit of data for sync
   dbs = getRepositories();
@@ -122,6 +154,7 @@ test("test energy loading", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
 
   let processedPoints = await dbs.stoneEnergyProcessed.find()
+  console.log(processedPoints)
   expect(processedPoints.length).toBe(2)
   expect(processedPoints[0].energyUsage).toBe(1000)
   expect(processedPoints[1].energyUsage).toBe(2000)
@@ -145,9 +178,9 @@ test("check processing energy data without interpolation WITH a gap", async () =
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
 
-  let processedPoints = await dbs.stoneEnergyProcessed.find()
-  expect(processedPoints.length).toBe(4)
-  expect(await dbs.stoneEnergy.find()).toHaveLength(1)
+  let processedPoints = await dbs.stoneEnergyProcessed.find();
+  expect(processedPoints.length).toBe(4);
+  expect(await dbs.stoneEnergy.find()).toHaveLength(1);
 });
 
 
@@ -184,12 +217,13 @@ test("check processing energy data in normal situation", async () => {
   let processedPoints = await dbs.stoneEnergyProcessed.find()
 
   expect(processedPoints.length).toBe(5)
+  let period = 300;
 
-  expect(processedPoints[0].energyUsage).toBe(Math.round((1000/303)*299+1000));
+  expect(processedPoints[0].energyUsage).toBe(Math.round((1000/(1*period + 3))*(1*period - 1)+1000));
   expect(processedPoints[1].energyUsage).toBe(3000);
-  expect(processedPoints[2].energyUsage).toBe(Math.round((1000/904)*300 + 3000));
-  expect(processedPoints[3].energyUsage).toBe(Math.round((1000/904)*600 + 3000));
-  expect(processedPoints[4].energyUsage).toBe(Math.round((1000/904)*900 + 3000));
+  expect(processedPoints[2].energyUsage).toBe(Math.round((1000/(3*period+4))*(1*period) + 3000));
+  expect(processedPoints[3].energyUsage).toBe(Math.round((1000/(3*period+4))*(2*period) + 3000));
+  expect(processedPoints[4].energyUsage).toBe(Math.round((1000/(3*period+4))*(3*period) + 3000));
 
   for (let i = 0; i < energyPoints.length-1;i++) {
     expect(energyPoints[i].processed).toBe(true);
@@ -208,11 +242,11 @@ test("check reboot detection and handling", async () => {
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
 
-
+  let period = 300;
   let processedPoints = await dbs.stoneEnergyProcessed.find()
   expect(processedPoints[0].energyUsage).toBe(1000);
   expect(processedPoints[1].energyUsage).toBe(1000);
-  expect(processedPoints[2].energyUsage).toBe(Math.round((3000/596)*296) + 1000); // diff/dt * 1periodDt
+  expect(processedPoints[2].energyUsage).toBe(Math.round((3000/((2*period)-4))*((1*period)-4)) + 1000); // diff/dt * 1periodDt
   expect(processedPoints[3].energyUsage).toBe(3000 + 1000);
   expect(await dbs.stoneEnergy.find()).toHaveLength(1)
 });
@@ -429,7 +463,6 @@ test("Aggregation of energy usage: month", async () => {
   function getDate(i) {
     return new Date(2022,1,1,3,40*i,3)
   }
-
   let data = [];
   let datapoints = 300;
   for (let i = 0; i < datapoints; i++) {
@@ -437,11 +470,10 @@ test("Aggregation of energy usage: month", async () => {
   }
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
-
+  console.log('fragments', await dbs.stoneEnergyProcessed.find({where:{interval:'fragment'}}))
   let processor = new EnergyDataProcessor();
-  await processor.processStoneAggregations(sphere.id, stone.id);
+  await processor.processAggregations(sphere.id);
 
-  expect(await dbs.stoneEnergyProcessed.find({where:{interval: '5m' }})).toHaveLength(0);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1h' }})).toHaveLength(198);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1d' }})).toHaveLength(8);
   expect(await dbs.stoneEnergyProcessed.find({where:{interval: '1M' }})).toHaveLength(0);
@@ -467,20 +499,46 @@ test("check getting of energy data, day, week", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
   let processor = new EnergyDataProcessor();
-  await processor.processStoneAggregations(sphere.id, stone.id);
-
-
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ getDate(150).toISOString() }&range=day`)).expect(({body}) => {
-    expect(body).toHaveLength(24);
-    expect(body[0].interval).toBe('1h');
+  await processor.processAggregations(sphere.id);
+  
+  let range = getRange(getDate(150),'day')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
+    expect(body).toHaveLength(25);
   });
 
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=week`)).expect(({body}) => {
-    expect(body).toHaveLength(7);
-    expect(body[0].interval).toBe('1d');
+  range = getRange( new Date(2022,1,8),'week')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=week`)).expect(({body}) => {
+    expect(body).toHaveLength(8);
     for (let i = 0; i < body.length;i++) {
       expect(new Date(body[i].timestamp).getDay()).toBe((i+1)%7);
     }
+  });
+}, 10000);
+
+
+test("check getting of energy data, day, fragemented", async () => {
+  await prepare();
+
+  function getDate(i) : Date {
+    return new Date(2022,1,1,3,40*i,3)
+  }
+
+  let data = [];
+  let datapoints = 23;
+  console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
+  for (let i = 0; i < datapoints; i++) {
+    get(data, stone, i*10000, getDate(i))
+  }
+
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
+
+  let processor = new EnergyDataProcessor();
+  await processor.processAggregations(sphere.id);
+
+  let range = getRange(getDate(1),'day')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
+    console.log(JSON.stringify(body,null,2))
+    expect(body).toHaveLength(15);
   });
 }, 10000);
 
@@ -503,14 +561,19 @@ test("check getting of energy data, month, year", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
   let processor = new EnergyDataProcessor();
-  await processor.processStoneAggregations(sphere.id, stone.id);
+  await processor.processAggregations(sphere.id);
 
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=month`)).expect(({body}) => {
-    expect(body).toHaveLength(28);
-    expect(body[0].interval).toBe('1d');
+
+
+
+  let range = getRange( new Date(2022,1,8),'month')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
+    expect(body).toHaveLength(29);
   });
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ new Date(2022,1,8).toISOString() }&range=year`)).expect(({body}) => {
-    expect(body).toHaveLength(12);
-    expect(body[0].interval).toBe('1M');
+
+  range = getRange( new Date(2022,1,8),'year')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+    expect(body).toHaveLength(13);
   });
 }, 10000);
+

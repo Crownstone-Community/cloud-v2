@@ -26,6 +26,8 @@ function fiveMinuteInterval(timestamp: number) : number {
   return date.valueOf();
 }
 
+
+
 export class EnergyDataProcessor {
 
   async processMeasurements(sphereId: string) {
@@ -136,15 +138,11 @@ export class EnergyDataProcessor {
   }
 
 
-  async processStoneAggregations(sphereId: string, stoneId: string) {
+  async processStoneAggregations(sphereId: string, stoneId: string, range: EnergyInterval) {
     log.debug("Start processing Aggregations...")
-    // get last known 5 minute interval datapoint
-    let aggregationIntervals = Object.keys(EnergyIntervalDataSet);
-    for (let j = 0; j < aggregationIntervals.length; j++) {
-      // @ts-ignore
-      let intervalData = EnergyIntervalDataSet[aggregationIntervals[j]];
-      await this._processAggregations(sphereId, stoneId, intervalData)
-    }
+    // @ts-ignore
+    let intervalData = EnergyIntervalDataSet[range];
+    await this._processAggregations(sphereId, stoneId, intervalData)
   }
 
 
@@ -239,7 +237,7 @@ export async function processPair(
   if (previousPoint.checked === false) {
     processSinglePoint(previousPoint, intervalData, samples);
   }
-  processDataPairSingleNew(previousPoint, nextPoint, intervalData, samples);
+  processDataPair(previousPoint, nextPoint, intervalData, samples);
 }
 
 
@@ -260,7 +258,8 @@ function processSinglePoint(
       sphereId:    datapoint.sphereId,
       stoneId:     datapoint.stoneId,
       energyUsage: datapoint.energyUsage,
-      timestamp:   new Date(correspondingSamplePoint)
+      timestamp:   new Date(correspondingSamplePoint),
+      interval:    intervalData.interval
     });
     datapoint.processed = true;
   }
@@ -271,18 +270,18 @@ function processSinglePoint(
   // await Dbs.stoneEnergy.update(datapoint).catch((e) => {log.error("Error persisting processed boolean on datapoint", e);})
 }
 
-function processDataPairSingleNew(
+function processDataPair(
   previouslyProcessedPoint: EnergyData,
   nextDatapoint:            EnergyData,
   intervalData:             IntervalDescription,
   samples: DataObject<EnergyDataProcessed>[]
 ) {
-  let nextTimestamp     = nextDatapoint.timestamp.valueOf();
-  let nextValue         = nextDatapoint.energyUsage;
-  let previousTimestamp = previouslyProcessedPoint.timestamp.valueOf();
-  let previousRawValue  = previouslyProcessedPoint.energyUsage;
-  let previousValue     = previouslyProcessedPoint.correctedEnergyUsage;
-  let offsetValue       = previousValue - previouslyProcessedPoint.energyUsage;
+  let nextTimestamp         = nextDatapoint.timestamp.valueOf();
+  let nextValue             = nextDatapoint.energyUsage;
+  let previousTimestamp     = previouslyProcessedPoint.timestamp.valueOf();
+  let previousRawValue      = previouslyProcessedPoint.energyUsage;
+  let previousValue         = previouslyProcessedPoint.correctedEnergyUsage;
+  let offsetValue           = previousValue - previouslyProcessedPoint.energyUsage;
 
   let previousSamplePoint   = intervalData.calculateSamplePoint(previousTimestamp);
   let nextSamplePoint       = intervalData.calculateSamplePoint(nextTimestamp);
@@ -333,6 +332,7 @@ function processDataPairSingleNew(
   // If more than 5 points have elapsed, we do not do anything WITH the prev and mark the prev as checked.
   // We do have to consider if the current is exactly ON the sample interval.
   if (elapsedSamplePoints > INTERPOLATION_THRESHOLD) {
+    // this hardly ever happens.
     let storeProcessedPoint = nextTimestamp === nextSamplePoint;
     if (storeProcessedPoint) {
       samples.push({sphereId: nextDatapoint.sphereId, stoneId: nextDatapoint.stoneId, energyUsage: nextValue, timestamp: new Date(nextSamplePoint), interval: intervalData.interval});
