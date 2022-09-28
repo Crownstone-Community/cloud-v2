@@ -7,10 +7,10 @@ export class EnergyUsageCollection extends Entity {
   stoneId: string;
 
   @property({ required: true })
-  energyUsage: number;
+  energy: number;
 
   @property({type: 'date', required: true})
-  timestamp: Date;
+  t: Date;
 
 }
 

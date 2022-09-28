@@ -121,7 +121,7 @@ export class Energy extends SphereItem {
     let pointsToStore = [];
     for (let usage of energyUsage) {
       if (stoneIds[usage.stoneId] !== true) { continue; }
-      pointsToStore.push({stoneId: usage.stoneId, sphereId: sphereId, timestamp: usage.timestamp, energyUsage: usage.energyUsage});
+      pointsToStore.push({stoneId: usage.stoneId, sphereId: sphereId, timestamp: usage.t, energyUsage: usage.energy});
     }
 
     await Dbs.stoneEnergy.createAll(pointsToStore);
@@ -267,8 +267,8 @@ export class Energy extends SphereItem {
   async deleteEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')    stoneId: string,
-    @param.query.dateTime('from')   fromDate: Date,
-    @param.query.dateTime('until')  untilDate: Date,
+    @param.query.dateTime('start')   fromDate: Date,
+    @param.query.dateTime('end')  untilDate: Date,
   ): Promise<Count> {
 
     let count          = await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, and: [{timestamp: {gte: fromDate}}, {timestamp: {lt: untilDate}}]});

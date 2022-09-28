@@ -39,8 +39,8 @@ function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*5*60*100
 function gen(stone: any, value: number, timestamp: number) : Partial<EnergyUsageCollection> {
   return {
     stoneId: stone.id,
-    energyUsage: value,
-    timestamp: new Date(timestamp)
+    energy: value,
+    t: new Date(timestamp)
   }
 }
 function get(arr: any[], stone, value, timestamp) {
