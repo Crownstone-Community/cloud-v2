@@ -42,7 +42,7 @@ export const Authorization = {
         AccessLevels.admin,
       ]
     }},
-  sphereHub:    (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
+  sphereAdminHub: (authorizationModel?: AuthorizationModel, config?: {scopes?: string[]}) => {
     return {
       scopes: config?.scopes ?? [],
       authorizationModel: authorizationModel,

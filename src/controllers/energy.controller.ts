@@ -104,7 +104,7 @@ export class Energy extends SphereItem {
   // Allow the collection of power data
   @post('/spheres/{id}/energyUsage')
   @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereAdmin())
+  @authorize(Authorization.sphereAdminHub())
   async collectEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
