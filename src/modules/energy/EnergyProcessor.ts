@@ -4,6 +4,7 @@ import {EnergyData} from "../../models/stoneSubModels/stone-energy-data.model";
 import {EnergyIntervalDataSet} from "./IntervalData";
 import {DataObject} from "@loopback/repository";
 import {EnergyDataProcessed} from "../../models/stoneSubModels/stone-energy-data-processed.model";
+import {Energy} from "../../controllers/energy.controller";
 
 const log = Logger(__filename);
 
@@ -127,22 +128,25 @@ export class EnergyDataProcessor {
     let stoneIdArray = (await Dbs.stone.find({where: {sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; });
     // create map from array
     for (let stoneId of stoneIdArray) {
-      // get last known 5 minute interval datapoint
-      let aggregationIntervals = Object.keys(EnergyIntervalDataSet);
-      for (let j = 0; j < aggregationIntervals.length; j++) {
-        // @ts-ignore
-        let intervalData = EnergyIntervalDataSet[aggregationIntervals[j]];
-        await this._processAggregations(sphereId, stoneId, intervalData)
+      for (let aggregationInterval in EnergyIntervalDataSet) {
+        let intervalData = EnergyIntervalDataSet[(aggregationInterval as string)];
+        await this.processStoneAggregations(sphereId, stoneId, intervalData);
       }
     }
   }
 
 
-  async processStoneAggregations(sphereId: string, stoneId: string, range: EnergyInterval) {
+  async processStoneAggregations(sphereId: string, stoneId: string, intervalData: EnergyIntervalData) {
     log.debug("Start processing Aggregations...")
+
+    let samples : DataObject<EnergyDataProcessed>[] = [];
+    let idsToDelete : string[] = [];
+
     // @ts-ignore
-    let intervalData = EnergyIntervalDataSet[range];
-    await this._processAggregations(sphereId, stoneId, intervalData)
+    await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete);
+
+    await Dbs.stoneEnergyProcessed.createAll(samples);
+    await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
   }
 
 
@@ -150,6 +154,8 @@ export class EnergyDataProcessor {
     sphereId: sphereId,
     stoneId: stoneId,
     intervalData: EnergyIntervalData,
+    samples: DataObject<EnergyDataProcessed>[],
+    idsToDelete: string[]
   ) {
     // find the most recent point of this interval level. We will start from there.
     let lastPoint = await Dbs.stoneEnergyProcessed.findOne({where: {stoneId: stoneId, interval: intervalData.targetInterval}, order: ['timestamp DESC']});
@@ -159,73 +165,86 @@ export class EnergyDataProcessor {
     let iterationRequired = true;
     let iterationSize     = 1000;
 
-    let samples : DataObject<EnergyDataProcessed>[] = [];
     while (iterationRequired) {
-      samples = [];
-      let idsToDelete = [];
       let processedPoints = await Dbs.stoneEnergyProcessed.find({where: {stoneId: stoneId, or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}], timestamp: {gt: fromDate}}, limit: iterationSize, order: ['timestamp ASC'] });
+      iterationRequired = processedPoints.length === iterationSize;
 
       log.debug("Aggregating stone", stoneId, "at", intervalData.targetInterval, "based on", intervalData.basedOnInterval, "from", fromDate, ":", processedPoints.length);
 
-      iterationRequired = processedPoints.length === iterationSize;
-
-      let previousPoint : EnergyDataProcessed | null = null;
-      for (let i = 0; i < processedPoints.length; i++) {
-        let point = processedPoints[i];
-        let timestamp  = new Date(point.timestamp).valueOf();
-        let isONsamplePoint = intervalData.isOnSamplePoint(timestamp);
-        // console.log(new Date(timestamp), isONsamplePoint, intervalData.targetInterval, intervalData.basedOnInterval);
-
-        if (isONsamplePoint) {
-          samples.push({stoneId: stoneId, sphereId: sphereId, energyUsage: point.energyUsage, timestamp: point.timestamp, interval: intervalData.targetInterval});
-        }
-        else if (previousPoint) {
-          let usedPreviousPoint = false;
-          let previousTimestamp = new Date(previousPoint.timestamp).valueOf();
-
-          let previousSamplePointFromCurrent = intervalData.getPreviousSamplePoint(timestamp);
-          let previousSamplePointFromLast    = intervalData.getPreviousSamplePoint(previousTimestamp);
-
-          // this means these items fall in the same bucket
-          if (previousSamplePointFromCurrent == previousSamplePointFromLast) {
-            // console.log("same_slot", new Date(previousSamplePointFromCurrent).toLocaleString(), new Date(previousSamplePointFromLast).toLocaleString(), new Date(timestamp).toLocaleString(), new Date(previousTimestamp).toLocaleString())
-            // do nothing
-            // previous point fell within a bucket of this interval, if it is a fragment, it can be removed
-            usedPreviousPoint = true;
-          }
-          else {
-            // this means that the point exactly ON the datapoint is missing, but we have one before, and one after (a number?) of points.
-            let dt = timestamp - previousTimestamp;
-            let dJ = point.energyUsage - previousPoint.energyUsage;
-            let dJms = dJ / dt;
-            let elapsedSamplePoints = intervalData.getNumberOfSamplePointsBetween(previousSamplePointFromLast, previousSamplePointFromCurrent);
-            // allow interpolation.
-            if (elapsedSamplePoints <= intervalData.interpolationThreshold) {
-              for (let j = 0; j < elapsedSamplePoints; j++ ) {
-                let samplePoint = intervalData.getNthSamplePoint(previousSamplePointFromLast, (1+j));
-                let dt = samplePoint - previousTimestamp;
-                let energyAtPoint = previousPoint.energyUsage + dt*dJms;
-                samples.push({stoneId: stoneId, sphereId: sphereId, energyUsage: Math.round(energyAtPoint), timestamp: new Date(samplePoint), interval: intervalData.targetInterval});
-                usedPreviousPoint = true;
-              }
-            }
-          }
-
-          if (usedPreviousPoint) {
-            if (previousPoint.interval === 'fragment') {
-              idsToDelete.push(previousPoint.id);
-            }
-          }
-        }
-        previousPoint = point;
+      fromDate = this._processAggregationPoints(sphereId, stoneId, processedPoints, intervalData, samples, idsToDelete);
+      if (fromDate === null) {
+        break;
       }
-      if (previousPoint) {
-        fromDate = previousPoint.timestamp;
-      }
-
-      await Dbs.stoneEnergyProcessed.createAll(samples);
-      await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
     }
+  }
+
+  _processAggregationPoints(
+    sphereId: sphereId,
+    stoneId: stoneId,
+    processedPoints: EnergyDataProcessed[],
+    intervalData: EnergyIntervalData,
+    samples: DataObject<EnergyDataProcessed>[],
+    idsToDelete: string[]
+  ) : Date {
+    let previousPoint : EnergyDataProcessed | null = null;
+
+    console.log("Processing points", sphereId, stoneId, processedPoints.length);
+
+
+    for (let i = 0; i < processedPoints.length; i++) {
+      let point = processedPoints[i];
+      let timestamp  = new Date(point.timestamp).valueOf();
+      let isONsamplePoint = intervalData.isOnSamplePoint(timestamp);
+      // console.log(new Date(timestamp), isONsamplePoint, intervalData.targetInterval, intervalData.basedOnInterval);
+
+      if (isONsamplePoint) {
+        samples.push({stoneId: stoneId, sphereId: sphereId, energyUsage: point.energyUsage, timestamp: point.timestamp, interval: intervalData.targetInterval});
+      }
+      else if (previousPoint) {
+        let usedPreviousPoint = false;
+        let previousTimestamp = new Date(previousPoint.timestamp).valueOf();
+
+        let previousSamplePointFromCurrent = intervalData.getPreviousSamplePoint(timestamp);
+        let previousSamplePointFromLast    = intervalData.getPreviousSamplePoint(previousTimestamp);
+
+        // this means these items fall in the same bucket
+        if (previousSamplePointFromCurrent == previousSamplePointFromLast) {
+          // console.log("same_slot", new Date(previousSamplePointFromCurrent).toLocaleString(), new Date(previousSamplePointFromLast).toLocaleString(), new Date(timestamp).toLocaleString(), new Date(previousTimestamp).toLocaleString())
+          // do nothing
+          // previous point fell within a bucket of this interval, if it is a fragment, it can be removed
+          usedPreviousPoint = true;
+        }
+        else {
+          // this means that the point exactly ON the datapoint is missing, but we have one before, and one after (a number?) of points.
+          let dt = timestamp - previousTimestamp;
+          let dJ = point.energyUsage - previousPoint.energyUsage;
+          let dJms = dJ / dt;
+          let elapsedSamplePoints = intervalData.getNumberOfSamplePointsBetween(previousSamplePointFromLast, previousSamplePointFromCurrent);
+          // allow interpolation.
+          if (elapsedSamplePoints <= intervalData.interpolationThreshold) {
+            for (let j = 0; j < elapsedSamplePoints; j++ ) {
+              let samplePoint = intervalData.getNthSamplePoint(previousSamplePointFromLast, (1+j));
+              let dt = samplePoint - previousTimestamp;
+              let energyAtPoint = previousPoint.energyUsage + dt*dJms;
+              samples.push({stoneId: stoneId, sphereId: sphereId, energyUsage: Math.round(energyAtPoint), timestamp: new Date(samplePoint), interval: intervalData.targetInterval});
+              usedPreviousPoint = true;
+            }
+          }
+        }
+
+        if (usedPreviousPoint) {
+          if (previousPoint.interval === 'fragment') {
+            idsToDelete.push(previousPoint.id);
+          }
+        }
+      }
+      previousPoint = point;
+    }
+    if (previousPoint) {
+      return previousPoint.timestamp;
+    }
+
+    return null;
   }
 }
 
@@ -388,9 +407,109 @@ function processDataPair(
 }
 
 
+let aggregating = false;
+export async function AggegateAllSpheres() {
+  if (aggregating) {
+    log.info("Already aggregating, skipping this call.");
+    return;
+  }
+
+  let spheres = await Dbs.sphere.find({fields:{id:true}}).catch((e) => {log.error("Error getting spheres", e);});
+  if (!spheres) { return ;}
+  let sphereIds = spheres.map((sphere) => { return sphere.id; });
 
 
+  aggregating = true;
+  let processor = new EnergyDataProcessor();
 
+    let intervalData = EnergyIntervalDataSet[interval];
+
+    let pointsOfInterval = await Dbs.stoneEnergyProcessed.find({where: {sphereId: interval: intervalData.targetInterval}, order: ['timestamp DESC'], fields:{sphereId: true, stoneId: true, timestamp: true}});
+
+    // sort points per sphere
+    let pointsPerSphere : Record<string, EnergyDataProcessed[]> = {};
+    for (let i = 0; i < pointsOfInterval.length; i++) {
+      let point = pointsOfInterval[i];
+      if (pointsPerSphere[point.sphereId] === undefined) {
+        pointsPerSphere[point.sphereId] = [];
+      }
+      pointsPerSphere[point.sphereId].push(point);
+    }
+
+    let stoneEnergyPoints = await Dbs.stoneEnergyProcessed.find({where: {or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}]}, fields:{sphereId: true}});
+
+    // get sphereId map from stoneEnergyPoints
+    let sphereIdMap : Record<string, boolean> = {};
+    for (let i = 0; i < stoneEnergyPoints.length; i++) {
+      sphereIdMap[stoneEnergyPoints[i].sphereId] = true;
+    }
+
+    for (let sphereId in sphereIdMap) {
+      for (let interval in EnergyIntervalDataSet) {
+      console.log("Handling", interval, sphereId);
+      console.time("aggregate");
+      let samples : DataObject<EnergyDataProcessed>[] = [];
+      let idsToDelete : string[] = [];
+
+      // @ts-ignore
+      let timestampOrQuery = {or: []};
+      let mostRecentPoints: Record<string, number> = {};
+      if (pointsPerSphere[sphereId] !== undefined) {
+        // get the most recentpoint for all stones in the pointsOfInterval array
+        for (let point of pointsOfInterval) {
+          if (mostRecentPoints[point.stoneId] === undefined) {
+            mostRecentPoints[point.stoneId] = point.timestamp.valueOf();
+          }
+          else {
+            if (mostRecentPoints[point.stoneId] < point.timestamp.valueOf()) {
+              mostRecentPoints[point.stoneId] = point.timestamp.valueOf();
+            }
+          }
+        }
+
+        // get the minimum timestamp of all the stones to query the sphere with.
+        for (let stoneId in mostRecentPoints) {
+          let mostRecentPoint = mostRecentPoints[stoneId];
+          timestampOrQuery.or.push({and: [{stoneId: stoneId}, {timestamp: {gt: new Date(mostRecentPoint)}}]});
+        }
+      }
+
+      if (timestampOrQuery.or.length === 0) {
+        continue;
+      }
+
+      let processedPoints = await Dbs.stoneEnergyProcessed.find({where: {and: [{sphereId: sphereId}, {or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}]}, timestampOrQuery]}, order: ['timestamp ASC'] });
+      // split points in stoneId arrays
+      let stoneIdArrays : Record<string, any[]> = {};
+      for (let point of processedPoints) {
+        if (stoneIdArrays[point.stoneId] === undefined) {
+          stoneIdArrays[point.stoneId] = [];
+        }
+        stoneIdArrays[point.stoneId].push(point);
+      }
+
+      // process each stoneId array
+      for (let stoneId in stoneIdArrays) {
+        if (stoneIdArrays[stoneId].length < 2) { continue; }
+        processor._processAggregationPoints(sphereId, stoneId, stoneIdArrays[stoneId], intervalData, samples, idsToDelete);
+      }
+
+
+      console.timeEnd("aggregate");
+      if (samples.length > 0) {
+        // console.log("Storing samples", samples)
+        await Dbs.stoneEnergyProcessed.createAll(samples);
+      }
+      if (idsToDelete.length > 0) {
+        // console.log("deleting samples")
+        await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
+      }
+    }
+  }
+  aggregating = false;
+
+  console.log("Finished")
+}
 
 
 

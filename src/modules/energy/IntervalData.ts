@@ -111,7 +111,7 @@ function getMonthData(targetInterval: EnergyInterval, basedOnInterval: EnergyInt
 }
 
 
-export const EnergyIntervalDataSet = {
+export const EnergyIntervalDataSet : Record<string, EnergyIntervalData> = {
   // '5m':  getMinuteData(5, '5m', '1m', 4),
   // '10m': getMinuteData(10, '10m', '5m', 4),
   // '15m': getMinuteData(15, '15m', '5m', 4),

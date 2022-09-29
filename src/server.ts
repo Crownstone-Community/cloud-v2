@@ -7,6 +7,7 @@ import { ApplicationConfig } from '@loopback/core';
 import {CrownstoneCloud} from "./application";
 import {SSEManager} from "./modules/sse/SSEManager";
 import {DataSanitizer} from "./modules/dataManagement/Sanitizer";
+import {AggegateAllSpheres} from "./modules/energy/EnergyProcessor";
 
 export {ApplicationConfig};
 
@@ -25,8 +26,17 @@ export class ExpressServer {
     this.app.use('/api', this.lbApp.requestHandler);
     this.app.get('/sanitize-database', async function (_req: Request, res: Response) {
       if (_req.query.token === process.env.SANITATION_TOKEN) {
-        let result = await DataSanitizer.sanitize()
         res.write("Processing...\n")
+        let result = await DataSanitizer.sanitize()
+        res.write("Removed the following data:\n")
+        return res.end(JSON.stringify(result, null, 2));
+      }
+      res.end("INVALID_TOKEN");
+    });
+    this.app.get('/aggregate-energy-data', async function (_req: Request, res: Response) {
+      if (_req.query.token === process.env.AGGREGATION_TOKEN) {
+        res.write("Processing...\n")
+        let result = await AggegateAllSpheres();
         res.write("Removed the following data:\n")
         return res.end(JSON.stringify(result, null, 2));
       }
