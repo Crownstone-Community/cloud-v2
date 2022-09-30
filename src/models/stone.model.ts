@@ -7,6 +7,9 @@ import {BaseEntity} from "./bases/base-entity";
 import {Location} from "./location.model";
 import {Sphere} from "./sphere.model";
 import {UicrData} from "./subModels/uicr.model";
+import {EnergyData} from "./stoneSubModels/stone-energy-data.model";
+import {EnergyDataProcessed} from "./stoneSubModels/stone-energy-data-processed.model";
+import {EnergyMetaData} from "./stoneSubModels/stone-energy-metadata.model";
 
 @model()
 export class Stone extends AddTimestamps(BaseEntity) {
@@ -67,6 +70,15 @@ export class Stone extends AddTimestamps(BaseEntity) {
 
   @hasMany(() => StoneSwitchState, {name: 'switchStateHistory', keyTo: 'stoneId'})
   switchStateHistory: StoneSwitchState[];
+
+  @hasMany(() => EnergyData, {name: 'energyData', keyTo: 'stoneId'})
+  energyData: EnergyData[];
+
+  @hasMany(() => EnergyDataProcessed, {name: 'energyDataProcessed', keyTo: 'stoneId'})
+  energyDataProcessed: EnergyDataProcessed[];
+
+  @hasMany(() => EnergyMetaData, {name: 'energyMetaData', keyTo: 'stoneId'})
+  energyMetaData: EnergyMetaData[];
 
   @belongsTo(() => Sphere, {name:'sphere'})
   sphereId: string;

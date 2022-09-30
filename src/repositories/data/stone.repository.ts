@@ -24,6 +24,12 @@ import {HttpErrors} from "@loopback/rest";
 import {keyTypes} from "../../enums";
 import {Dbs} from "../../modules/containers/RepoContainer";
 import {CloudUtil} from "../../util/CloudUtil";
+import {EnergyData} from "../../models/stoneSubModels/stone-energy-data.model";
+import {EnergyDataProcessed} from "../../models/stoneSubModels/stone-energy-data-processed.model";
+import {EnergyMetaData} from "../../models/stoneSubModels/stone-energy-metadata.model";
+import {EnergyDataRepository} from "./stone-energy-data.repository";
+import {EnergyDataProcessedRepository} from "./stone-energy-data-processed.repository";
+import {EnergyMetaDataRepository} from "./stone-energy-metadata.repository";
 
 
 export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Stone.prototype.id > {
@@ -31,36 +37,48 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
   public readonly location:           BelongsToAccessor<Location,               typeof Location.prototype.id>;
   public readonly currentSwitchState: HasOneRepositoryFactory<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
 
-  public behaviours:         HasManyRepositoryFactory<StoneBehaviour,   typeof StoneBehaviour.prototype.id>;
-  public abilities:          HasManyRepositoryFactory<StoneAbility,     typeof StoneAbility.prototype.id>;
-  public switchStateHistory: HasManyRepositoryFactory<StoneSwitchState, typeof StoneSwitchState.prototype.id>;
+  public behaviours:          HasManyRepositoryFactory<StoneBehaviour,      typeof StoneBehaviour.prototype.id>;
+  public abilities:           HasManyRepositoryFactory<StoneAbility,        typeof StoneAbility.prototype.id>;
+  public switchStateHistory:  HasManyRepositoryFactory<StoneSwitchState,    typeof StoneSwitchState.prototype.id>;
+  public energyData:          HasManyRepositoryFactory<EnergyData,          typeof EnergyData.prototype.id>;
+  public energyDataProcessed: HasManyRepositoryFactory<EnergyDataProcessed, typeof EnergyDataProcessed.prototype.id>;
+  public energyMetaData:      HasManyRepositoryFactory<EnergyMetaData,      typeof EnergyMetaData.prototype.id>;
 
 
   constructor(
     @inject('datasources.data') protected datasource: juggler.DataSource,
-    @repository.getter('SphereRepository')           sphereRepoGetter: Getter<SphereRepository>,
-    @repository.getter('LocationRepository')         locationRepoGetter: Getter<LocationRepository>,
+    @repository.getter('SphereRepository')           sphereRepoGetter:           Getter<SphereRepository>,
+    @repository.getter('LocationRepository')         locationRepoGetter:         Getter<LocationRepository>,
     @repository.getter('StoneSwitchStateRepository') stoneSwitchStateRepoGetter: Getter<StoneSwitchStateRepository>,
 
-    @repository(StoneBehaviourRepository)   protected stoneBehaviourRepo:   StoneBehaviourRepository,
-    @repository(StoneAbilityRepository)     protected stoneAbilityRepo:     StoneAbilityRepository,
-    @repository(StoneSwitchStateRepository) protected stoneSwitchStateRepo: StoneSwitchStateRepository,
-    ) {
+    @repository(StoneBehaviourRepository)      protected stoneBehaviourRepo:      StoneBehaviourRepository,
+    @repository(StoneAbilityRepository)        protected stoneAbilityRepo:        StoneAbilityRepository,
+    @repository(StoneSwitchStateRepository)    protected stoneSwitchStateRepo:    StoneSwitchStateRepository,
+    @repository(EnergyDataRepository)          protected energyDataRepo:          EnergyDataRepository,
+    @repository(EnergyDataProcessedRepository) protected energyDataProcessedRepo: EnergyDataProcessedRepository,
+    @repository(EnergyMetaDataRepository)      protected energyMetaDataRepo:      EnergyMetaDataRepository,
+  ) {
     super(Stone, datasource);
-    this.sphere             = this.createBelongsToAccessorFor('sphere',   sphereRepoGetter);
-    this.location           = this.createBelongsToAccessorFor('location', locationRepoGetter);
+    this.sphere              = this.createBelongsToAccessorFor('sphere',   sphereRepoGetter);
+    this.location            = this.createBelongsToAccessorFor('location', locationRepoGetter);
 
-    this.currentSwitchState = this.createHasOneRepositoryFactoryFor('currentSwitchState', stoneSwitchStateRepoGetter);
+    this.currentSwitchState  = this.createHasOneRepositoryFactoryFor('currentSwitchState', stoneSwitchStateRepoGetter);
 
-    this.behaviours         = this.createHasManyRepositoryFactoryFor('behaviours',        async () => stoneBehaviourRepo);
-    this.abilities          = this.createHasManyRepositoryFactoryFor('abilities',         async () => stoneAbilityRepo);
-    this.switchStateHistory = this.createHasManyRepositoryFactoryFor('switchStateHistory',async () => stoneSwitchStateRepo);
+    this.behaviours          = this.createHasManyRepositoryFactoryFor('behaviours',         async () => stoneBehaviourRepo);
+    this.abilities           = this.createHasManyRepositoryFactoryFor('abilities',          async () => stoneAbilityRepo);
+    this.switchStateHistory  = this.createHasManyRepositoryFactoryFor('switchStateHistory', async () => stoneSwitchStateRepo);
+    this.energyData          = this.createHasManyRepositoryFactoryFor('energyData',         async () => energyDataRepo);
+    this.energyDataProcessed = this.createHasManyRepositoryFactoryFor('energyDataProcessed',async () => energyDataProcessedRepo);
+    this.energyMetaData      = this.createHasManyRepositoryFactoryFor('energyMetaData',     async () => energyMetaDataRepo);
 
-    this.registerInclusionResolver('location',           this.location.inclusionResolver);
-    this.registerInclusionResolver('behaviours',         this.behaviours.inclusionResolver);
-    this.registerInclusionResolver('abilities',          this.abilities.inclusionResolver);
-    this.registerInclusionResolver('switchStateHistory', this.switchStateHistory.inclusionResolver);
-    this.registerInclusionResolver('currentSwitchState', this.currentSwitchState.inclusionResolver);
+    this.registerInclusionResolver('location',            this.location.inclusionResolver);
+    this.registerInclusionResolver('behaviours',          this.behaviours.inclusionResolver);
+    this.registerInclusionResolver('abilities',           this.abilities.inclusionResolver);
+    this.registerInclusionResolver('switchStateHistory',  this.switchStateHistory.inclusionResolver);
+    this.registerInclusionResolver('currentSwitchState',  this.currentSwitchState.inclusionResolver);
+    this.registerInclusionResolver('energyData',          this.energyData.inclusionResolver);
+    this.registerInclusionResolver('energyDataProcessed', this.energyDataProcessed.inclusionResolver);
+    this.registerInclusionResolver('energyMetaData',      this.energyMetaData.inclusionResolver);
 
   }
 

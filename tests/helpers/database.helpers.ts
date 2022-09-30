@@ -226,7 +226,7 @@ function initRepositories() : RepositoryContainer {
   stoneEnergy          = new EnergyDataRepository(testdb, sphereGetter, stoneGetter);
   stoneEnergyProcessed = new EnergyDataProcessedRepository(testdb, sphereGetter, stoneGetter);
   stoneEnergyMetaData  = new EnergyMetaDataRepository(testdb, sphereGetter, stoneGetter);
-  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
+  stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState, stoneEnergy, stoneEnergyProcessed, stoneEnergyMetaData);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
   sphere               = new SphereRepository(testdb, sphereAccessGetter, userGetter, stone, location, scene, fingerprintV2, messageV2, hub, sphereFeature, sphereTrackingNumber, toon);

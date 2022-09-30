@@ -592,6 +592,9 @@ test("check aggregation via main aggregator", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
   await AggegateAllSpheres();
+  await AggegateAllSpheres();
+  await AggegateAllSpheres();
+  await AggegateAllSpheres();
 
   let range = getRange( new Date(2022,1,8),'month')
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {

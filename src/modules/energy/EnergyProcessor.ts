@@ -464,6 +464,14 @@ async function _aggregateAllSpheres(force = false) {
       await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
     }
   }
+
+  if (metaData) {
+    metaData.timestamp = new Date();
+    await Dbs.metaData.update(metaData)
+  }
+  else {
+    await Dbs.metaData.create({type:"aggregationTime", timestamp: new Date()});
+  }
 }
 
 

@@ -162,6 +162,9 @@ export class DataDownloader {
             {relation: 'behaviours'},
             {relation: 'abilities', scope: {include:[{relation:'properties'}]}},
             {relation: 'switchStateHistory'},
+            {relation: 'energyData'},
+            {relation: 'energyDataProcessed'},
+            {relation: 'energyMetaData'},
           ]});
 
         // map stones so we can easily look them up
@@ -189,6 +192,15 @@ export class DataDownloader {
 
           if (stone.behaviours === undefined) {
             delete stone.behaviours;
+          }
+          if (stone.energyData === undefined) {
+            delete stone.energyData;
+          }
+          if (stone.energyDataProcessed === undefined) {
+            delete stone.energyDataProcessed;
+          }
+          if (stone.energyMetaData === undefined) {
+            delete stone.energyMetaData;
           }
 
           this.addJson(stone, stone.name, ['spheres', sphere.name, 'crownstones'])
