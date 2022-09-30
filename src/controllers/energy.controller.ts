@@ -16,6 +16,7 @@ import {EnergyUsageCollection} from "../models/endpointModels/energy-usage-colle
 import {EnergyDataProcessed} from "../models/stoneSubModels/stone-energy-data-processed.model";
 import {Filter} from "@loopback/filter/src/query";
 import {EnergyMetaData} from "../models/stoneSubModels/stone-energy-metadata.model";
+import {EnergyData} from "../models/stoneSubModels/stone-energy-data.model";
 
 const FOREVER = new Date('2100-01-01 00:00:00');
 
@@ -183,15 +184,8 @@ export class Energy extends SphereItem {
     if (start === end) { return []; }
     if (start  >  end) { throw new HttpErrors.BadRequest("Start must be before end"); }
 
-    let fieldsAndOrder : Filter<EnergyDataProcessed> = {
-      fields:['stoneId', 'energyUsage', 'timestamp'],
-      order:['timestamp ASC']
-    };
-    let queryWhere = {
-      sphereId,
-      and:[{timestamp: {gte: start}}, {timestamp: {lte: end}}]
-    };
 
+    let fields : Filter<EnergyDataProcessed | EnergyData> = {fields:['stoneId', 'energyUsage', 'timestamp']};
     let interval : EnergyInterval = '1h';
     let duration = end.valueOf() - start.valueOf();
     let hour = 3600e3;
@@ -217,7 +211,15 @@ export class Energy extends SphereItem {
         throw new HttpErrors.BadRequest("Invalid string for \"range\", should be one of these: day, week, month, year");
     }
 
-    let datapoints : any[] = await Dbs.stoneEnergyProcessed.find({where: {...queryWhere, interval}, ...fieldsAndOrder});
+    let datapoints : any[] = await Dbs.stoneEnergyProcessed.find({
+      where: {
+        sphereId,
+        interval,
+        and:[{timestamp: {gte: start}}, {timestamp: {lte: end}}]
+      },
+      ...fields,
+      order:['timestamp ASC']
+    });
 
     // if we do not have a fully filled range, check if we have a pending unprocessed value which provides the most up-to-date data.
     let lastTimestamp = datapoints[datapoints.length-1]?.timestamp ?? start;
@@ -228,10 +230,12 @@ export class Energy extends SphereItem {
       let additionalPoint = await Dbs.stoneEnergy.findOne({
         where: {
           sphereId,
+          energyUsage: {gt: 0},
+          correctedEnergyUsage: {gt: 0},
           checked: true,
           and:[{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}]
         },
-        fields: ['stoneId', 'energyUsage', 'timestamp'],
+        ...fields,
         order:  ['timestamp DESC'],
       });
 
@@ -244,7 +248,7 @@ export class Energy extends SphereItem {
             sphereId,
             and:[{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}]
           },
-          fields: ['stoneId', 'energyUsage', 'timestamp'],
+          ...fields,
           order:  ['timestamp DESC'],
         });
         if (additionalPoint) {
@@ -260,10 +264,12 @@ export class Energy extends SphereItem {
       let additionalPoint = await Dbs.stoneEnergy.findOne({
         where: {
           sphereId,
+          energyUsage: {gt: 0},
+          correctedEnergyUsage: {gt: 0},
           checked: true,
           and:[{timestamp: {gte: start}}, {timestamp: {lt: firstTimestamp}}]
         },
-        fields: ['stoneId', 'energyUsage', 'timestamp'],
+        ...fields,
         order:  ['timestamp ASC'],
       });
 
@@ -276,7 +282,7 @@ export class Energy extends SphereItem {
             sphereId,
             and:[{timestamp: {gte: start}}, {timestamp: {lt: firstTimestamp}}]
           },
-          fields: ['stoneId', 'energyUsage', 'timestamp'],
+          ...fields,
           order:  ['timestamp ASC'],
         });
         if (additionalPoint) {

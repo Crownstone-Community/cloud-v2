@@ -34,7 +34,9 @@ let stone3, behaviour3, ability3, abilityProperty3;
 let location;
 let token;
 
-function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*5*60*1000 + a*1000}
+let INTERVAL = 5*60;
+
+function m(x,a) { return new Date('2022-01-01 01:00:00Z').valueOf() + x*INTERVAL*1000 + a*1000}
 
 function gen(stone: any, value: number, timestamp: number) : Partial<EnergyUsageCollection> {
   return {
@@ -154,7 +156,6 @@ test("test energy loading", async () => {
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
 
   let processedPoints = await dbs.stoneEnergyProcessed.find()
-  console.log(processedPoints)
   expect(processedPoints.length).toBe(2)
   expect(processedPoints[0].energyUsage).toBe(1000)
   expect(processedPoints[1].energyUsage).toBe(2000)
@@ -217,7 +218,7 @@ test("check processing energy data in normal situation", async () => {
   let processedPoints = await dbs.stoneEnergyProcessed.find()
 
   expect(processedPoints.length).toBe(5)
-  let period = 300;
+  let period = INTERVAL;
 
   expect(processedPoints[0].energyUsage).toBe(Math.round((1000/(1*period + 3))*(1*period - 1)+1000));
   expect(processedPoints[1].energyUsage).toBe(3000);
@@ -242,7 +243,7 @@ test("check reboot detection and handling", async () => {
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data)
 
-  let period = 300;
+  let period = INTERVAL;
   let processedPoints = await dbs.stoneEnergyProcessed.find()
   expect(processedPoints[0].energyUsage).toBe(1000);
   expect(processedPoints[1].energyUsage).toBe(1000);
@@ -470,7 +471,6 @@ test("Aggregation of energy usage: month", async () => {
   }
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
-  console.log('fragments', await dbs.stoneEnergyProcessed.find({where:{interval:'fragment'}}))
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id);
 
@@ -525,7 +525,7 @@ test("check getting of energy data, day, fragemented", async () => {
 
   let data = [];
   let datapoints = 23;
-  console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
+  // console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
   for (let i = 0; i < datapoints; i++) {
     get(data, stone, i*10000, getDate(i))
   }
@@ -537,7 +537,6 @@ test("check getting of energy data, day, fragemented", async () => {
 
   let range = getRange(getDate(1),'day')
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
-    console.log(JSON.stringify(body,null,2))
     expect(body).toHaveLength(15);
   });
 }, 10000);

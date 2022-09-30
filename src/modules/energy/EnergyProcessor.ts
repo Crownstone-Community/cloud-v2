@@ -28,6 +28,13 @@ function fiveMinuteInterval(timestamp: number) : number {
 }
 
 
+function hourInterval(timestamp: number) : number {
+  let date = new Date(timestamp);
+  date.setMinutes(0,0,0);
+  return date.valueOf();
+}
+
+
 
 export class EnergyDataProcessor {
 
@@ -437,7 +444,6 @@ async function _aggregateAllSpheres(force = false) {
   }
 
   console.log("Aggregating from", fromTime);
-
 
   // all stones that have new data since the last aggregation.
   let energyMetaDataSet = await Dbs.stoneEnergyMetaData.find({where:{updatedAt: {gt: fromTime}}}).catch((e) => {log.error("Error getting metadata", e);});
