@@ -181,6 +181,7 @@ export class Energy extends SphereItem {
     end.setMinutes(0,0,0);
 
     if (start === end) { return []; }
+    if (start  >  end) { throw new HttpErrors.BadRequest("Start must be before end"); }
 
     let fieldsAndOrder : Filter<EnergyDataProcessed> = {
       fields:['stoneId', 'energyUsage', 'timestamp'],
@@ -194,6 +195,7 @@ export class Energy extends SphereItem {
     let interval : EnergyInterval = '1h';
     let duration = end.valueOf() - start.valueOf();
     let hour = 3600e3;
+
     switch (range) {
       case 'day':
         if (duration > 25 * hour) { throw new HttpErrors.BadRequest("Range is too large for day range."); }
