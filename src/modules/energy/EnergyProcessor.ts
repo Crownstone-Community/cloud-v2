@@ -117,8 +117,8 @@ export class EnergyDataProcessor {
 
       // all processed datapoints have been marked, except the last one, and possible the very first one. If we have samples, then the very first one has been used.
       // we mark it processed because of that.
-      await Dbs.stoneEnergyProcessed.createAll(samples);
-      await Dbs.stoneEnergy.deleteAll({id:{inq: idsToDelete}});
+      if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
+      if (idsToDelete.length > 0) { await Dbs.stoneEnergy.deleteAll({id: {inq: idsToDelete}}); }
       await Dbs.stoneEnergy.update(lastDatapoint);
     }
   }
@@ -127,11 +127,15 @@ export class EnergyDataProcessor {
   async processAggregations(sphereId: string) {
     let stoneIdArray = (await Dbs.stone.find({where: {sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; });
     // create map from array
-    for (let stoneId of stoneIdArray) {
-      for (let aggregationInterval in EnergyIntervalDataSet) {
-        let intervalData = EnergyIntervalDataSet[(aggregationInterval as string)];
-        await this.processStoneAggregations(sphereId, stoneId, intervalData);
+    for (let aggregationInterval in EnergyIntervalDataSet) {
+      let samples : DataObject<EnergyDataProcessed>[] = [];
+      let idsToDelete : string[] = [];
+      for (let stoneId of stoneIdArray) {
+          let intervalData = EnergyIntervalDataSet[(aggregationInterval as string)];
+          await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete);
       }
+      if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
+      if (idsToDelete.length > 0) { await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}}); }
     }
   }
 
@@ -145,8 +149,8 @@ export class EnergyDataProcessor {
     // @ts-ignore
     await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete);
 
-    await Dbs.stoneEnergyProcessed.createAll(samples);
-    await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
+    if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
+    if (idsToDelete.length > 0) { await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}}); }
   }
 
 
@@ -187,9 +191,6 @@ export class EnergyDataProcessor {
     idsToDelete: string[]
   ) : Date {
     let previousPoint : EnergyDataProcessed | null = null;
-
-    console.log("Processing points", sphereId, stoneId, processedPoints.length);
-
 
     for (let i = 0; i < processedPoints.length; i++) {
       let point = processedPoints[i];
@@ -407,108 +408,62 @@ function processDataPair(
 }
 
 
-let aggregating = false;
+export let AGGREGATING = false;
 export async function AggegateAllSpheres() {
-  if (aggregating) {
-    log.info("Already aggregating, skipping this call.");
+  if (AGGREGATING) {
+    console.error("Already aggregating, skipping this call.");
     return;
   }
 
-  let spheres = await Dbs.sphere.find({fields:{id:true}}).catch((e) => {log.error("Error getting spheres", e);});
-  if (!spheres) { return ;}
-  let sphereIds = spheres.map((sphere) => { return sphere.id; });
+  AGGREGATING = true;
+  try {
+    await _aggregateAllSpheres();
+  }
+  catch (err: any) {
+    console.error("Error in aggregateAllSpheres", err);
+  }
+  finally {
+    AGGREGATING = false;
+    console.log("Finished")
+  }
+}
+
+async function _aggregateAllSpheres(force = false) {
+  // check from whence we have to get the data
+  let metaData = await Dbs.metaData.findOne({where:{type:"aggregationTime"}});
+  let fromTime = new Date(0);
+  if (metaData !== null && !force) {
+    fromTime = metaData.timestamp;
+  }
+
+  console.log("Aggregating from", fromTime);
 
 
-  aggregating = true;
+  // all stones that have new data since the last aggregation.
+  let energyMetaDataSet = await Dbs.stoneEnergyMetaData.find({where:{updatedAt: {gt: fromTime}}}).catch((e) => {log.error("Error getting metadata", e);});
+  if (!energyMetaDataSet || energyMetaDataSet.length === 0) { return; }
+
   let processor = new EnergyDataProcessor();
-
+  for (let interval in EnergyIntervalDataSet) {
     let intervalData = EnergyIntervalDataSet[interval];
 
-    let pointsOfInterval = await Dbs.stoneEnergyProcessed.find({where: {sphereId: interval: intervalData.targetInterval}, order: ['timestamp DESC'], fields:{sphereId: true, stoneId: true, timestamp: true}});
+    let samples: DataObject<EnergyDataProcessed>[] = [];
+    let idsToDelete: string[] = [];
 
-    // sort points per sphere
-    let pointsPerSphere : Record<string, EnergyDataProcessed[]> = {};
-    for (let i = 0; i < pointsOfInterval.length; i++) {
-      let point = pointsOfInterval[i];
-      if (pointsPerSphere[point.sphereId] === undefined) {
-        pointsPerSphere[point.sphereId] = [];
-      }
-      pointsPerSphere[point.sphereId].push(point);
+    for (let energyMetaData of energyMetaDataSet) {
+      // there is only one entry per stoneId
+      await processor._processAggregations(energyMetaData.sphereId, energyMetaData.stoneId, intervalData, samples, idsToDelete);
     }
 
-    let stoneEnergyPoints = await Dbs.stoneEnergyProcessed.find({where: {or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}]}, fields:{sphereId: true}});
-
-    // get sphereId map from stoneEnergyPoints
-    let sphereIdMap : Record<string, boolean> = {};
-    for (let i = 0; i < stoneEnergyPoints.length; i++) {
-      sphereIdMap[stoneEnergyPoints[i].sphereId] = true;
+    if (samples.length > 0) {
+      // console.log("Storing samples", samples)
+      await Dbs.stoneEnergyProcessed.createAll(samples);
     }
-
-    for (let sphereId in sphereIdMap) {
-      for (let interval in EnergyIntervalDataSet) {
-      console.log("Handling", interval, sphereId);
-      console.time("aggregate");
-      let samples : DataObject<EnergyDataProcessed>[] = [];
-      let idsToDelete : string[] = [];
-
-      // @ts-ignore
-      let timestampOrQuery = {or: []};
-      let mostRecentPoints: Record<string, number> = {};
-      if (pointsPerSphere[sphereId] !== undefined) {
-        // get the most recentpoint for all stones in the pointsOfInterval array
-        for (let point of pointsOfInterval) {
-          if (mostRecentPoints[point.stoneId] === undefined) {
-            mostRecentPoints[point.stoneId] = point.timestamp.valueOf();
-          }
-          else {
-            if (mostRecentPoints[point.stoneId] < point.timestamp.valueOf()) {
-              mostRecentPoints[point.stoneId] = point.timestamp.valueOf();
-            }
-          }
-        }
-
-        // get the minimum timestamp of all the stones to query the sphere with.
-        for (let stoneId in mostRecentPoints) {
-          let mostRecentPoint = mostRecentPoints[stoneId];
-          timestampOrQuery.or.push({and: [{stoneId: stoneId}, {timestamp: {gt: new Date(mostRecentPoint)}}]});
-        }
-      }
-
-      if (timestampOrQuery.or.length === 0) {
-        continue;
-      }
-
-      let processedPoints = await Dbs.stoneEnergyProcessed.find({where: {and: [{sphereId: sphereId}, {or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}]}, timestampOrQuery]}, order: ['timestamp ASC'] });
-      // split points in stoneId arrays
-      let stoneIdArrays : Record<string, any[]> = {};
-      for (let point of processedPoints) {
-        if (stoneIdArrays[point.stoneId] === undefined) {
-          stoneIdArrays[point.stoneId] = [];
-        }
-        stoneIdArrays[point.stoneId].push(point);
-      }
-
-      // process each stoneId array
-      for (let stoneId in stoneIdArrays) {
-        if (stoneIdArrays[stoneId].length < 2) { continue; }
-        processor._processAggregationPoints(sphereId, stoneId, stoneIdArrays[stoneId], intervalData, samples, idsToDelete);
-      }
-
-
-      console.timeEnd("aggregate");
-      if (samples.length > 0) {
-        // console.log("Storing samples", samples)
-        await Dbs.stoneEnergyProcessed.createAll(samples);
-      }
-      if (idsToDelete.length > 0) {
-        // console.log("deleting samples")
-        await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
-      }
+    if (idsToDelete.length > 0) {
+      // console.log("deleting samples")
+      await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
     }
   }
-  aggregating = false;
-
-  console.log("Finished")
 }
 
 

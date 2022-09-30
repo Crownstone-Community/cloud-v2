@@ -36,9 +36,11 @@ import {MessageV2Repository}            from "../../repositories/data/messageV2.
 import {MessageRecipientUserRepository} from "../../repositories/data/message-recipient-user.repository";
 import {MessageDeletedByUserRepository} from "../../repositories/data/message-deletedBy-user.repository";
 import {MessageReadByUserRepository}    from "../../repositories/data/message-readBy-user.repository";
-import {AppRepository} from "../../repositories/data/app.repository";
-import {EnergyDataRepository} from "../../repositories/data/stone-energy-data.repository";
-import {EnergyDataProcessedRepository} from "../../repositories/data/stone-energy-data-processed.repository";
+import {AppRepository}                  from "../../repositories/data/app.repository";
+import {EnergyDataRepository}           from "../../repositories/data/stone-energy-data.repository";
+import {EnergyDataProcessedRepository}  from "../../repositories/data/stone-energy-data-processed.repository";
+import {EnergyMetaDataRepository}       from "../../repositories/data/stone-energy-metadata.repository";
+import {MetaDataRepository}             from "../../repositories/data/metadata.repository";
 
 export interface RepositoryContainer {
   app:                  AppRepository,
@@ -65,6 +67,7 @@ export interface RepositoryContainer {
   message:              MessageRepository,
   messageState:         MessageStateRepository,
   messageUser:          MessageUserRepository,
+  metaData:             MetaDataRepository,
   scene:                SceneRepository,
   sphereAccess:         SphereAccessRepository,
   sphereFeature:        SphereFeatureRepository,
@@ -79,6 +82,7 @@ export interface RepositoryContainer {
   stoneKeys:            StoneKeyRepository,
   stoneEnergy:          EnergyDataRepository;
   stoneEnergyProcessed: EnergyDataProcessedRepository;
+  stoneEnergyMetaData:  EnergyMetaDataRepository;
   toon:                 ToonRepository,
   user:                 UserRepository,
 }
@@ -109,12 +113,13 @@ export let Dbs : RepositoryContainer = {
   message:              null,
   messageState:         null,
   messageUser:          null,
+  metaData:             null,
   scene:                null,
   sphereAccess:         null,
   sphereFeature:        null,
   sphereTrackingNumber: null,
   sphereKeys:           null,
-  sphere :              null,
+  sphere:               null,
   stone:                null,
   stoneAbilityProperty: null,
   stoneAbility:         null,
@@ -123,6 +128,7 @@ export let Dbs : RepositoryContainer = {
   stoneKeys:            null,
   stoneEnergy:          null,
   stoneEnergyProcessed: null,
+  stoneEnergyMetaData:  null,
   toon:                 null,
   user:                 null,
 };
@@ -152,6 +158,7 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.message              = await app.getRepository( MessageRepository );
   Dbs.messageState         = await app.getRepository( MessageStateRepository );
   Dbs.messageUser          = await app.getRepository( MessageUserRepository );
+  Dbs.metaData             = await app.getRepository( MetaDataRepository );
   Dbs.scene                = await app.getRepository( SceneRepository );
   Dbs.sphereAccess         = await app.getRepository( SphereAccessRepository );
   Dbs.sphereFeature        = await app.getRepository( SphereFeatureRepository );
@@ -165,6 +172,7 @@ export async function PopulateRepositoryContainer(app: CrownstoneCloud) {
   Dbs.stoneSwitchState     = await app.getRepository( StoneSwitchStateRepository );
   Dbs.stoneKeys            = await app.getRepository( StoneKeyRepository );
   Dbs.stoneEnergy          = await app.getRepository( EnergyDataRepository );
+  Dbs.stoneEnergyMetaData  = await app.getRepository( EnergyMetaDataRepository );
   Dbs.stoneEnergyProcessed = await app.getRepository( EnergyDataProcessedRepository );
   Dbs.toon                 = await app.getRepository( ToonRepository );
   Dbs.user                 = await app.getRepository( UserRepository );

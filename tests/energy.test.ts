@@ -7,7 +7,7 @@ import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createHub, createLocation, createSphere, createStone, createUser} from "./builders/createUserData";
 import {CloudUtil} from "../src/util/CloudUtil";
 import {auth, getToken, login} from "./rest-helpers/rest.helpers";
-import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
+import {AggegateAllSpheres, EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-collection.model";
 // import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 
@@ -564,7 +564,34 @@ test("check getting of energy data, month, year", async () => {
   await processor.processAggregations(sphere.id);
 
 
+  let range = getRange( new Date(2022,1,8),'month')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
+    expect(body).toHaveLength(29);
+  });
 
+  range = getRange( new Date(2022,1,8),'year')
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+    expect(body).toHaveLength(13);
+  });
+}, 10000);
+
+
+test("check aggregation via main aggregator", async () => {
+  await prepare();
+
+  function getDate(i) : Date {
+    return new Date(2022,-1,1,12*i,40*i,3)
+  }
+
+  let data = [];
+  let datapoints = 800;
+  for (let i = 0; i < datapoints; i++) {
+    get(data, stone, i*10000, getDate(i))
+  }
+
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
+
+  await AggegateAllSpheres();
 
   let range = getRange( new Date(2022,1,8),'month')
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {

@@ -81,6 +81,8 @@ import {EnergyData} from "../../src/models/stoneSubModels/stone-energy-data.mode
 import {EnergyDataProcessed} from "../../src/models/stoneSubModels/stone-energy-data-processed.model";
 import {EnergyDataRepository} from "../../src/repositories/data/stone-energy-data.repository";
 import {EnergyDataProcessedRepository} from "../../src/repositories/data/stone-energy-data-processed.repository";
+import {MetaDataRepository} from "../../src/repositories/data/metadata.repository";
+import {EnergyMetaDataRepository} from "../../src/repositories/data/stone-energy-metadata.repository";
 
 interface DatabaseDump {
   appInstallation          : AppInstallation[],
@@ -148,6 +150,7 @@ function initRepositories() : RepositoryContainer {
   let messageRecipientUser: MessageRecipientUserRepository;
   let messageDeletedByUser: MessageDeletedByUserRepository;
   let messageReadByUser:    MessageReadByUserRepository;
+  let metaData:             MetaDataRepository;
   let scene:                SceneRepository;
   let sphereAccess:         SphereAccessRepository;
   let sphereFeature:        SphereFeatureRepository;
@@ -161,25 +164,26 @@ function initRepositories() : RepositoryContainer {
   let stoneKeys:            StoneKeyRepository;
   let stoneEnergy:          EnergyDataRepository;
   let stoneEnergyProcessed: EnergyDataProcessedRepository;
+  let stoneEnergyMetaData:  EnergyMetaDataRepository;
   let toon:                 ToonRepository;
   let user:                 UserRepository;
   let hub:                  HubRepository;
   let crownstoneToken:      CrownstoneTokenRepository;
 
 
-  let sphereGetter       = () : Promise<SphereRepository>       => { return new Promise((resolve, _) => { resolve(sphere) })}
-  let deviceGetter       = () : Promise<DeviceRepository>       => { return new Promise((resolve, _) => { resolve(device) })}
-  let locationGetter     = () : Promise<LocationRepository>     => { return new Promise((resolve, _) => { resolve(location) })}
-  let stoneGetter        = () : Promise<StoneRepository>        => { return new Promise((resolve, _) => { resolve(stone) })}
-  let abilityGetter      = () : Promise<StoneAbilityRepository> => { return new Promise((resolve, _) => { resolve(stoneAbility) })}
-  let sphereAccessGetter = () : Promise<SphereAccessRepository> => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
-  let messageGetter      = () : Promise<MessageRepository>      => { return new Promise((resolve, _) => { resolve(message) })}
-  let messageV2Getter    = () : Promise<MessageV2Repository>      => { return new Promise((resolve, _) => { resolve(messageV2) })}
+  let sphereGetter       = () : Promise<SphereRepository>           => { return new Promise((resolve, _) => { resolve(sphere) })}
+  let deviceGetter       = () : Promise<DeviceRepository>           => { return new Promise((resolve, _) => { resolve(device) })}
+  let locationGetter     = () : Promise<LocationRepository>         => { return new Promise((resolve, _) => { resolve(location) })}
+  let stoneGetter        = () : Promise<StoneRepository>            => { return new Promise((resolve, _) => { resolve(stone) })}
+  let abilityGetter      = () : Promise<StoneAbilityRepository>     => { return new Promise((resolve, _) => { resolve(stoneAbility) })}
+  let sphereAccessGetter = () : Promise<SphereAccessRepository>     => { return new Promise((resolve, _) => { resolve(sphereAccess) })}
+  let messageGetter      = () : Promise<MessageRepository>          => { return new Promise((resolve, _) => { resolve(message) })}
+  let messageV2Getter    = () : Promise<MessageV2Repository>        => { return new Promise((resolve, _) => { resolve(messageV2) })}
   let stoneSwitchGetter  = () : Promise<StoneSwitchStateRepository> => { return new Promise((resolve, _) => { resolve(stoneSwitchState) })}
-  let fingerprintGetter  = () : Promise<FingerprintRepository>  => { return new Promise((resolve, _) => { resolve(fingerprint) })}
-  let fsFilesGetter      = () : Promise<FsFilesRepository>      => { return new Promise((resolve, _) => { resolve(fsFiles) })}
-  let messageUserGetter  = () : Promise<MessageUserRepository>  => { return new Promise((resolve, _) => { resolve(messageUser) })}
-  let userGetter         = () : Promise<UserRepository>         => { return new Promise((resolve, _) => { resolve(user) })}
+  let fingerprintGetter  = () : Promise<FingerprintRepository>      => { return new Promise((resolve, _) => { resolve(fingerprint) })}
+  let fsFilesGetter      = () : Promise<FsFilesRepository>          => { return new Promise((resolve, _) => { resolve(fsFiles) })}
+  let messageUserGetter  = () : Promise<MessageUserRepository>      => { return new Promise((resolve, _) => { resolve(messageUser) })}
+  let userGetter         = () : Promise<UserRepository>             => { return new Promise((resolve, _) => { resolve(user) })}
 
 
   hub                  = new HubRepository(testdb, sphereGetter, stoneGetter, locationGetter);
@@ -208,6 +212,7 @@ function initRepositories() : RepositoryContainer {
   messageState         = new MessageStateRepository(testdb, sphereGetter, messageGetter, messageGetter, userGetter);
   message              = new MessageRepository(testdb, sphereGetter, userGetter, messageUserGetter, messageState);
   messageV2            = new MessageV2Repository(testdb, sphereGetter, userGetter, messageRecipientUser, messageDeletedByUser, messageReadByUser);
+  metaData             = new MetaDataRepository(testdb);
   scene                = new SceneRepository(testdb, sphereGetter);
   sphereAccess         = new SphereAccessRepository(testdb, sphereGetter);
   sphereFeature        = new SphereFeatureRepository(testdb, sphereGetter);
@@ -220,6 +225,7 @@ function initRepositories() : RepositoryContainer {
   stoneKeys            = new StoneKeyRepository(testdb, sphereGetter, stoneGetter);
   stoneEnergy          = new EnergyDataRepository(testdb, sphereGetter, stoneGetter);
   stoneEnergyProcessed = new EnergyDataProcessedRepository(testdb, sphereGetter, stoneGetter);
+  stoneEnergyMetaData  = new EnergyMetaDataRepository(testdb, sphereGetter, stoneGetter);
   stone                = new StoneRepository(testdb, sphereGetter, locationGetter, stoneSwitchGetter, stoneBehaviour, stoneAbility, stoneSwitchState);
   toon                 = new ToonRepository(testdb, sphereGetter);
 
@@ -251,6 +257,7 @@ function initRepositories() : RepositoryContainer {
     message,
     messageState,
     messageUser,
+    metaData,
     oauthToken,
     scene,
     sphere,
@@ -266,6 +273,7 @@ function initRepositories() : RepositoryContainer {
     stoneSwitchState,
     stoneEnergy,
     stoneEnergyProcessed,
+    stoneEnergyMetaData,
     toon,
     user
   };

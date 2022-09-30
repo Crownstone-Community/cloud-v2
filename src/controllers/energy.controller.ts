@@ -15,6 +15,7 @@ import {EnergyDataProcessor} from "../modules/energy/EnergyProcessor";
 import {EnergyUsageCollection} from "../models/endpointModels/energy-usage-collection.model";
 import {EnergyDataProcessed} from "../models/stoneSubModels/stone-energy-data-processed.model";
 import {Filter} from "@loopback/filter/src/query";
+import {EnergyMetaData} from "../models/stoneSubModels/stone-energy-metadata.model";
 
 const FOREVER = new Date('2100-01-01 00:00:00');
 
@@ -117,17 +118,43 @@ export class Energy extends SphereItem {
     // create map from array
     let stoneIds : Record<string, true> = {};
     for (let id of stoneIdArray) { stoneIds[id] = true; }
+    let stoneIdsThatHaveData : Record<string, true> = {};
 
     let pointsToStore = [];
     for (let usage of energyUsage) {
       if (stoneIds[usage.stoneId] !== true) { continue; }
       pointsToStore.push({stoneId: usage.stoneId, sphereId: sphereId, timestamp: usage.t, energyUsage: usage.energy});
+      stoneIdsThatHaveData[usage.stoneId] = true;
     }
 
     await Dbs.stoneEnergy.createAll(pointsToStore);
 
     let processor = new EnergyDataProcessor();
     await processor.processMeasurements(sphereId);
+
+
+    // update metadata fields
+    if (pointsToStore.length > 0) {
+      let result = await Dbs.stoneEnergyMetaData.updateAll({updatedAt: new Date()}, {stoneId: {inq: stoneIdArray}});
+      let stoneIdsThatHaveDataArray = Object.keys(stoneIdsThatHaveData);
+      // check if we have metadata for all stonesIds
+      if (result.count !== stoneIdsThatHaveDataArray.length) {
+        let metadata = await Dbs.stoneEnergyMetaData.find({where: {stoneId: {inq: stoneIdArray}}, fields:{stoneId: true}});
+        let metaDataIdMap : Record<string, EnergyMetaData> = {};
+        for (let meta of metadata) {
+          metaDataIdMap[meta.stoneId] = meta;
+        }
+        let metadataToStore = [];
+        for (let stoneId of stoneIdArray) {
+          if (metaDataIdMap[stoneId] === undefined) {
+            metadataToStore.push({stoneId: stoneId, sphereId: sphereId, updatedAt: new Date()});
+          }
+        }
+        if (metadataToStore.length > 0) {
+          await Dbs.stoneEnergyMetaData.createAll(metadataToStore);
+        }
+      }
+    }
 
     return {message: "Energy usage stored", count: pointsToStore.length};
   }
