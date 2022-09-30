@@ -109,7 +109,7 @@ export class Energy extends SphereItem {
   async collectEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id') sphereId: string,
-    @requestBody.array(getModelSchemaRef(EnergyUsageCollection)) energyUsage: EnergyUsageCollection[]
+    @requestBody.array(getModelSchemaRef(EnergyUsageCollection), {required: true}) energyUsage: EnergyUsageCollection[]
   ): Promise<storeReply> {
     let currentState = await Dbs.sphereFeature.findOne({where:{name: sphereFeatures.ENERGY_COLLECTION_PERMISSION, sphereId: sphereId}});
     if (!currentState?.enabled) { throw new HttpErrors.Forbidden("Energy collection is not enabled for this sphere."); }
@@ -167,12 +167,10 @@ export class Energy extends SphereItem {
   async getEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')       sphereId: string,
-    @param.query.dateTime('start') start:    Date,
-    @param.query.dateTime('end')   end:      Date,
-    @param.query.string('range')   range:    'day' | 'week' | 'month' | 'year',
+    @param.query.dateTime('start', {required:true}) start:    Date,
+    @param.query.dateTime('end',   {required:true})   end:      Date,
+    @param.query.string('range',   {required:true})   range:    'day' | 'week' | 'month' | 'year',
   ): Promise<EnergyDataProcessed[]> {
-    if (start === undefined) { throw new HttpErrors.BadRequest("start is required as ISO string like this: " + new Date().toISOString()); }
-    if (end === undefined)   { throw new HttpErrors.BadRequest("end is required as ISO string like this: " + new Date().toISOString()); }
 
     // just in case the values are not date objects but strings or timestamps.
     start = new Date(start);
@@ -296,8 +294,8 @@ export class Energy extends SphereItem {
   async deleteEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')    stoneId: string,
-    @param.query.dateTime('start')   fromDate: Date,
-    @param.query.dateTime('end')  untilDate: Date,
+    @param.query.dateTime('start', {required: true})   fromDate: Date,
+    @param.query.dateTime('end', {required: true})  untilDate: Date,
   ): Promise<Count> {
 
     let count          = await Dbs.stoneEnergy.deleteAll({stoneId: stoneId, and: [{timestamp: {gte: fromDate}}, {timestamp: {lt: untilDate}}]});
