@@ -171,6 +171,8 @@ export class Energy extends SphereItem {
     @param.query.dateTime('end')   end:      Date,
     @param.query.string('range')   range:    'day' | 'week' | 'month' | 'year',
   ): Promise<EnergyDataProcessed[]> {
+    if (start === undefined) { throw new HttpErrors.BadRequest("start is required as ISO string like this: " + new Date().toISOString()); }
+    if (end === undefined)   { throw new HttpErrors.BadRequest("end is required as ISO string like this: " + new Date().toISOString()); }
 
     // just in case the values are not date objects but strings or timestamps.
     start = new Date(start);
