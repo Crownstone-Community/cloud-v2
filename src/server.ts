@@ -8,6 +8,7 @@ import {CrownstoneCloud} from "./application";
 import {SSEManager} from "./modules/sse/SSEManager";
 import {DataSanitizer} from "./modules/dataManagement/Sanitizer";
 import {AggegateAllSpheres} from "./modules/energy/EnergyProcessor";
+import {DataGarbageCollection} from "./modules/dataManagement/DataGarbageCollection";
 
 export {ApplicationConfig};
 
@@ -36,12 +37,27 @@ export class ExpressServer {
     this.app.get('/aggregate-energy-data', async function (_req: Request, res: Response) {
       if (_req.query.token === process.env.AGGREGATION_TOKEN) {
         res.write("Processing...\n")
-        let result = await AggegateAllSpheres();
+
+        let force = _req.query.force === "true";
+        if (force) {
+          res.write("Forcing aggregation...\n")
+        }
+        let result = await AggegateAllSpheres(force);
+        res.write("Done\n")
+        return res.end(JSON.stringify(result, null, 2));
+      }
+      res.end("INVALID_TOKEN");
+    });
+    this.app.get('/garbage-collect-data', async function (_req: Request, res: Response) {
+      if (_req.query.token === process.env.AGGREGATION_TOKEN) {
+        res.write("Processing...\n")
+        let result = await DataGarbageCollection();
         res.write("Removed the following data:\n")
         return res.end(JSON.stringify(result, null, 2));
       }
       res.end("INVALID_TOKEN");
     });
+
     // Custom Express routes
     this.app.get('/', function (_req: Request, res: Response) {
       res.sendFile(path.join(__dirname, '../public/index.html'));

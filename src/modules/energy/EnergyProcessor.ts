@@ -5,6 +5,8 @@ import {EnergyIntervalDataSet} from "./IntervalData";
 import {DataObject} from "@loopback/repository";
 import {EnergyDataProcessed} from "../../models/stoneSubModels/stone-energy-data-processed.model";
 import {Energy} from "../../controllers/energy.controller";
+import {PerformanceHandler} from "../dataManagement/PerformanceHandler";
+
 
 const log = Logger(__filename);
 
@@ -44,6 +46,7 @@ export class EnergyDataProcessor {
 
     let count = 0;
     while (iterationRequired) {
+
       let energyData = await Dbs.stoneEnergy.find({
         where: {checked: false, sphereId: sphereId},
         limit: iterationSize,
@@ -166,10 +169,15 @@ export class EnergyDataProcessor {
     stoneId: stoneId,
     intervalData: EnergyIntervalData,
     samples: DataObject<EnergyDataProcessed>[],
-    idsToDelete: string[]
+    idsToDelete: string[],
+    monitor: PerformanceHandler = null
   ) {
     // find the most recent point of this interval level. We will start from there.
+    monitor?.start("findOne where stoneId interval, order timestamp DESC", 'findOne-query');
     let lastPoint = await Dbs.stoneEnergyProcessed.findOne({where: {stoneId: stoneId, interval: intervalData.targetInterval}, order: ['timestamp DESC']});
+    monitor?.end();
+
+
     log.debug("Last point to start processing ",intervalData.targetInterval,"from:", lastPoint)
     let fromDate = lastPoint && lastPoint.timestamp || new Date(0);
 
@@ -177,12 +185,16 @@ export class EnergyDataProcessor {
     let iterationSize     = 1000;
 
     while (iterationRequired) {
+      monitor?.start("find where stoneId interval and fragment, timestamp. order timestamp ASC", 'find-query');
       let processedPoints = await Dbs.stoneEnergyProcessed.find({where: {stoneId: stoneId, or: [{interval: intervalData.basedOnInterval}, {interval: 'fragment'}], timestamp: {gt: fromDate}}, limit: iterationSize, order: ['timestamp ASC'] });
+      monitor?.end();
       iterationRequired = processedPoints.length === iterationSize;
 
       log.debug("Aggregating stone", stoneId, "at", intervalData.targetInterval, "based on", intervalData.basedOnInterval, "from", fromDate, ":", processedPoints.length);
 
+      monitor?.start('_processAggregationPoints');
       fromDate = this._processAggregationPoints(sphereId, stoneId, processedPoints, intervalData, samples, idsToDelete);
+      monitor?.end();
       if (fromDate === null) {
         break;
       }
@@ -195,7 +207,7 @@ export class EnergyDataProcessor {
     processedPoints: EnergyDataProcessed[],
     intervalData: EnergyIntervalData,
     samples: DataObject<EnergyDataProcessed>[],
-    idsToDelete: string[]
+    idsToDelete: string[],
   ) : Date {
     let previousPoint : EnergyDataProcessed | null = null;
 
@@ -256,7 +268,7 @@ export class EnergyDataProcessor {
   }
 }
 
-export async function processPair(
+export function processPair(
   previousPoint: EnergyData,
   nextPoint: EnergyData,
   intervalData: IntervalDescription,
@@ -416,7 +428,7 @@ function processDataPair(
 
 
 export let AGGREGATING = false;
-export async function AggegateAllSpheres() {
+export async function AggegateAllSpheres(force = false) {
   if (AGGREGATING) {
     console.error("Already aggregating, skipping this call.");
     return;
@@ -443,6 +455,11 @@ async function _aggregateAllSpheres(force = false) {
     fromTime = metaData.timestamp;
   }
 
+
+
+  // let monitor : PerformanceHandler = new PerformanceHandler()
+  let monitor : PerformanceHandler = null; // new PerformanceHandler()
+
   console.log("Aggregating from", fromTime);
 
   // all stones that have new data since the last aggregation.
@@ -458,16 +475,22 @@ async function _aggregateAllSpheres(force = false) {
 
     for (let energyMetaData of energyMetaDataSet) {
       // there is only one entry per stoneId
-      await processor._processAggregations(energyMetaData.sphereId, energyMetaData.stoneId, intervalData, samples, idsToDelete);
+      monitor?.start(`Aggregate ${interval} ${energyMetaData.sphereId} ${energyMetaData.stoneId}`)
+      await processor._processAggregations(energyMetaData.sphereId, energyMetaData.stoneId, intervalData, samples, idsToDelete, monitor);
+      monitor?.end();
     }
 
     if (samples.length > 0) {
       // console.log("Storing samples", samples)
+      monitor?.start(`Storing samples for ${interval}: ${samples.length}`,'create-query');
       await Dbs.stoneEnergyProcessed.createAll(samples);
+      monitor?.end();
     }
     if (idsToDelete.length > 0) {
       // console.log("deleting samples")
+      monitor?.start(`Deleting samples for ${interval}: ${samples.length}`, 'delete-query');
       await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}});
+      monitor?.end();
     }
   }
 
@@ -478,6 +501,9 @@ async function _aggregateAllSpheres(force = false) {
   else {
     await Dbs.metaData.create({type:"aggregationTime", timestamp: new Date()});
   }
+
+  console.log(JSON.stringify(monitor?.getAverageTimes('query'), null, 2));
+  monitor?.destroy()
 }
 
 
