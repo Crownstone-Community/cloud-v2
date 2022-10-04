@@ -6,6 +6,7 @@ import {DataObject} from "@loopback/repository";
 import {EnergyDataProcessed} from "../../models/stoneSubModels/stone-energy-data-processed.model";
 import {Energy} from "../../controllers/energy.controller";
 import {PerformanceHandler} from "../dataManagement/PerformanceHandler";
+import {HttpErrors} from "@loopback/rest";
 
 
 const log = Logger(__filename);
@@ -135,6 +136,10 @@ export class EnergyDataProcessor {
 
 
   async processAggregations(sphereId: string) {
+    let sphereTimezone = await Dbs.sphere.findById(sphereId, {fields: {timezone:true}});
+    if (!sphereTimezone.timezone) { throw new HttpErrors.FailedDependency("No timezone is defined for this sphere. Enter the sphere to have it set automatically, or restart your app to have it do so (App version 6.0.0 and higher)."); }
+
+
     let stoneIdArray = (await Dbs.stone.find({where: {sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; });
     // create map from array
     for (let aggregationInterval in EnergyIntervalDataSet) {
@@ -142,22 +147,25 @@ export class EnergyDataProcessor {
       let idsToDelete : string[] = [];
       for (let stoneId of stoneIdArray) {
           let intervalData = EnergyIntervalDataSet[(aggregationInterval as string)];
-          await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete);
+          await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete, sphereTimezone.timezone);
       }
+
+      console.log(samples.length, idsToDelete.length);
+
       if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
       if (idsToDelete.length > 0) { await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}}); }
     }
   }
 
 
-  async processStoneAggregations(sphereId: string, stoneId: string, intervalData: EnergyIntervalData) {
+  async processStoneAggregations(sphereId: string, stoneId: string, intervalData: EnergyIntervalData, timezone: timezone) {
     log.debug("Start processing Aggregations...")
 
     let samples : DataObject<EnergyDataProcessed>[] = [];
     let idsToDelete : string[] = [];
 
     // @ts-ignore
-    await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete);
+    await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete, timezone);
 
     if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
     if (idsToDelete.length > 0) { await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}}); }
@@ -170,8 +178,14 @@ export class EnergyDataProcessor {
     intervalData: EnergyIntervalData,
     samples: DataObject<EnergyDataProcessed>[],
     idsToDelete: string[],
+    timezone: timezone,
     monitor: PerformanceHandler = null
   ) {
+    if (!timezone) {
+      console.log("Could not aggregate sphere", sphereId, "stone", stoneId, "because timezone is not set.");
+      return;
+    }
+
     // find the most recent point of this interval level. We will start from there.
     monitor?.start("findOne where stoneId interval, order timestamp DESC", 'findOne-query');
     let lastPoint = await Dbs.stoneEnergyProcessed.findOne({where: {stoneId: stoneId, interval: intervalData.targetInterval}, order: ['timestamp DESC']});
@@ -193,7 +207,7 @@ export class EnergyDataProcessor {
       log.debug("Aggregating stone", stoneId, "at", intervalData.targetInterval, "based on", intervalData.basedOnInterval, "from", fromDate, ":", processedPoints.length);
 
       monitor?.start('_processAggregationPoints');
-      fromDate = this._processAggregationPoints(sphereId, stoneId, processedPoints, intervalData, samples, idsToDelete);
+      fromDate = this._processAggregationPoints(sphereId, stoneId, processedPoints, intervalData, samples, idsToDelete, timezone);
       monitor?.end();
       if (fromDate === null) {
         break;
@@ -208,13 +222,14 @@ export class EnergyDataProcessor {
     intervalData: EnergyIntervalData,
     samples: DataObject<EnergyDataProcessed>[],
     idsToDelete: string[],
+    timezone: timezone
   ) : Date {
     let previousPoint : EnergyDataProcessed | null = null;
 
     for (let i = 0; i < processedPoints.length; i++) {
       let point = processedPoints[i];
       let timestamp  = new Date(point.timestamp).valueOf();
-      let isONsamplePoint = intervalData.isOnSamplePoint(timestamp);
+      let isONsamplePoint = intervalData.isOnSamplePoint(timestamp, timezone);
       // console.log(new Date(timestamp), isONsamplePoint, intervalData.targetInterval, intervalData.basedOnInterval);
 
       if (isONsamplePoint) {
@@ -224,8 +239,8 @@ export class EnergyDataProcessor {
         let usedPreviousPoint = false;
         let previousTimestamp = new Date(previousPoint.timestamp).valueOf();
 
-        let previousSamplePointFromCurrent = intervalData.getPreviousSamplePoint(timestamp);
-        let previousSamplePointFromLast    = intervalData.getPreviousSamplePoint(previousTimestamp);
+        let previousSamplePointFromCurrent = intervalData.getPreviousSamplePoint(timestamp, timezone);
+        let previousSamplePointFromLast    = intervalData.getPreviousSamplePoint(previousTimestamp, timezone);
 
         // this means these items fall in the same bucket
         if (previousSamplePointFromCurrent == previousSamplePointFromLast) {
@@ -239,11 +254,11 @@ export class EnergyDataProcessor {
           let dt = timestamp - previousTimestamp;
           let dJ = point.energyUsage - previousPoint.energyUsage;
           let dJms = dJ / dt;
-          let elapsedSamplePoints = intervalData.getNumberOfSamplePointsBetween(previousSamplePointFromLast, previousSamplePointFromCurrent);
+          let elapsedSamplePoints = intervalData.getNumberOfSamplePointsBetween(previousSamplePointFromLast, previousSamplePointFromCurrent, timezone);
           // allow interpolation.
           if (elapsedSamplePoints <= intervalData.interpolationThreshold) {
             for (let j = 0; j < elapsedSamplePoints; j++ ) {
-              let samplePoint = intervalData.getNthSamplePoint(previousSamplePointFromLast, (1+j));
+              let samplePoint = intervalData.getNthSamplePoint(previousSamplePointFromLast, (1+j), timezone);
               let dt = samplePoint - previousTimestamp;
               let energyAtPoint = previousPoint.energyUsage + dt*dJms;
               samples.push({stoneId: stoneId, sphereId: sphereId, energyUsage: Math.round(energyAtPoint), timestamp: new Date(samplePoint), interval: intervalData.targetInterval});
@@ -464,6 +479,15 @@ async function _aggregateAllSpheres(force = false) {
   let energyMetaDataSet = await Dbs.stoneEnergyMetaData.find({where:{updatedAt: {gt: fromTime}}}).catch((e) => {log.error("Error getting metadata", e);});
   if (!energyMetaDataSet || energyMetaDataSet.length === 0) { return; }
 
+  // get unique sphereIds from the energyMetaDataSet to get their timezones
+  let sphereIds = energyMetaDataSet.map((metaData) => { return metaData.sphereId; });
+  let spheres = await Dbs.sphere.find({where:{id: {inq: sphereIds}}, fields:{id:true, timezone: true}}).catch((e) => {log.error("Error getting spheres", e);});
+  let timezoneMap : Record<sphereId, timezone> = {};
+  if (!spheres) { return; }
+  for (let sphere of spheres) {
+    timezoneMap[sphere.id] = sphere.timezone;
+  }
+
   let processor = new EnergyDataProcessor();
   for (let interval in EnergyIntervalDataSet) {
     let intervalData = EnergyIntervalDataSet[interval];
@@ -474,7 +498,7 @@ async function _aggregateAllSpheres(force = false) {
     for (let energyMetaData of energyMetaDataSet) {
       // there is only one entry per stoneId
       monitor?.start(`Aggregate ${interval} ${energyMetaData.sphereId} ${energyMetaData.stoneId}`)
-      await processor._processAggregations(energyMetaData.sphereId, energyMetaData.stoneId, intervalData, samples, idsToDelete, monitor);
+      await processor._processAggregations(energyMetaData.sphereId, energyMetaData.stoneId, intervalData, samples, idsToDelete, timezoneMap[energyMetaData.sphereId], monitor);
       monitor?.end();
     }
 

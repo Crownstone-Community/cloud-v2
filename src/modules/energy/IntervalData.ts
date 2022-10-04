@@ -1,28 +1,35 @@
+
 let MINUTES_MS = 60*1000;
 let HOUR_MS    = 60*MINUTES_MS;
 let DAY_MS     = 24*HOUR_MS;
 let WEEK_MS    = 7*DAY_MS;
 let MONTH_MS   = 28*DAY_MS;
 
+var moment = require('moment-timezone');
+
 function getMinuteData(minuteCount : number, targetInterval: EnergyInterval, basedOnInterval: EnergyInterval, threshold: number) : EnergyIntervalData {
   return {
     interpolationThreshold: threshold,
     targetInterval, basedOnInterval,
-    isOnSamplePoint:        function(timestamp: number) : boolean {
-      let date = new Date(timestamp);
-      let samplePoint = date.setMinutes(date.getMinutes() - (date.getMinutes() % minuteCount),0,0);
+    isOnSamplePoint:        function(timestamp: timestamp, timezone: timezone) : boolean {
+      let date = moment(timestamp).tz(timezone);
+      let samplePoint = date.minutes(date.minutes() - (date.minutes() % minuteCount)).seconds(0).milliseconds(0).valueOf();
       return samplePoint === timestamp;
     },
-    getPreviousSamplePoint: function(timestamp: number) : number  {
-      let date = new Date(timestamp);
-      let samplePoint = date.setMinutes(date.getMinutes() - (date.getMinutes() % minuteCount),0,0);
+    getPreviousSamplePoint: function(timestamp: timestamp, timezone: timezone) : number  {
+      let date = moment(timestamp).tz(timezone);
+      let samplePoint = date.minutes((date.minutes() - (date.minutes() % minuteCount))).seconds(0).milliseconds(0).valueOf();
       return samplePoint;
     },
-    getNthSamplePoint(fromSamplePoint: number, n: number) : number {
-      return fromSamplePoint + n*MINUTES_MS*minuteCount;
+    getNthSamplePoint(fromSamplePoint: timestamp, n: number, timezone: timezone) : number {
+      let date = moment(fromSamplePoint).tz(timezone);
+      return date.add(n*minuteCount, 'minutes').valueOf();
     },
-    getNumberOfSamplePointsBetween(fromSamplePoint: number, toSamplePoint: number) : number {
-      return Math.floor((toSamplePoint - fromSamplePoint) / (MINUTES_MS*minuteCount));
+    getNumberOfSamplePointsBetween(fromSamplePoint: timestamp, toSamplePoint: timestamp, timezone: timezone) : number {
+      let fromDate = moment(fromSamplePoint).tz(timezone);
+      let toDate = moment(toSamplePoint).tz(timezone);
+      let diff = toDate.diff(fromDate, "minutes");
+      return Math.floor(diff/minuteCount);
     }
   }
 }
@@ -32,21 +39,26 @@ function getDayData(targetInterval: EnergyInterval, basedOnInterval: EnergyInter
   return {
     interpolationThreshold: threshold,
     targetInterval, basedOnInterval,
-    isOnSamplePoint: function(timestamp: number) : boolean {
-      let date = new Date(timestamp);
-      let samplePoint = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-      return samplePoint === timestamp;
+    isOnSamplePoint: function(timestamp: timestamp, timezone: timezone) : boolean {
+      let date = moment(timestamp).tz(timezone);
+      // get midnight of the moment date
+      let midnight = date.hours(0).minutes(0).seconds(0).milliseconds(0).valueOf();
+      return midnight === timestamp;
     },
-    getPreviousSamplePoint: function(timestamp: number) : number  {
-      let date = new Date(timestamp);
-      let midnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    getPreviousSamplePoint: function(timestamp: timestamp, timezone: timezone) : number  {
+      let date = moment(timestamp).tz(timezone);
+      let midnight = date.hours(0).minutes(0).seconds(0).milliseconds(0).valueOf();
       return midnight;
     },
-    getNthSamplePoint(fromSamplePoint: number, n: number) : number {
-      return fromSamplePoint + n*DAY_MS;
+    getNthSamplePoint(fromSamplePoint: timestamp, n: number, timezone: timezone) : number {
+      let date = moment(fromSamplePoint).tz(timezone);
+      return date.add(n, 'days').valueOf();
     },
-    getNumberOfSamplePointsBetween(fromSamplePoint: number, toSamplePoint: number) : number {
-      return Math.floor((toSamplePoint - fromSamplePoint) / DAY_MS);
+    getNumberOfSamplePointsBetween(fromSamplePoint: timestamp, toSamplePoint: timestamp, timezone: timezone) : number {
+      let fromDate = moment(fromSamplePoint).tz(timezone);
+      let toDate = moment(toSamplePoint).tz(timezone);
+      let diff = toDate.diff(fromDate, 'days');
+      return diff;
     }
   }
 }
@@ -56,13 +68,13 @@ function getDayData(targetInterval: EnergyInterval, basedOnInterval: EnergyInter
 //     interpolationThreshold: threshold,
 //     targetInterval, basedOnInterval,
 //     // gets the upcoming sample point. If the timestamp is on a monday, it will return the provided timestamp.
-//     isOnSamplePoint: function(timestamp: number) : boolean {
+//     isOnSamplePoint: function(timestamp: timestamp) : boolean {
 //       let minutes = new Date(timestamp).getMinutes();
 //       let hours   = new Date(timestamp).getHours();
 //       let day     = new Date(timestamp).getDay(); // 0 = sunday
 //       return minutes === 0 && hours === 0 && day === 1; // 00:00 on Monday morning
 //     },
-//     getPreviousSamplePoint: function(timestamp: number) : number  {
+//     getPreviousSamplePoint: function(timestamp: timestamp) : number  {
 //       let minutes = new Date(timestamp).getMinutes();
 //       let hours   = new Date(timestamp).getHours();
 //       let day     = new Date(timestamp).getDay(); // 0 = sunday
@@ -84,28 +96,28 @@ function getMonthData(targetInterval: EnergyInterval, basedOnInterval: EnergyInt
     interpolationThreshold: threshold,
     targetInterval,
     basedOnInterval,
-    isOnSamplePoint: function(timestamp: number) : boolean {
-      let date = new Date(timestamp);
-      let samplePoint = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
-      return timestamp === samplePoint;
+    isOnSamplePoint: function(timestamp: timestamp, timezone: timezone) : boolean {
+      let date = moment(timestamp).tz(timezone);
+      let firstOfMonth = date.date(1).hour(0).minute(0).second(0).millisecond(0).valueOf();
+      return timestamp === firstOfMonth;
     },
-    getPreviousSamplePoint: function(timestamp: number) : number  {
+    getPreviousSamplePoint: function(timestamp: timestamp, timezone: timezone) : number  {
       // get the first of the previous month of the timestamp
-      let date = new Date(timestamp);
-      let firstOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+      let date = moment(timestamp).tz(timezone);
+      let firstOfMonth = date.date(1).hour(0).minute(0).second(0).millisecond(0).valueOf();
       return firstOfMonth;
     },
-    getNthSamplePoint(fromSamplePoint: number, n: number) : number {
-      let date = new Date(fromSamplePoint);
-      let firstOfMonth = new Date(date.getFullYear(), date.getMonth()+n, 1).getTime();
+    getNthSamplePoint(fromSamplePoint: timestamp, n: number, timezone: timezone) : number {
+      let date = moment(fromSamplePoint).tz(timezone);
+      let firstOfMonth = date.month(date.month() + n).date(1).hour(0).minute(0).second(0).millisecond(0).valueOf();
       return firstOfMonth;
     },
-    getNumberOfSamplePointsBetween(fromSamplePoint: number, toSamplePoint: number) : number {
-      let dateFrom = new Date(fromSamplePoint);
-      let dateTo   = new Date(toSamplePoint);
-      let yearsDifference = (dateTo.getFullYear() - dateFrom.getFullYear());
-      let monthsDifference = (dateTo.getMonth() - dateFrom.getMonth());
-      return yearsDifference*12 + monthsDifference;
+    getNumberOfSamplePointsBetween(fromSamplePoint: timestamp, toSamplePoint: timestamp, timezone: timezone) : number {
+      let fromDate = moment(fromSamplePoint).tz(timezone);
+      let toDate = moment(toSamplePoint).tz(timezone);
+
+      let diff = toDate.diff(fromDate, 'months');
+      return diff;
     }
   }
 }

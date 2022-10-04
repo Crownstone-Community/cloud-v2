@@ -7,8 +7,6 @@ import {del, param, post, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
-import {SyncHandler} from "../modules/sync/SyncHandler";
-import {SyncRequestResponse} from "../declarations/syncTypes";
 import {authorize} from "@loopback/authorization";
 import {SphereItem} from "./support/SphereItem";
 import {Authorization} from "../security/authorization-strategies/authorization-sphere";

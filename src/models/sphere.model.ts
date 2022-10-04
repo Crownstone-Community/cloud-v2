@@ -8,7 +8,6 @@ import {User} from "./user.model";
 import {Location} from "./location.model";
 import {Stone} from "./stone.model";
 import {Scene} from "./scene.model";
-import {Message} from "./message.model";
 import {Hub} from "./hub.model";
 import {SphereAccess} from "./sphere-access.model";
 import {SphereTrackingNumber} from "./sphere-tracking-number.model";
@@ -38,6 +37,9 @@ export class Sphere extends AddTimestamps(BaseEntity) {
 
   @property()
   gpsLocation: GeoPoint;
+
+  @property({type: 'string'})
+  timezone: string;
 
   @hasMany(() => Location, {keyTo: 'sphereId'})
   locations: Location[];

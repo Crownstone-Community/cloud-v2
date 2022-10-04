@@ -163,6 +163,8 @@ interface idMap {[ids: string]:string}
 interface accessMap {admin?: boolean, member?:boolean, guest?:boolean}
 
 type sphereId          = string;
+type timezone          = string;
+type timestamp         = number;
 type locationId        = string;
 type stoneId           = string;
 type sceneId           = string;

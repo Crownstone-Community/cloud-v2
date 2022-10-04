@@ -115,6 +115,10 @@ export class Energy extends SphereItem {
     let currentState = await Dbs.sphereFeature.findOne({where:{name: sphereFeatures.ENERGY_COLLECTION_PERMISSION, sphereId: sphereId}});
     if (!currentState?.enabled) { throw new HttpErrors.Forbidden("Energy collection is not enabled for this sphere."); }
 
+    let sphereTimezone = await this.sphereRepo.findById(sphereId, {fields: {timezone:true}});
+    if (!sphereTimezone.timezone) { throw new HttpErrors.FailedDependency("No timezone is defined for this sphere. Enter the sphere to have it set automatically, or restart your app to have it do so (App version 6.0.0 and higher)."); }
+
+
     let stoneIdArray = (await Dbs.stone.find({where: {sphereId: sphereId}, fields: {id: true}})).map((stone) => { return stone.id; });
     // create map from array
     let stoneIds : Record<string, true> = {};
@@ -172,6 +176,8 @@ export class Energy extends SphereItem {
     @param.query.dateTime('end',   {required:true})   end:      Date,
     @param.query.string('range',   {required:true})   range:    'day' | 'week' | 'month' | 'year',
   ): Promise<EnergyDataProcessed[]> {
+    let sphereTimezone = await this.sphereRepo.findById(sphereId, {fields: {timezone:true}});
+    if (!sphereTimezone.timezone) { throw new HttpErrors.FailedDependency("No timezone is defined for this sphere. Enter the sphere to have it set automatically, or restart your app to have it do so (App version 6.0.0 and higher)."); }
 
     // just in case the values are not date objects but strings or timestamps.
     start = new Date(start);

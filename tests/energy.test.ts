@@ -9,6 +9,7 @@ import {CloudUtil} from "../src/util/CloudUtil";
 import {auth, getToken, login} from "./rest-helpers/rest.helpers";
 import {AggegateAllSpheres, EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-collection.model";
+import {EnergyIntervalDataSet} from "../src/modules/energy/IntervalData";
 // import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 
 let app    : CrownstoneCloud;
@@ -456,6 +457,37 @@ test("check correct handling of energyData without datapoints on intervals 2", a
   expect(await dbs.stoneEnergy.find()).toHaveLength(1);
   expect(await dbs.stoneEnergyProcessed.find()).toHaveLength(2);
 });
+
+
+test("Energy interval calculation", async () => {
+  let timezone = "Europe/Amsterdam";
+
+  let hour = EnergyIntervalDataSet['1h'];
+  expect(hour.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
+  expect(hour.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
+  expect(hour.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
+  expect(hour.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,1,1,5,0,0,0).valueOf());
+  expect(hour.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,1,1,5,0,0,0).valueOf(), timezone)).toBe(5);
+
+  let day   = EnergyIntervalDataSet['1d'];
+  expect(day.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
+  expect(day.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
+  expect(day.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
+  expect(day.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,1,6,0,0,0,0).valueOf());
+  expect(day.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,1,6,0,0,0,0).valueOf(), timezone)).toBe(5);
+
+
+  let month = EnergyIntervalDataSet['1M'];
+  expect(month.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
+  expect(month.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
+  expect(month.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
+  expect(month.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,6,1,0,0,0,0).valueOf());
+  expect(month.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,6,1,0,0,0,0).valueOf(), timezone)).toBe(5);
+
+
+})
+
+
 
 
 test("Aggregation of energy usage: month", async () => {
