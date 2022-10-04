@@ -67,14 +67,14 @@ export class Localization extends SphereItem {
   }
 
 
-  // @get('/DEV_fingerprints/')
-  // @authenticate(SecurityTypes.accessToken)
-  // async getFingerprints(
-  //   @inject(SecurityBindings.USER) userProfile : UserProfileDescription
-  // ): Promise<FingerprintV2[]> {
-  //   let sphereIds = await SphereAccessUtil.getSphereIdsForUser(userProfile[securityId], "guest");
-  //   let result    = await Dbs.fingerprintV2.find({where:{sphereId: {inq: sphereIds}}});
-  //   return result;
-  // }
+  @get('/fingerprints/')
+  @authenticate(SecurityTypes.accessToken)
+  async getFingerprints(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription
+  ): Promise<FingerprintV2[]> {
+    let sphereIds = await SphereAccessUtil.getSphereIdsForUser(userProfile[securityId], "guest");
+    let result    = await Dbs.fingerprintV2.find({where:{sphereId: {inq: sphereIds}}});
+    return result;
+  }
 
 }
