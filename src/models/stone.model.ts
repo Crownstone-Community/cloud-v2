@@ -59,6 +59,9 @@ export class Stone extends AddTimestamps(BaseEntity) {
   @belongsTo(() => Location)
   locationId: string;
 
+  @property({type: 'string'})
+  currentSwitchStateId: string;
+
   @hasOne(() => StoneSwitchState, {name: 'currentSwitchState', keyTo:'stoneId', keyFrom:'currentSwitchStateId'})
   currentSwitchState: StoneSwitchState;
 

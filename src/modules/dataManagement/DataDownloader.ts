@@ -11,6 +11,7 @@ var AdmZip = require("adm-zip");
 const THROTTLE_TIME = 5*60*1000; // 5 minutes;
 const SESSION_LIMIT = 5;         // max consecutive sessions to download user data.
 
+// this should be in a REDIS database.... for now it works since we have 1 instance.
 export class UserDataManagementThrottleClass {
 
   userIds  : Record<string, number> = {};

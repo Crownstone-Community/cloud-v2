@@ -455,8 +455,6 @@ async function _aggregateAllSpheres(force = false) {
     fromTime = metaData.timestamp;
   }
 
-
-
   // let monitor : PerformanceHandler = new PerformanceHandler()
   let monitor : PerformanceHandler = null; // new PerformanceHandler()
 
