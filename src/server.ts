@@ -63,6 +63,10 @@ export class ExpressServer {
       res.sendFile(path.join(__dirname, '../public/index.html'));
     });
 
+    this.app.get('/hi', function (_req: Request, res: Response) {
+      res.end(JSON.stringify({hi: "v2"}));
+    });
+
     // Custom Express routes
     this.app.get('/user-data', function (_req: Request, res: Response) {
       res.sendFile(path.join(__dirname, '../public/user-data.html'));
