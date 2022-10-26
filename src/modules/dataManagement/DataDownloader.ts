@@ -100,9 +100,8 @@ export class DataDownloader {
 
     try {
       let user = await Dbs.user.findById(this.userId);
-
       // download the user data
-      this.addJson(user,'user');
+      this.addJson(user,'user', [],['password', 'earlyAccessLevel']);
 
       // get the user profile picture
       await this.addFile(user.profilePicId, 'user profile picture');
@@ -127,7 +126,8 @@ export class DataDownloader {
       let fingerprints = await find(Dbs.fingerprint,{where: {id: {inq: fingerprintIds}}});
       this.addJson(fingerprints,'fingerprints');
 
-      // download spehres (where member or admin)
+
+      // download spheres (where member or admin)
       let spheresWithAccess : SphereAccess[] = await find(Dbs.sphereAccess,{
         where: {
           and: [
@@ -138,6 +138,7 @@ export class DataDownloader {
       let roles     = spheresWithAccess.map((data) => { return data.role; })
       let spheres   = await find(Dbs.sphere,{where:{id:{inq: sphereIds}}});
 
+
       // get sphere contents
       for (let i = 0;  i < spheres.length; i++) {
         let sphere       = spheres[i];
@@ -145,6 +146,11 @@ export class DataDownloader {
         let sphereId     = sphere.id;
 
         this.addJson(sphere,sphere.name, 'spheres');
+
+        // download all fingerprints
+        let fingerprintsV2 = await find(Dbs.fingerprintV2,{where: {sphereId: sphereId}});
+        this.addJson(fingerprintsV2,'fingerprintsV2', ['spheres', sphere.name]);
+
 
         // get scenes
         let scenes = await find(Dbs.scene,{where:{sphereId: sphereId}});
@@ -216,11 +222,15 @@ export class DataDownloader {
         }
         this.addJson(locations, 'locations', ['spheres', sphere.name]);
         // get hubs
-        this.addJson(await find(Dbs.hub, {where:{sphereId: sphereId}}), 'hubs', ['spheres', sphere.name]);
+        if (roleInSphere === 'admin') {
+          this.addJson(await find(Dbs.hub, {where: {sphereId: sphereId}}), 'hubs', ['spheres', sphere.name], ['token']);
+        }
         // get toons
         this.addJson(await find(Dbs.toon, {where:{sphereId: sphereId}}), 'toons', ['spheres', sphere.name]);
+
         // get sphere keys (you have access to)
         this.addJson(await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]), 'keys', ['spheres', sphere.name]);
+
         // get messages (sent by you)
         let messages   = await find(Dbs.message,  {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
         let messagesV2 = await find(Dbs.messageV2,{where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}})
@@ -269,7 +279,7 @@ export class DataDownloader {
     }
   }
 
-  async addJson(data: any, filename: string, pathArray: string | string[] = []) {
+  async addJson(data: any, filename: string, pathArray: string | string[] = [], hiddenFields: string[] = []) {
     if (!data) { return; }
     else if (Array.isArray(data)) {
       if (data.length === 0) { return; }
@@ -281,6 +291,17 @@ export class DataDownloader {
     }
 
     let stringifiedData = JSON.stringify(data, null, 2);
+
+    if (hiddenFields.length > 0) {
+      let dataObject = JSON.parse(stringifiedData);
+      for (let field of hiddenFields) {
+        if (data[field]) {
+          dataObject[field] = data[field];
+        }
+      }
+      stringifiedData = JSON.stringify(dataObject, null, 2);
+    }
+
 
     let filePathArray = ['data'];
     if (Array.isArray(pathArray)) {

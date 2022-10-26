@@ -150,8 +150,6 @@ export class EnergyDataProcessor {
           await this._processAggregations(sphereId, stoneId, intervalData, samples, idsToDelete, sphereTimezone.timezone);
       }
 
-      console.log(samples.length, idsToDelete.length);
-
       if (samples.length     > 0) { await Dbs.stoneEnergyProcessed.createAll(samples); }
       if (idsToDelete.length > 0) { await Dbs.stoneEnergyProcessed.deleteAll({id: {inq: idsToDelete}}); }
     }
@@ -328,17 +326,17 @@ function processDataPair(
   previouslyProcessedPoint: EnergyData,
   nextDatapoint:            EnergyData,
   intervalData:             IntervalDescription,
-  samples: DataObject<EnergyDataProcessed>[]
+  samples:                  DataObject<EnergyDataProcessed>[]
 ) {
-  let nextTimestamp         = nextDatapoint.timestamp.valueOf();
-  let nextValue             = nextDatapoint.energyUsage;
-  let previousTimestamp     = previouslyProcessedPoint.timestamp.valueOf();
-  let previousRawValue      = previouslyProcessedPoint.energyUsage;
-  let previousValue         = previouslyProcessedPoint.correctedEnergyUsage;
-  let offsetValue           = previousValue - previouslyProcessedPoint.energyUsage;
+  let nextTimestamp       = nextDatapoint.timestamp.valueOf();
+  let nextValue           = nextDatapoint.energyUsage;
+  let previousTimestamp   = previouslyProcessedPoint.timestamp.valueOf();
+  let previousRawValue    = previouslyProcessedPoint.energyUsage;
+  let previousValue       = previouslyProcessedPoint.correctedEnergyUsage;
+  let offsetValue         = previousValue - previouslyProcessedPoint.energyUsage;
 
-  let previousSamplePoint   = intervalData.calculateSamplePoint(previousTimestamp);
-  let nextSamplePoint       = intervalData.calculateSamplePoint(nextTimestamp);
+  let previousSamplePoint = intervalData.calculateSamplePoint(previousTimestamp);
+  let nextSamplePoint     = intervalData.calculateSamplePoint(nextTimestamp);
 
   let timeSinceLastSamplePoint = nextTimestamp - previousTimestamp;
 
@@ -346,7 +344,7 @@ function processDataPair(
   // if it is smaller, we will add the energyAtPoint to the offsetValue.
   // The reason here is that we will assume a reset, and that the energy from 0 to energyAtPoint is consumed.
   // This can miss a second reboot when we're not listening.
-  // TODO: check if the difference is within the thresold of negative usage, then accept that we have negative usage.
+  // TODO: check if the difference is within the threshold of negative usage, then accept that we have negative usage.
   if (nextValue < previousRawValue*0.9) { // we compare with raw, since previousValue has the offset included.
     nextValue += previousValue;
   }
