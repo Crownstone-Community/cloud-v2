@@ -706,6 +706,7 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "id": "dbId:SphereRepository:1",
       "name": "mySphere",
+      "timezone": "Europe/Amsterdam",
       "uid": 211,
       "updatedAt": "1970-01-01T00:00:00.000Z",
       "uuid": "ibeaconUUID2002",
