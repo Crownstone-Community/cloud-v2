@@ -5,7 +5,7 @@ let DAY_MS     = 24*HOUR_MS;
 let WEEK_MS    = 7*DAY_MS;
 let MONTH_MS   = 28*DAY_MS;
 
-var moment = require('moment-timezone');
+const moment = require('moment-timezone');
 
 function getMinuteData(minuteCount : number, targetInterval: EnergyInterval, basedOnInterval: EnergyInterval, threshold: number) : EnergyIntervalData {
   return {

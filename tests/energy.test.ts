@@ -12,9 +12,13 @@ import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-c
 import {EnergyIntervalDataSet} from "../src/modules/energy/IntervalData";
 // import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 
+const moment = require('moment-timezone');
+
 let app    : CrownstoneCloud;
 let client : Client;
-let repos = getRepositories();
+let repos  = getRepositories();
+
+const timezone = "Europe/Amsterdam";
 
 beforeEach(async () => { await clearTestDatabase(); })
 beforeAll(async () => {
@@ -50,33 +54,37 @@ function get(arr: any[], stone, value, timestamp) {
   arr.push(gen(stone, value, timestamp))
 }
 
-function getRange(date, range) : {start: Date, end: Date } {
+function getRange(date : number, range, timezone) : {start: Date, end: Date } {
   if (range === "day") {
-    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    let end   = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-    return {start, end};
+    let start = moment.tz(date.valueOf(), timezone).hours(0).minutes(0).seconds(0).milliseconds(0);
+    let end   = start.clone().add(1, 'day');
+    return {start: start.toDate(), end: end.toDate()};
   }
 
 
   if (range === 'week') {
     // get the monday of the week of the date as start and a week later as end
-    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - (date.getDay()+6)%7);
-    let end   = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
-    return {start, end};
+    let momentStart = moment.tz(date, timezone).hours(0).minutes(0).seconds(0).milliseconds(0);
+    let startDay = momentStart.day(1);
+    let start = startDay
+    let end   = start.clone().add(7, 'days');
+    return {start: start.toDate(), end: end.toDate()};
   }
 
 
   if (range === 'month') {
-    let start = new Date(date.getFullYear(), date.getMonth(), 1);
-    let end   = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-    return {start, end};
+    let momentStart = moment(date).tz(timezone).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
+    let start = momentStart;
+    let end   = start.clone().add(1, 'month');
+    return {start: start.toDate(), end: end.toDate()};
   }
 
 
   if (range === 'year') {
-    let start = new Date(date.getFullYear(), 0, 1);
-    let end   = new Date(date.getFullYear() + 1, 0, 1);
-    return {start, end};
+    let momentStart = moment(date).tz(timezone).month(1).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
+    let start = momentStart;
+    let end   = momentStart.clone().add(1, 'year');
+    return {start: start.toDate(), end: end.toDate()};
   }
 }
 
@@ -460,29 +468,29 @@ test("check correct handling of energyData without datapoints on intervals 2", a
 
 
 test("Energy interval calculation", async () => {
-  let timezone = "Europe/Amsterdam";
+
 
   let hour = EnergyIntervalDataSet['1h'];
-  expect(hour.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
-  expect(hour.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
-  expect(hour.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
-  expect(hour.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,1,1,5,0,0,0).valueOf());
-  expect(hour.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,1,1,5,0,0,0).valueOf(), timezone)).toBe(5);
+  expect(hour.isOnSamplePoint(moment.tz('2022-01-01T00:00:00.00', timezone).valueOf(), timezone)).toBe(true);
+  expect(hour.isOnSamplePoint(moment.tz('2022-01-01T00:04:00', timezone).valueOf(), timezone)).toBe(false);
+  expect(hour.getPreviousSamplePoint(moment.tz('2022-01-01T00:45:00', timezone).valueOf(), timezone)).toBe(moment.tz('2022-01-01T00:00:00', timezone).valueOf());
+  expect(hour.getNthSamplePoint(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), 5, timezone)).toBe(moment.tz('2022-01-01T05:00:00', timezone).valueOf());
+  expect(hour.getNumberOfSamplePointsBetween(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), moment.tz('2022-01-01T05:00:00', timezone).valueOf(), timezone)).toBe(5);
 
   let day   = EnergyIntervalDataSet['1d'];
-  expect(day.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
-  expect(day.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
-  expect(day.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
-  expect(day.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,1,6,0,0,0,0).valueOf());
-  expect(day.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,1,6,0,0,0,0).valueOf(), timezone)).toBe(5);
+  expect(day.isOnSamplePoint(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), timezone)).toBe(true);
+  expect(day.isOnSamplePoint(moment.tz('2022-01-01T00:04:00', timezone).valueOf(), timezone)).toBe(false);
+  expect(day.getPreviousSamplePoint(moment.tz('2022-01-01T00:45:00', timezone).valueOf(), timezone)).toBe(moment.tz('2022-01-01T00:00:00', timezone).valueOf());
+  expect(day.getNthSamplePoint(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), 5, timezone)).toBe(moment.tz('2022-01-06T00:00:00', timezone).valueOf());
+  expect(day.getNumberOfSamplePointsBetween(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), moment.tz('2022-01-06T00:00:00', timezone).valueOf(), timezone)).toBe(5);
 
 
   let month = EnergyIntervalDataSet['1M'];
-  expect(month.isOnSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), timezone)).toBe(true);
-  expect(month.isOnSamplePoint(new Date(2022,1,1,0,4,0,0).valueOf(), timezone)).toBe(false);
-  expect(month.getPreviousSamplePoint(new Date(2022,1,1,0,45,0,0).valueOf(), timezone)).toBe(new Date(2022,1,1,0,0,0,0).valueOf());
-  expect(month.getNthSamplePoint(new Date(2022,1,1,0,0,0,0).valueOf(), 5, timezone)).toBe(new Date(2022,6,1,0,0,0,0).valueOf());
-  expect(month.getNumberOfSamplePointsBetween(new Date(2022,1,1,0,0,0,0).valueOf(), new Date(2022,6,1,0,0,0,0).valueOf(), timezone)).toBe(5);
+  expect(month.isOnSamplePoint(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), timezone)).toBe(true);
+  expect(month.isOnSamplePoint(moment.tz('2022-01-01T00:04:00', timezone).valueOf(), timezone)).toBe(false);
+  expect(month.getPreviousSamplePoint(moment.tz('2022-01-01T00:45:00', timezone).valueOf(), timezone)).toBe(moment.tz('2022-01-01T00:00:00', timezone).valueOf());
+  expect(month.getNthSamplePoint(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), 5, timezone)).toBe(moment.tz('2022-06-01T00:00:00', timezone).valueOf());
+  expect(month.getNumberOfSamplePointsBetween(moment.tz('2022-01-01T00:00:00', timezone).valueOf(), moment.tz('2022-06-01T00:00:00', timezone).valueOf(), timezone)).toBe(5);
 
 
 })
@@ -494,7 +502,7 @@ test("Aggregation of energy usage: month", async () => {
   await prepare();
 
   function getDate(i) {
-    return new Date(2022,1,1,3,40*i,3)
+    return moment.tz('2022-01-01T03:00:03', timezone).add(40*i, 'minutes').toDate();
   }
   let data = [];
   let datapoints = 300;
@@ -518,12 +526,11 @@ test("check getting of energy data, day, week", async () => {
   await prepare();
 
   function getDate(i) : Date {
-    return new Date(2022,1,1,3,40*i,3)
+    return moment.tz('2022-01-01T03:00:03', timezone).add(40*i, 'minutes').toDate();
   }
 
   let data = [];
   let datapoints = 800;
-  // console.log('from', getDate(0).toISOString(), 'to', getDate(datapoints).toISOString())
   for (let i = 0; i < datapoints; i++) {
     get(data, stone, i*10000, getDate(i))
   }
@@ -533,16 +540,16 @@ test("check getting of energy data, day, week", async () => {
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id);
   
-  let range = getRange(getDate(150),'day')
+  let range = getRange(getDate(150).valueOf(),'day', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
     expect(body).toHaveLength(25);
   });
 
-  range = getRange( new Date(2022,1,8),'week')
+  range = getRange( moment.tz('2022-01-08',timezone).toDate(),'week', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=week`)).expect(({body}) => {
     expect(body).toHaveLength(8);
     for (let i = 0; i < body.length;i++) {
-      expect(new Date(body[i].timestamp).getDay()).toBe((i+1)%7);
+      expect(moment(body[i].timestamp).tz(timezone).day()).toBe((i+1)%7);
     }
   });
 }, 10000);
@@ -552,7 +559,7 @@ test("check getting of energy data, day, fragemented", async () => {
   await prepare();
 
   function getDate(i) : Date {
-    return new Date(2022,1,1,3,40*i,3)
+    return moment.tz('2022-01-01T03:00:03', timezone).add(40*i, 'minutes').toDate();
   }
 
   let data = [];
@@ -567,7 +574,7 @@ test("check getting of energy data, day, fragemented", async () => {
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id);
 
-  let range = getRange(getDate(1),'day')
+  let range = getRange(getDate(1).valueOf(),'day', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
     expect(body).toHaveLength(15);
   });
@@ -579,7 +586,7 @@ test("check getting of energy data, month, year", async () => {
   await prepare();
 
   function getDate(i) : Date {
-    return new Date(2022,-1,1,12*i,40*i,3)
+    return moment.tz('2021-12-01T00:00:03', timezone).add(12*i, 'hours').add(40*i, 'minutes').toDate();
   }
 
   let data = [];
@@ -595,12 +602,12 @@ test("check getting of energy data, month, year", async () => {
   await processor.processAggregations(sphere.id);
 
 
-  let range = getRange( new Date(2022,1,8),'month')
+  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'month', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
-    expect(body).toHaveLength(29);
+    expect(body).toHaveLength(32);
   });
 
-  range = getRange( new Date(2022,1,8),'year')
+  range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(13);
   });
@@ -611,7 +618,7 @@ test("check aggregation via main aggregator", async () => {
   await prepare();
 
   function getDate(i) : Date {
-    return new Date(2022,-1,1,12*i,40*i,3)
+    return moment.tz('2021-12-01T00:00:03', timezone).add(12*i, 'hours').add(40*i, 'minutes').toDate();
   }
 
   let data = [];
@@ -627,12 +634,12 @@ test("check aggregation via main aggregator", async () => {
   await AggegateAllSpheres();
   await AggegateAllSpheres();
 
-  let range = getRange( new Date(2022,1,8),'month')
+  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'month', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
-    expect(body).toHaveLength(29);
+    expect(body).toHaveLength(32);
   });
 
-  range = getRange( new Date(2022,1,8),'year')
+  range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone)
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(13);
   });
