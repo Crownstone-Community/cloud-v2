@@ -76,9 +76,9 @@ export class User {
     @inject(RestBindings.Http.RESPONSE) response:     Response,
   ) : Promise<any> {
     let userId = userProfile[securityId];
-    if (UserDataDownloadThrottle.allowUserSession(userId) === false) {
-      throw new HttpErrors.TooManyRequests("You can only access this method once every 5 minutes.")
-    }
+    // if (UserDataDownloadThrottle.allowUserSession(userId) === false) {
+    //   throw new HttpErrors.TooManyRequests("You can only access this method once every 5 minutes.")
+    // }
 
     try {
       let fileBuffer = await new DataDownloader(userId).download();

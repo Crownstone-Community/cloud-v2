@@ -47,7 +47,8 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
 
 
     __handleId(entity: DataObject<E>) {
-      if (CONFIG.generateCustomIds) {
+      // @ts-ignore
+      if (CONFIG.generateCustomIds && !entity.id) {
         // @ts-ignore
         entity.id = CloudUtil.createId(this.constructor.name)
       }

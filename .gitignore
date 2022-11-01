@@ -12,3 +12,5 @@ dist
 !container.js
 
 isolate-session*
+
+/private

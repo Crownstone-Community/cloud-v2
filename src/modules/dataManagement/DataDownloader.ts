@@ -6,7 +6,7 @@ import {getEncryptionKeys} from "../sync/helpers/KeyUtil";
 import {Device} from "../../models/device.model";
 import {FingerprintLinker} from "../../models/fingerprint-linker.model";
 import {Util} from "../../util/Util";
-var AdmZip = require("adm-zip");
+const AdmZip = require("adm-zip");
 
 const THROTTLE_TIME = 5*60*1000; // 5 minutes;
 const SESSION_LIMIT = 5;         // max consecutive sessions to download user data.
@@ -112,8 +112,6 @@ export class DataDownloader {
         include: [
           {relation: 'installations'},
           {relation: 'preferences'},
-          {relation: 'locationMap'},
-          {relation: 'sphereMap'},
         ]});
 
       this.addJson(devices,'devices');
@@ -126,6 +124,8 @@ export class DataDownloader {
       let fingerprints = await find(Dbs.fingerprint,{where: {id: {inq: fingerprintIds}}});
       this.addJson(fingerprints,'fingerprints');
 
+      let sphereAccess : SphereAccess[] = await find(Dbs.sphereAccess,{where: {userId: this.userId, invitePending: false}});
+      this.addJson(sphereAccess,'sphereAccess');
 
       // download spheres (where member or admin)
       let spheresWithAccess : SphereAccess[] = await find(Dbs.sphereAccess,{
@@ -266,7 +266,8 @@ export class DataDownloader {
         }
 
         let filename = fileData.meta.filename.split("?r=")[0];
-        filePathArray.push(filename);
+        let fileNameArr = filename.split(".");
+        filePathArray.push(fileId + '.' + fileNameArr[fileNameArr.length-1]);
 
         let filePath = path.join.apply(this,filePathArray);
 

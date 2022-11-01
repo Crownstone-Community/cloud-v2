@@ -9,6 +9,11 @@ import {SSEManager} from "./modules/sse/SSEManager";
 import {DataSanitizer} from "./modules/dataManagement/Sanitizer";
 import {AggegateAllSpheres} from "./modules/energy/EnergyProcessor";
 import {DataGarbageCollection} from "./modules/dataManagement/DataGarbageCollection";
+import {DataImporter} from "./modules/dataManagement/DataImporter";
+
+const multer = require("multer");
+const uploadPath = `${__dirname}/../private/`;
+const upload = multer({ dest: uploadPath });
 
 export {ApplicationConfig};
 
@@ -65,6 +70,39 @@ export class ExpressServer {
 
     this.app.get('/hi', function (_req: Request, res: Response) {
       res.end(JSON.stringify({hi: "v2"}));
+    });
+
+    this.app.get('/import-data', async  function (_req: Request, res: Response) {
+      let importer = new DataImporter();
+      try {
+        if (importer.checkIfImportIsAllowed()) {
+          res.sendFile(path.join(__dirname, '../public/import-data.html'));
+        }
+        else {
+          res.end("Import is not allowed on any of the production databases.");
+        }
+      }
+      catch (err : any) {
+        res.end("Error: " + err);
+      }
+    });
+
+    this.app.post('/import-data', upload.single('file'), async function (_req: Request, res: Response) {
+      let importer = new DataImporter();
+      try {
+        if (importer.checkIfImportIsAllowed()) {
+          await importer.getFile(_req, res, uploadPath);
+          await importer.import(_req, res);
+
+          res.end("DONE")
+        }
+        else {
+          res.end("Import is not allowed on any of the production databases.");
+        }
+      }
+      catch (err : any) {
+        res.end("Error: " + err);
+      }
     });
 
     // Custom Express routes
