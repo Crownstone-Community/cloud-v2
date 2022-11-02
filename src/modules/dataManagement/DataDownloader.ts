@@ -106,12 +106,21 @@ export class DataDownloader {
       // get the user profile picture
       await this.addFile(user.profilePicId, 'user profile picture');
 
+      // download the Crownstone tokens belonging to this user
+      let tokens = await Dbs.crownstoneToken.find({where: {userId: this.userId}});
+      await this.addJson(tokens, 'tokens', []);
+
+      // download the Crownstone tokens belonging to this user
+      let oauthTokens = await Dbs.oauthToken.find({where: {userId: this.userId}});
+      await this.addJson(oauthTokens, 'oauthTokens', []);
+
       // download all devices
       let devices = await find(Dbs.device,{
         where: {ownerId: this.userId },
         include: [
           {relation: 'installations'},
           {relation: 'preferences'},
+          {relation: 'fingerprintLinks'},
         ]});
 
       this.addJson(devices,'devices');
@@ -232,10 +241,19 @@ export class DataDownloader {
         this.addJson(await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]), 'keys', ['spheres', sphere.name]);
 
         // get messages (sent by you)
-        let messages   = await find(Dbs.message,  {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
-        let messagesV2 = await find(Dbs.messageV2,{where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}})
+        let messages               = await find(Dbs.message,               {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
+        let messageState           = await find(Dbs.messageState,          {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
+        let messageDeletedByUser   = await find(Dbs.messageDeletedByUser,  {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
+        let messageReadByUser      = await find(Dbs.messageReadByUser,     {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
+        let messageRecipientUser   = await find(Dbs.messageRecipientUser,  {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
+        let messagesV2             = await find(Dbs.messageV2,             {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}})
 
-        this.addJson({...messages, ...messagesV2}, 'messages', ['spheres', sphere.name]);
+        this.addJson({...messages},             'messages',             ['spheres', sphere.name]);
+        this.addJson({...messageState},         'messageState',         ['spheres', sphere.name]);
+        this.addJson({...messageDeletedByUser}, 'messageDeletedByUser', ['spheres', sphere.name]);
+        this.addJson({...messageReadByUser},    'messageReadByUser',    ['spheres', sphere.name]);
+        this.addJson({...messageRecipientUser}, 'messageRecipientUser', ['spheres', sphere.name]);
+        this.addJson({...messagesV2},           'messagesV2',           ['spheres', sphere.name]);
 
         await Util.wait(250);
       }
@@ -257,21 +275,27 @@ export class DataDownloader {
       try {
         let fileData = await GridFsUtil.downloadFileFromId(fileId);
 
-        let filePathArray = ['data'];
+        let filePathArrayBase = ['data'];
         if (Array.isArray(pathArray)) {
-          filePathArray = filePathArray.concat(pathArray);
+          filePathArrayBase = filePathArrayBase.concat(pathArray);
         }
         else {
-          filePathArray.push(pathArray);
+          filePathArrayBase.push(pathArray);
         }
 
         let filename = fileData.meta.filename.split("?r=")[0];
         let fileNameArr = filename.split(".");
-        filePathArray.push(fileId + '.' + fileNameArr[fileNameArr.length-1]);
+        let fileDataPathArray = [...filePathArrayBase];
+            fileDataPathArray.push(fileId + '.' + fileNameArr[fileNameArr.length-1]);
 
-        let filePath = path.join.apply(this,filePathArray);
+        let fileMetaPathArray = [...filePathArrayBase];
+        fileMetaPathArray.shift()
+
+        let filePath = path.join.apply(this,fileDataPathArray);
 
         // add file directly
+        this.addJson({...fileData.meta}, fileId, fileMetaPathArray);
+        this.addJson([...fileData.chunks], fileId + "_chunks", fileMetaPathArray);
         this.zipFile.addFile(filePath, fileData.data, "entry comment goes here");
       }
       catch (err) {
@@ -281,7 +305,10 @@ export class DataDownloader {
   }
 
   async addJson(data: any, filename: string, pathArray: string | string[] = [], hiddenFields: string[] = []) {
-    if (!data) { return; }
+    if (!data) {
+      console.log("No data to store", filename);
+      return;
+    }
     else if (Array.isArray(data)) {
       if (data.length === 0) { return; }
     }
@@ -291,16 +318,32 @@ export class DataDownloader {
       }
     }
 
-    let stringifiedData = JSON.stringify(data, null, 2);
+    function insertHiddenFields(dataObj: any) {
+      let stringifiedData = JSON.stringify(dataObj);
 
-    if (hiddenFields.length > 0) {
-      let dataObject = JSON.parse(stringifiedData);
-      for (let field of hiddenFields) {
-        if (data[field]) {
-          dataObject[field] = data[field];
+      if (hiddenFields.length > 0) {
+        let dataObject = JSON.parse(stringifiedData);
+        for (let field of hiddenFields) {
+          if (dataObj[field]) {
+            dataObject[field] = dataObj[field];
+          }
         }
+        stringifiedData = JSON.stringify(dataObject);
       }
-      stringifiedData = JSON.stringify(dataObject, null, 2);
+
+      return JSON.parse(stringifiedData);
+    }
+
+    let stringifiedData;
+    if (Array.isArray(data)) {
+      let result = [];
+      for (let i = 0; i < data.length; i++) {
+        result.push(insertHiddenFields(data[i]));
+      }
+      stringifiedData = JSON.stringify(result, null, 2);
+    }
+    else {
+      stringifiedData = JSON.stringify(insertHiddenFields(data), null, 2);
     }
 
 

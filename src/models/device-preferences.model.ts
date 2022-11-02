@@ -3,7 +3,7 @@ import {Device} from "./device.model";
 import {AddTimestamps} from "./bases/timestamp-mixin";
 import {BaseEntity} from "./bases/base-entity";
 
-@model()
+@model({settings:{mongodb: {collection: 'Preference'}}})
 export class DevicePreferences extends AddTimestamps(BaseEntity) {
 
   @property({type: 'string', id: true})
@@ -12,8 +12,8 @@ export class DevicePreferences extends AddTimestamps(BaseEntity) {
   @property({type: 'string', required: true})
   property: string;
 
-  @property({type: 'boolean', required: true})
-  value: string;
+  @property({required: true})
+  value: any;
 
   @belongsTo(() => Device)
   deviceId: string;

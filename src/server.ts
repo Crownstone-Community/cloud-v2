@@ -65,7 +65,13 @@ export class ExpressServer {
 
     // Custom Express routes
     this.app.get('/', function (_req: Request, res: Response) {
-      res.sendFile(path.join(__dirname, '../public/index.html'));
+      let importer = new DataImporter();
+      if (importer.checkIfImportIsAllowed()) {
+        res.sendFile(path.join(__dirname, '../public/index_with_import.html'));
+      }
+      else {
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+      }
     });
 
     this.app.get('/hi', function (_req: Request, res: Response) {

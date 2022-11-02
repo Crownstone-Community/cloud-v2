@@ -12,7 +12,9 @@ export class CrownstoneTokenRepository extends DefaultCrudRepository<CrownstoneT
   }
 
   async create(entity: DataObject<CrownstoneToken>, options?: Options): Promise<CrownstoneToken> {
-    entity.id = CloudUtil.createToken();
+    if (!entity.id) {
+      entity.id = CloudUtil.createToken();
+    }
     return super.create(entity, options);
   }
 }

@@ -1,9 +1,8 @@
 import {
-  Count,
   DataObject,
   DefaultCrudRepository,
   Entity,
-  Options, Where
+  Options
 } from "@loopback/repository";
 import {CONFIG} from "../../config";
 import {CloudUtil} from "../../util/CloudUtil";
@@ -23,7 +22,8 @@ export class CsCrudRepository< E extends Entity, ID> extends DefaultCrudReposito
     }
 
     __handleId(entity: DataObject<E>) {
-      if (CONFIG.generateCustomIds) {
+      // @ts-ignore
+      if (CONFIG.generateCustomIds && !entity.id) {
         // @ts-ignore
         entity.id = CloudUtil.createId(this.constructor.name)
       }

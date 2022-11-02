@@ -14,7 +14,7 @@ export class Fingerprint extends AddTimestamps(BaseEntity) {
   @property({type: 'string'})
   phoneType: string;
 
-  @property({type: 'number'})
+  @property({})
   data: any;
 
   @property({type: 'boolean', default: false})

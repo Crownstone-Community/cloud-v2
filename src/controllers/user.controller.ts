@@ -12,8 +12,6 @@ import {UserService} from "../services";
 import {User as UserModel} from "../models/user.model";
 import {UserRepository} from "../repositories/users/user.repository";
 import {repository} from "@loopback/repository";
-import {SyncHandler} from "../modules/sync/SyncHandler";
-import {SyncRequestResponse} from "../declarations/syncTypes";
 import {DataDownloader, UserDataDownloadThrottle} from "../modules/dataManagement/DataDownloader";
 import {Response} from "express";
 

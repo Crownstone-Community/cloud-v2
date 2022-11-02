@@ -32,7 +32,7 @@ export class FsFiles extends Entity {
   @property({type: 'array', itemType: 'string'})
   aliases: string[];
 
-  @property({type: 'string'})
+  @property({type: 'object'})
   metadata: any;
 }
 
