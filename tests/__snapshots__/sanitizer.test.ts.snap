@@ -58,7 +58,7 @@ exports[`Before deleting users, check if orphaned fingerprints are removed. 1`] 
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "data": null,
+    "data": "data",
     "id": "dbId:FingerprintRepository:10",
     "isTransformed": false,
     "locationId": "dbId:LocationRepository:1",
@@ -68,7 +68,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "data": null,
+    "data": "data",
     "id": "dbId:FingerprintRepository:3",
     "isTransformed": false,
     "locationId": "dbId:LocationRepository:3",
@@ -78,7 +78,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "data": null,
+    "data": "data",
     "id": "dbId:FingerprintRepository:8",
     "isTransformed": false,
     "locationId": "dbId:LocationRepository:2",
@@ -405,7 +405,7 @@ Object {
   "fingerprint": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:1",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:1",
@@ -415,7 +415,7 @@ Object {
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:2",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:2",
@@ -425,7 +425,7 @@ Object {
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:4",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:1",
@@ -435,7 +435,7 @@ Object {
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:5",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:2",
@@ -445,7 +445,7 @@ Object {
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:6",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:3",
@@ -1195,7 +1195,7 @@ Object {
   "fingerprint": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:7",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:1",
@@ -1205,7 +1205,7 @@ Object {
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "data": null,
+      "data": "data",
       "id": "dbId:FingerprintRepository:9",
       "isTransformed": false,
       "locationId": "dbId:LocationRepository:3",
