@@ -10,6 +10,7 @@ import {auth, getToken, login} from "./rest-helpers/rest.helpers";
 import {AggegateAllSpheres, EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 import {EnergyUsageCollection} from "../src/models/endpointModels/energy-usage-collection.model";
 import {EnergyIntervalDataSet} from "../src/modules/energy/IntervalData";
+import {Dbs} from "../src/modules/containers/RepoContainer";
 // import {EnergyDataProcessor} from "../src/modules/energy/EnergyProcessor";
 
 const moment = require('moment-timezone');
@@ -81,7 +82,7 @@ function getRange(date : number, range, timezone) : {start: Date, end: Date } {
 
 
   if (range === 'year') {
-    let momentStart = moment(date).tz(timezone).month(1).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
+    let momentStart = moment(date).tz(timezone).month(0).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
     let start = momentStart;
     let end   = momentStart.clone().add(1, 'year');
     return {start: start.toDate(), end: end.toDate()};
@@ -644,4 +645,38 @@ test("check aggregation via main aggregator", async () => {
     expect(body).toHaveLength(13);
   });
 }, 10000);
+
+
+test("check year aggregation", async () => {
+  await prepare();
+
+  let data = [];
+  get(data, stone, 1e5, moment.tz('2022-09-15T03:00:00', timezone).toDate())
+  get(data, stone, 2e5, moment.tz('2022-09-16T03:00:00', timezone).toDate())
+  get(data, stone, 12e5, moment.tz('2022-10-15T03:00:00', timezone).toDate())
+  get(data, stone, 13e5, moment.tz('2022-10-16T03:00:00', timezone).toDate())
+  get(data, stone, 23e5, moment.tz('2022-11-15T03:00:00', timezone).toDate())
+  get(data, stone, 24e5, moment.tz('2022-11-16T03:00:00', timezone).toDate())
+
+  get(data, stone2, 1e5, moment.tz('2022-09-15T03:00:00', timezone).toDate())
+  get(data, stone2, 2e5, moment.tz('2022-09-16T03:00:00', timezone).toDate())
+  get(data, stone2, 12e5, moment.tz('2022-10-15T03:00:00', timezone).toDate())
+  get(data, stone2, 13e5, moment.tz('2022-10-16T03:00:00', timezone).toDate())
+  get(data, stone2, 23e5, moment.tz('2022-11-15T03:00:00', timezone).toDate())
+  get(data, stone2, 24e5, moment.tz('2022-11-16T03:00:00', timezone).toDate())
+
+  await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
+
+  let processor = new EnergyDataProcessor();
+  await processor.processAggregations(sphere.id);
+
+  // console.log(await Dbs.stoneEnergyProcessed.find());
+
+  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone);
+  console.log("getting range", range.start.toISOString(), range.end.toISOString())
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+    expect(body).toHaveLength(8);
+    console.log("here", body)
+  });
+});
 

@@ -190,9 +190,10 @@ export class Energy extends SphereItem {
     if (start === end) { return []; }
     if (start  >  end) { throw new HttpErrors.BadRequest("Start must be before end"); }
 
-
     let fields : Filter<EnergyDataProcessed | EnergyData> = {fields:['stoneId', 'energyUsage', 'timestamp']};
     let interval : EnergyInterval = '1h';
+    let backupInterval : EnergyInterval = '1h';
+
     let duration = end.valueOf() - start.valueOf();
     let hour = 3600e3;
 
@@ -200,18 +201,22 @@ export class Energy extends SphereItem {
       case 'day':
         if (duration > 25 * hour) { throw new HttpErrors.BadRequest("Range is too large for day range."); }
         interval = '1h';
+        backupInterval = '5m';
         break;
       case 'week':
         if (duration > 8 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for week range."); }
         interval = '1d';
+        backupInterval = '1h';
         break;
       case 'month':
         if (duration > 32 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for month range."); }
         interval = '1d';
+        backupInterval = '1h';
         break;
       case 'year':
         if (duration > 366 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for year range."); }
         interval = '1M';
+        backupInterval = '1d';
         break;
       default:
         throw new HttpErrors.BadRequest("Invalid string for \"range\", should be one of these: day, week, month, year");
@@ -229,72 +234,77 @@ export class Energy extends SphereItem {
 
     // if we do not have a fully filled range, check if we have a pending unprocessed value which provides the most up-to-date data.
     let lastTimestamp = datapoints[datapoints.length-1]?.timestamp ?? start;
+    let stoneIds = datapoints.map((point) => { return point.stoneId; });
+    // convert the idArray to a map
+    let stoneIdsMap : Record<string, boolean> = {};
+    let amountOfStoneIds = stoneIds.length;
+    for (let id of stoneIds) { stoneIdsMap[id] = false; }
+
+    /**
+     * @param mapFunction // (point) => { datapoints.push({stoneId: point.stoneId, energyUsage: point.correctedEnergyUsage, timestamp: point.timestamp}); }
+     */
+    function filterAndInsertPoints(additionalPoints: any[], insertFunction: (point: any) => void) {
+      let stoneIdsAvailable = {...stoneIdsMap};
+      let usedStoneIdCount = 0;
+      for (let point of additionalPoints) {
+        if (stoneIdsAvailable[point.stoneId] === false) {
+          insertFunction(point);
+          stoneIdsAvailable[point.stoneId] = true;
+          usedStoneIdCount++;
+          if (usedStoneIdCount === amountOfStoneIds) {
+            return;
+          }
+        }
+      }
+    }
+
+    /**
+     * @param timequery // [{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}]
+     * @param order     // 'timestamp DESC'
+     */
+    async function getAdditionalPoint(timequery: any[], order: string, filterInsertEnergyUsage: (point: any) => void, filterInsertEnergyUsageProcessed: (point: any) => void) {
+      // get a point for the next interval, even if it might be partial.
+      let additionalPoints = await Dbs.stoneEnergy.find({
+        where: { sphereId, energyUsage: {gt: 0}, correctedEnergyUsage: {gt: 0}, checked: true, and:timequery},
+        fields: ['stoneId', 'energyUsage', 'timestamp', 'correctedEnergyUsage'],
+        order:  [order],
+      });
+
+      if (additionalPoints.length > 0) {
+        filterAndInsertPoints(additionalPoints, filterInsertEnergyUsage);
+      }
+      else {
+        let additionalPoints = await Dbs.stoneEnergyProcessed.find({
+          where: { sphereId, interval: backupInterval, and:timequery },
+          ...fields,
+          order: [order],
+        });
+        if (additionalPoints.length > 0) {
+          filterAndInsertPoints(additionalPoints, filterInsertEnergyUsageProcessed);
+        }
+      }
+    }
+
 
     // check if we need an additional point at the end.
     if (lastTimestamp < end) {
-      // get a point for the next interval, even if it might be partial.
-      let additionalPoint = await Dbs.stoneEnergy.findOne({
-        where: {
-          sphereId,
-          energyUsage: {gt: 0},
-          correctedEnergyUsage: {gt: 0},
-          checked: true,
-          and:[{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}]
-        },
-        ...fields,
-        order:  ['timestamp DESC'],
-      });
-
-      if (additionalPoint) {
-        datapoints.push({stoneId: additionalPoint.stoneId, energyUsage: additionalPoint.correctedEnergyUsage, timestamp: additionalPoint.timestamp});
-      }
-      else {
-        let additionalPoint = await Dbs.stoneEnergyProcessed.findOne({
-          where: {
-            sphereId,
-            and:[{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}]
-          },
-          ...fields,
-          order:  ['timestamp DESC'],
-        });
-        if (additionalPoint) {
-          datapoints.push(additionalPoint);
-        }
-      }
+      await getAdditionalPoint(
+        [{timestamp: {gt: lastTimestamp}}, {timestamp: {lte: end}}],
+        'timestamp DESC',
+        (point) => { datapoints.push({stoneId: point.stoneId, energyUsage: point.correctedEnergyUsage, timestamp: point.timestamp}); },
+        (point) => { datapoints.push(point); }
+      );
     }
 
     // check if we need an additional point at the start.
     let firstTimestamp = datapoints[0]?.timestamp ?? end;
     if (firstTimestamp > start) {
-      // get a point for the previous interval, even if it might be partial.
-      let additionalPoint = await Dbs.stoneEnergy.findOne({
-        where: {
-          sphereId,
-          energyUsage: {gt: 0},
-          correctedEnergyUsage: {gt: 0},
-          checked: true,
-          and:[{timestamp: {gte: start}}, {timestamp: {lt: firstTimestamp}}]
-        },
-        ...fields,
-        order:  ['timestamp ASC'],
-      });
-
-      if (additionalPoint) {
-        datapoints.unshift({stoneId: additionalPoint.stoneId, energyUsage: additionalPoint.correctedEnergyUsage, timestamp: additionalPoint.timestamp});
-      }
-      else {
-        let additionalPoint = await Dbs.stoneEnergyProcessed.findOne({
-          where: {
-            sphereId,
-            and:[{timestamp: {gte: start}}, {timestamp: {lt: firstTimestamp}}]
-          },
-          ...fields,
-          order:  ['timestamp ASC'],
-        });
-        if (additionalPoint) {
-          datapoints.unshift(additionalPoint);
-        }
-      }
+      await getAdditionalPoint(
+        [{timestamp: {gte: start}}, {timestamp: {lt: firstTimestamp}}],
+        'timestamp ASC',
+        (point) => { datapoints.unshift({stoneId: point.stoneId, energyUsage: point.correctedEnergyUsage, timestamp: point.timestamp});  },
+        (point) => {datapoints.unshift(point);  }
+      );
     }
 
     return datapoints;
