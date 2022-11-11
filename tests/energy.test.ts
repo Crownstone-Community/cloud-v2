@@ -608,6 +608,8 @@ test("check year aggregation", async () => {
   await prepare();
 
   let data = [];
+  get(data, stone, 1e4, moment.tz('2022-09-13T03:00:00', timezone).toDate())
+  get(data, stone, 1e4, moment.tz('2022-09-14T03:00:00', timezone).toDate())
   get(data, stone, 1e5, moment.tz('2022-09-15T03:00:00', timezone).toDate())
   get(data, stone, 2e5, moment.tz('2022-09-16T03:00:00', timezone).toDate())
   get(data, stone, 12e5, moment.tz('2022-10-15T03:00:00', timezone).toDate())
@@ -621,6 +623,7 @@ test("check year aggregation", async () => {
   get(data, stone2, 13e5, moment.tz('2022-10-16T03:00:00', timezone).toDate())
   get(data, stone2, 23e5, moment.tz('2022-11-15T03:00:00', timezone).toDate())
   get(data, stone2, 24e5, moment.tz('2022-11-16T03:00:00', timezone).toDate())
+  get(data, stone2, 25e5, moment.tz('2022-11-17T03:00:00', timezone).toDate())
 
   await client.post(auth(`/spheres/${sphere.id}/energyUsage`)).send(data);
 
@@ -630,6 +633,7 @@ test("check year aggregation", async () => {
   // console.log(await Dbs.stoneEnergyProcessed.find());
   await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(8);
+    console.log(body)
   });
 });
 
