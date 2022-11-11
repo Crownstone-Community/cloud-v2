@@ -17,6 +17,10 @@ import {EnergyDataProcessed} from "../models/stoneSubModels/stone-energy-data-pr
 import {Filter} from "@loopback/filter/src/query";
 import {EnergyMetaData} from "../models/stoneSubModels/stone-energy-metadata.model";
 import {EnergyData} from "../models/stoneSubModels/stone-energy-data.model";
+import {EnergyIntervalDataSet, UnusedIntervalDataset} from "../modules/energy/IntervalData";
+
+
+const moment = require('moment-timezone');
 
 const FOREVER = new Date('2100-01-01 00:00:00');
 
@@ -172,49 +176,63 @@ export class Energy extends SphereItem {
   async getEnergyUsage(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')       sphereId: string,
-    @param.query.dateTime('start', {required:true}) start:    Date,
-    @param.query.dateTime('end',   {required:true})   end:      Date,
+    @param.query.dateTime('date', {required:true}) date:    Date,
+    // @param.query.dateTime('start', {required:true}) start:    Date,
+    // @param.query.dateTime('end',   {required:true})   end:      Date,
     @param.query.string('range',   {required:true})   range:    'day' | 'week' | 'month' | 'year',
   ): Promise<EnergyDataProcessed[]> {
-    let sphereTimezone = await this.sphereRepo.findById(sphereId, {fields: {timezone:true}});
-    if (!sphereTimezone.timezone) { throw new HttpErrors.FailedDependency("No timezone is defined for this sphere. Enter the sphere to have it set automatically, or restart your app to have it do so (App version 6.0.0 and higher)."); }
+    let sphere = await this.sphereRepo.findById(sphereId, {fields: {timezone:true}});
+    if (!sphere.timezone) { throw new HttpErrors.FailedDependency("No timezone is defined for this sphere. Enter the sphere to have it set automatically, or restart your app to have it do so (App version 6.0.0 and higher)."); }
 
+    let sphereTimezone = sphere.timezone;
     // just in case the values are not date objects but strings or timestamps.
-    start = new Date(start);
-    end   = new Date(end);
+    let start : Date;
+    let end : Date;
 
     // ensure we query on round, hourly values.
-    start.setMinutes(0,0,0);
-    end.setMinutes(0,0,0);
+    // start.setMinutes(0,0,0);
+    // end.setMinutes(0,0,0);
+    let timestamp = new Date(date).valueOf();
 
-    if (start === end) { return []; }
-    if (start  >  end) { throw new HttpErrors.BadRequest("Start must be before end"); }
+    if (range === "day") {
+      start = new Date(EnergyIntervalDataSet['1d'].getPreviousSamplePoint(timestamp, sphereTimezone))
+      end   = new Date(EnergyIntervalDataSet['1d'].getNthSamplePoint(start.valueOf(), 1, sphereTimezone))
+    }
+
+    if (range === 'week') {
+      start = new Date(UnusedIntervalDataset['1w'].getPreviousSamplePoint(timestamp, sphereTimezone))
+      end   = new Date(UnusedIntervalDataset['1w'].getNthSamplePoint(start.valueOf(), 1, sphereTimezone))
+    }
+
+    if (range === 'month') {
+      start = new Date(EnergyIntervalDataSet['1M'].getPreviousSamplePoint(timestamp, sphereTimezone))
+      end   = new Date(EnergyIntervalDataSet['1M'].getNthSamplePoint(start.valueOf(), 1, sphereTimezone))
+    }
+
+    if (range === 'year') {
+      start = moment.tz(timestamp, sphereTimezone).startOf('year').toDate();
+      end   = moment.tz(start, sphereTimezone).add(1,'year').toDate();
+    }
+
 
     let fields : Filter<EnergyDataProcessed | EnergyData> = {fields:['stoneId', 'energyUsage', 'timestamp']};
     let interval : EnergyInterval = '1h';
     let backupInterval : EnergyInterval = '1h';
 
-    let duration = end.valueOf() - start.valueOf();
-    let hour = 3600e3;
-
     switch (range) {
       case 'day':
-        if (duration > 25 * hour) { throw new HttpErrors.BadRequest("Range is too large for day range."); }
         interval = '1h';
         backupInterval = '5m';
         break;
       case 'week':
-        if (duration > 8 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for week range."); }
         interval = '1d';
         backupInterval = '1h';
         break;
       case 'month':
-        if (duration > 32 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for month range."); }
         interval = '1d';
         backupInterval = '1h';
         break;
       case 'year':
-        if (duration > 366 * 24 * hour) { throw new HttpErrors.BadRequest("Range is too large for year range."); }
         interval = '1M';
         backupInterval = '1d';
         break;

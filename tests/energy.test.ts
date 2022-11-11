@@ -55,42 +55,6 @@ function get(arr: any[], stone, value, timestamp) {
   arr.push(gen(stone, value, timestamp))
 }
 
-function getRange(date : number, range, timezone) : {start: Date, end: Date } {
-  if (range === "day") {
-    let start = moment.tz(date.valueOf(), timezone).hours(0).minutes(0).seconds(0).milliseconds(0);
-    let end   = start.clone().add(1, 'day');
-    return {start: start.toDate(), end: end.toDate()};
-  }
-
-
-  if (range === 'week') {
-    // get the monday of the week of the date as start and a week later as end
-    let momentStart = moment.tz(date, timezone).hours(0).minutes(0).seconds(0).milliseconds(0);
-    let startDay = momentStart.day(1);
-    let start = startDay
-    let end   = start.clone().add(7, 'days');
-    return {start: start.toDate(), end: end.toDate()};
-  }
-
-
-  if (range === 'month') {
-    let momentStart = moment(date).tz(timezone).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
-    let start = momentStart;
-    let end   = start.clone().add(1, 'month');
-    return {start: start.toDate(), end: end.toDate()};
-  }
-
-
-  if (range === 'year') {
-    let momentStart = moment(date).tz(timezone).month(0).date(1).hours(0).minutes(0).seconds(0).milliseconds(0);
-    let start = momentStart;
-    let end   = momentStart.clone().add(1, 'year');
-    return {start: start.toDate(), end: end.toDate()};
-  }
-}
-
-
-
 async function populate() {
   // fill with a bit of data for sync
   dbs = getRepositories();
@@ -540,14 +504,12 @@ test("check getting of energy data, day, week", async () => {
 
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id);
-  
-  let range = getRange(getDate(150).valueOf(),'day', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
+
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ getDate(150).toISOString() }&range=day`)).expect(({body}) => {
     expect(body).toHaveLength(25);
   });
 
-  range = getRange( moment.tz('2022-01-08',timezone).toDate(),'week', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=week`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08',timezone).toDate().toISOString() }&range=week`)).expect(({body}) => {
     expect(body).toHaveLength(8);
     for (let i = 0; i < body.length;i++) {
       expect(moment(body[i].timestamp).tz(timezone).day()).toBe((i+1)%7);
@@ -575,8 +537,7 @@ test("check getting of energy data, day, fragemented", async () => {
   let processor = new EnergyDataProcessor();
   await processor.processAggregations(sphere.id);
 
-  let range = getRange(getDate(1).valueOf(),'day', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=day`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ getDate(1).toISOString() }&range=day`)).expect(({body}) => {
     expect(body).toHaveLength(15);
   });
 }, 10000);
@@ -603,13 +564,11 @@ test("check getting of energy data, month, year", async () => {
   await processor.processAggregations(sphere.id);
 
 
-  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'month', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=month`)).expect(({body}) => {
     expect(body).toHaveLength(32);
   });
 
-  range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(13);
   });
 }, 10000);
@@ -635,13 +594,11 @@ test("check aggregation via main aggregator", async () => {
   await AggegateAllSpheres();
   await AggegateAllSpheres();
 
-  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'month', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=month`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=month`)).expect(({body}) => {
     expect(body).toHaveLength(32);
   });
 
-  range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone)
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(13);
   });
 }, 10000);
@@ -671,12 +628,8 @@ test("check year aggregation", async () => {
   await processor.processAggregations(sphere.id);
 
   // console.log(await Dbs.stoneEnergyProcessed.find());
-
-  let range = getRange(moment.tz('2022-01-08', timezone).valueOf(),'year', timezone);
-  console.log("getting range", range.start.toISOString(), range.end.toISOString())
-  await client.get(auth(`/spheres/${sphere.id}/energyUsage?start=${ range.start.toISOString() }&end=${ range.end.toISOString() }&range=year`)).expect(({body}) => {
+  await client.get(auth(`/spheres/${sphere.id}/energyUsage?date=${ moment.tz('2022-01-08', timezone).toISOString() }&range=year`)).expect(({body}) => {
     expect(body).toHaveLength(8);
-    console.log("here", body)
   });
 });
 

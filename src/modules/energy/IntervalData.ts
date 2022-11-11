@@ -1,3 +1,4 @@
+import {Energy} from "../../controllers/energy.controller";
 
 let MINUTES_MS = 60*1000;
 let HOUR_MS    = 60*MINUTES_MS;
@@ -63,33 +64,35 @@ function getDayData(targetInterval: EnergyInterval, basedOnInterval: EnergyInter
   }
 }
 
-// function getWeekData(targetInterval: EnergyInterval, basedOnInterval: EnergyInterval, threshold: number) : EnergyIntervalData {
-//   return {
-//     interpolationThreshold: threshold,
-//     targetInterval, basedOnInterval,
-//     // gets the upcoming sample point. If the timestamp is on a monday, it will return the provided timestamp.
-//     isOnSamplePoint: function(timestamp: timestamp) : boolean {
-//       let minutes = new Date(timestamp).getMinutes();
-//       let hours   = new Date(timestamp).getHours();
-//       let day     = new Date(timestamp).getDay(); // 0 = sunday
-//       return minutes === 0 && hours === 0 && day === 1; // 00:00 on Monday morning
-//     },
-//     getPreviousSamplePoint: function(timestamp: timestamp) : number  {
-//       let minutes = new Date(timestamp).getMinutes();
-//       let hours   = new Date(timestamp).getHours();
-//       let day     = new Date(timestamp).getDay(); // 0 = sunday
-//       let mondayOffset = (day+6) % 7; // this maps sunday = 6, monday 0, tuesday 1, ...
-//       return timestamp - MINUTES_MS*(minutes) - HOUR_MS*(hours) - DAY_MS*(mondayOffset);
-//     },
-//     getNthSamplePoint(fromSamplePoint: number, n: number) : number {
-//       return fromSamplePoint + n*WEEK_MS;
-//     },
-//     getNumberOfSamplePointsBetween(fromSamplePoint: number, toSamplePoint: number) : number {
-//       let weeks = Math.floor((fromSamplePoint - toSamplePoint) / WEEK_MS);
-//       return weeks;
-//     }
-//   }
-// }
+function getWeekData(targetInterval: EnergyInterval, basedOnInterval: EnergyInterval, threshold: number) : EnergyIntervalData {
+  return {
+    interpolationThreshold: threshold,
+    targetInterval, basedOnInterval,
+    // gets the upcoming sample point. If the timestamp is on a monday, it will return the provided timestamp.
+    isOnSamplePoint: function(timestamp: timestamp, timezone: timezone) : boolean {
+      let date = moment(timestamp).tz(timezone);
+      // get midnight of the moment date on monday
+      let mondayMidnight = date.day(1).hours(0).minutes(0).seconds(0).milliseconds(0);
+      return mondayMidnight === timestamp;
+    },
+    getPreviousSamplePoint: function(timestamp: timestamp, timezone: timezone) : number  {
+      let date = moment(timestamp).tz(timezone);
+      // get midnight of the moment date on monday
+      let mondayMidnight = date.day(1).hours(0).minutes(0).seconds(0).milliseconds(0);
+      return mondayMidnight.valueOf();
+    },
+    getNthSamplePoint(fromSamplePoint: timestamp, n: number, timezone: timezone) : number {
+      let date = moment(fromSamplePoint).tz(timezone);
+      return date.add(n, 'weeks').valueOf();
+    },
+    getNumberOfSamplePointsBetween(fromSamplePoint: timestamp, toSamplePoint: timestamp, timezone: timezone) : number {
+      let fromDate = moment(fromSamplePoint).tz(timezone);
+      let toDate = moment(toSamplePoint).tz(timezone);
+      let diff = toDate.diff(fromDate, 'weeks');
+      return diff;
+    }
+  }
+}
 
 function getMonthData(targetInterval: EnergyInterval, basedOnInterval: EnergyInterval, threshold: number) : EnergyIntervalData {
   return {
@@ -135,4 +138,8 @@ export const EnergyIntervalDataSet : Record<string, EnergyIntervalData> = {
   '1d':  getDayData('1d', '1h', 4),
   // '1w':  getWeekData('1w','1d', 4),
   '1M':  getMonthData('1M', '1d', 4),
+}
+
+export const UnusedIntervalDataset : Record<string, EnergyIntervalData> = {
+  '1w':  getWeekData('1w','1d', 4),
 }
