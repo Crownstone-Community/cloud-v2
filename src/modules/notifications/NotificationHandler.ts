@@ -85,7 +85,7 @@ class NotificationHandlerClass {
   async notifyTokens(iosTokens: string[], iosDevTokens: string[], androidTokens: string[], messageData: NotificationMessage) {
     if (iosTokens.length > 0 || iosDevTokens.length > 0 || androidTokens.length > 0) {
       // get app, currently hardcoded.
-      let app = await Dbs.app.findOne({where: {name: 'Crownstone'}});
+      let app = await Dbs.app.findOne({where: {name: 'Crownstone.consumer'}});
       if (app && app.pushSettings) {
         // console.log("Sending notification", messageData)
 

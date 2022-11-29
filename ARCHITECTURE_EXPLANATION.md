@@ -18,10 +18,10 @@ the cloudV1 will handle the rest. It is a lot of work to fully replace the cloud
 # What is different from loopback 4?
 
 ## server.ts
-The main server is a Express server, and loopback 4 only handles requests after /api. The reason for this is the flexibility it provides for adding
+The main server is an Express server, and loopback 4 only handles requests after /api. The reason for this is the flexibility it provides for adding
 custom endpoints without having to go through the loopback controllers.
 
-## modules
+## Modules
 
 Most of the Crownstone specific modules like the syncer, sse handling, notifications, energy processing, data processing and the Repo container live in the modules folder.
 
@@ -37,19 +37,19 @@ Instead of injecting the repositories needed for each controller, I prefer to ha
 Path: `/src/modules/dataManagement`
 Number of database util modules. Called via controllers or custom endpoints.
 
-- ##DataDownloader##
+- **DataDownloader**
   - collecting all the data belonging to a user in order to download it. Called by the user data endpoint.
   - contains a throttling mechansim that is no longer used. Was created to avoid overloading the server since the download consists of many requests. It is not used due to the conclusion of Crownstone and the import/export functionality would be awkward if a user is severely throttled.
-- ##DataGarbageCollection##
+- **DataGarbageCollection**
   - Delete 5 minute energy data older than 24 hours
   - Delete 1h energy data older than 14 days
   - Delete SwitchStateHistory older than 1 day excluding the currently used ids
   - Called by crownstone cron job via the /garbage-collect-data endpoint
-- ##DataImporter##
+- **DataImporter**
   - Can import a zip file exported by the dataDownloader and fill a database. The endpoint for this is disabled if one of the database urls (hashed) are similar to the production ones and by the ALLOW_IMPORT env var.
-- ##PerformanceHandler##
+- **PerformanceHandler**
   - Provides an API for monitoring performance throughout the cloudV2. Can be inserted manually during development. Not used in production.
-- ##Sanitizer##
+- **Sanitizer**
   - Cleans up orphaned data if a user or sphere or something is deleted.
   - Called by crownstone cron via the /sanitize-database endpoint (called about twice a day)
 

@@ -47,15 +47,18 @@ export class Messages extends SphereItem {
       }
     }
 
-
-
-    if (recipients.length > 0) {
-      message.recipients = recipients;
-      NotificationUtil.messageForUserIds(recipients.map((recipient) => { return recipient.userId; }), message);
+    try {
+      if (recipients.length > 0) {
+        message.recipients = recipients;
+        NotificationUtil.messageForUserIds(recipients.map((recipient) => { return recipient.userId; }), message);
+      }
+      else {
+        // if there are no specific recipients, the entire sphere is a recipient.
+        NotificationUtil.messageForSphere(sphereId, message);
+      }
     }
-    else {
-      // if there are no specific recipients, the entire sphere is a recipient.
-      NotificationUtil.messageForSphere(sphereId, message);
+    catch (err: any) {
+      console.log("Error sending notification", err);
     }
 
 
