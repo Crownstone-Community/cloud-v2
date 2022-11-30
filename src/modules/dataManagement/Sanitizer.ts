@@ -36,8 +36,10 @@ export class DataSanitizer {
     let deletedLocationsCount         = await deleteGetCount(Dbs.location,{sphereId: {nin: spheresWithOwnerIds}});
     let deletedStoneCount             = await deleteGetCount(Dbs.stone,{sphereId: {nin: spheresWithOwnerIds}});
 
-    let stoneIds                      = await idArray(Dbs.stone.find({fields:{id: true}}));
-    let sphereIds                     = await idArray(Dbs.sphere.find({fields:{id: true}}));
+    let stoneIds                         = await idArray(Dbs.stone.find({fields:{id: true}}));
+
+
+    let sphereIds                        = await idArray(Dbs.sphere.find({fields:{id: true}}));
     let deletedOrphanedSphereAccessCount = await deleteGetCount(Dbs.sphereAccess,{sphereId: {nin: sphereIds}});
 
     let deletedStoneBehavioursCount   = await deleteGetCount(Dbs.stoneBehaviour,{stoneId: {nin: stoneIds}});
@@ -48,6 +50,42 @@ export class DataSanitizer {
     let deletedStoneEnergyCount       = await deleteGetCount(Dbs.stoneEnergy,{stoneId: {nin: stoneIds}});
     let deletedStoneEnergyProcessedCount = await deleteGetCount(Dbs.stoneEnergyProcessed,{stoneId: {nin: stoneIds}});
     let deletedStoneEnergyMetadataCount  = await deleteGetCount(Dbs.stoneEnergyMetaData,{stoneId: {nin: stoneIds}});
+
+    // check for duplicate entries in the database
+    let stoneAbilities = await Dbs.stoneAbility.find({fields: {id: true, stoneId: true, type: true}});
+    let abilityMap : any = {};
+    let abilitiesToKeep : any = [];
+    let abilitiesToDelete : any = [];
+    for (let stoneAbilty of stoneAbilities) {
+      if (abilityMap[`${stoneAbilty.stoneId}_${stoneAbilty.type}`] === undefined) {
+        abilityMap[`${stoneAbilty.stoneId}_${stoneAbilty.type}`] = true;
+        abilitiesToKeep.push(stoneAbilty.id);
+      }
+      else {
+        abilitiesToDelete.push(stoneAbilty.id);
+      }
+    }
+
+    if (abilitiesToDelete.length > 0) {
+      await deleteGetCount(Dbs.stoneAbility,{id: {inq: abilitiesToDelete}});
+    }
+
+    deletedStoneAbilityPropsCount += await deleteGetCount(Dbs.stoneAbilityProperty,{stoneId: {nin: abilitiesToKeep}});
+
+    let stoneAbilityProperties = await Dbs.stoneAbilityProperty.find({fields:{id:true, abilityId: true, type: true}});
+    let abilityPropertyMap : any = {};
+    let abilitiesPropertiesToDelete : any = [];
+    for (let stoneAbiltyProp of stoneAbilityProperties) {
+      if (abilityPropertyMap[`${stoneAbiltyProp.abilityId}_${stoneAbiltyProp.type}`] === undefined) {
+        abilityMap[`${stoneAbiltyProp.abilityId}_${stoneAbiltyProp.type}`] = true;
+      }
+      else {
+        abilitiesPropertiesToDelete.push(stoneAbiltyProp.id);
+      }
+    }
+    if (abilitiesPropertiesToDelete.length > 0) {
+      await deleteGetCount(Dbs.stoneAbilityProperty,{id: {inq: abilitiesPropertiesToDelete}});
+    }
 
     let deletedHubCount               = await deleteGetCount(Dbs.hub,{sphereId: {nin: spheresWithOwnerIds}});
 
