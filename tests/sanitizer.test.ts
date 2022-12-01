@@ -56,6 +56,38 @@ test("Before deleting users, check sanitation deletion counts", async () => {
   expect(result).toMatchSnapshot()
 });
 
+
+test("Check if duplicate abilities are removed", async () => {
+  let data = await createMockSphereDatabase(client, "sphere1");
+  let stone0 = data.stones[0];
+
+  // create duplicate ability
+  let newAbility = await Dbs.stoneAbility.create({stoneId: stone0.id, sphereId: data.sphere.id, type:'switchCraft', enabled: false, syncedToCrownstone: true});
+  newAbility.type = 'dimming';
+  await Dbs.stoneAbility.update(newAbility);
+  let result = await DataSanitizer.sanitize();
+
+  expect(await Dbs.stoneAbility.find({where:{id:newAbility.id}})).toHaveLength(0);
+  expect(result).toMatchSnapshot()
+});
+
+test("Check if duplicate abilityProperties are removed", async () => {
+  let data = await createMockSphereDatabase(client, "sphere1");
+  let stone0 = data.stones[0];
+
+  // find ability
+  let ability = await Dbs.stoneAbility.findOne({where:{stoneId:stone0.id, type:'dimming'}});
+
+  // create duplicate abilityProperty
+  let newAbilityProp = await Dbs.stoneAbilityProperty.create({stoneId: stone0.id, sphereId: data.sphere.id, abilityId: ability.id, type:'test', value: 'true', syncedToCrownstone: true});
+  newAbilityProp.type = 'smoothDimming';
+  await Dbs.stoneAbilityProperty.update(newAbilityProp);
+  console.log(await Dbs.stoneAbilityProperty.find())
+  let result = await DataSanitizer.sanitize();
+
+  expect(result).toMatchSnapshot()
+});
+
 test("Running twice should not have any effect", async () => {
   await createMockSphereDatabase(client, "sphere1");
   await DataSanitizer.sanitize();

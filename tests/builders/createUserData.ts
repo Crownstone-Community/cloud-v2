@@ -255,6 +255,7 @@ export async function createMockSphereDatabase(client: Client, version: string) 
   return {
     users: {admin, member},
     sphere: sphere,
+    stones: [stone1, stone2, stone3],
   }
 }
 

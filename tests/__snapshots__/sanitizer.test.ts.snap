@@ -271,6 +271,118 @@ Array [
 ]
 `;
 
+exports[`Check if duplicate abilities are removed 1`] = `
+Object {
+  "devices": Object {
+    "appInstallations": 0,
+    "deviceLocationsMap": 0,
+    "deviceSphereMap": 0,
+    "devices": 0,
+    "fingerprintLinks": 0,
+    "preferences": 0,
+  },
+  "files": Object {
+    "chunks": 1,
+    "files": 1,
+  },
+  "fingerprints": 3,
+  "spheres": Object {
+    "access": Object {
+      "hubs": 0,
+      "spheres": 0,
+      "users": 0,
+    },
+    "hubs": 0,
+    "locations": 0,
+    "messages": Object {
+      "messageStates": 0,
+      "messageUsers": 0,
+      "messages": 0,
+      "messagesDeleteByUsers": 0,
+      "messagesReadByUsers": 0,
+      "messagesRecipientUsers": 0,
+      "messagesV2": 0,
+    },
+    "scenes": 0,
+    "sphereKeys": 0,
+    "spheres": 0,
+    "stones": Object {
+      "abilities": 1,
+      "abilityProperties": 0,
+      "behaviours": 0,
+      "energyData": 0,
+      "energyDataProcessed": 0,
+      "energyMetadataCount": 0,
+      "keys": 0,
+      "stones": 0,
+      "switchStates": 0,
+    },
+    "toons": 0,
+    "trackingNumbers": 0,
+  },
+  "tokens": Object {
+    "crownstoneTokens": 0,
+    "oauthTokens": 0,
+  },
+}
+`;
+
+exports[`Check if duplicate abilityProperties are removed 1`] = `
+Object {
+  "devices": Object {
+    "appInstallations": 0,
+    "deviceLocationsMap": 0,
+    "deviceSphereMap": 0,
+    "devices": 0,
+    "fingerprintLinks": 0,
+    "preferences": 0,
+  },
+  "files": Object {
+    "chunks": 1,
+    "files": 1,
+  },
+  "fingerprints": 3,
+  "spheres": Object {
+    "access": Object {
+      "hubs": 0,
+      "spheres": 0,
+      "users": 0,
+    },
+    "hubs": 0,
+    "locations": 0,
+    "messages": Object {
+      "messageStates": 0,
+      "messageUsers": 0,
+      "messages": 0,
+      "messagesDeleteByUsers": 0,
+      "messagesReadByUsers": 0,
+      "messagesRecipientUsers": 0,
+      "messagesV2": 0,
+    },
+    "scenes": 0,
+    "sphereKeys": 0,
+    "spheres": 0,
+    "stones": Object {
+      "abilities": 0,
+      "abilityProperties": 1,
+      "behaviours": 0,
+      "energyData": 0,
+      "energyDataProcessed": 0,
+      "energyMetadataCount": 0,
+      "keys": 0,
+      "stones": 0,
+      "switchStates": 0,
+    },
+    "toons": 0,
+    "trackingNumbers": 0,
+  },
+  "tokens": Object {
+    "crownstoneTokens": 0,
+    "oauthTokens": 0,
+  },
+}
+`;
+
 exports[`Delete member and admin in sphere and run sanitation. Database should be cleared. 1`] = `
 Object {
   "app": Array [],

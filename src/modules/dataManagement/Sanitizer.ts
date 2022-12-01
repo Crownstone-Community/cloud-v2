@@ -51,44 +51,46 @@ export class DataSanitizer {
     let deletedStoneEnergyProcessedCount = await deleteGetCount(Dbs.stoneEnergyProcessed,{stoneId: {nin: stoneIds}});
     let deletedStoneEnergyMetadataCount  = await deleteGetCount(Dbs.stoneEnergyMetaData,{stoneId: {nin: stoneIds}});
 
-    // check for duplicate entries in the database
-    let stoneAbilities = await Dbs.stoneAbility.find({fields: {id: true, stoneId: true, type: true}});
-    let abilityMap : any = {};
-    let abilitiesToKeep : any = [];
-    let abilitiesToDelete : any = [];
-    for (let stoneAbilty of stoneAbilities) {
-      if (abilityMap[`${stoneAbilty.stoneId}_${stoneAbilty.type}`] === undefined) {
-        abilityMap[`${stoneAbilty.stoneId}_${stoneAbilty.type}`] = true;
-        abilitiesToKeep.push(stoneAbilty.id);
+    // check for duplicate entries of abilites in the database
+      let stoneAbilities = await Dbs.stoneAbility.find({fields: {id: true, stoneId: true, type: true}});
+      let abilityMap : any = {};
+      let abilitiesToKeep : any = [];
+      let abilitiesToDelete : any = [];
+      for (let stoneAbilty of stoneAbilities) {
+        let description = `${stoneAbilty.stoneId}_${stoneAbilty.type}`;
+        if (abilityMap[description] === undefined) {
+          abilityMap[description] = true;
+          abilitiesToKeep.push(stoneAbilty.id);
+        }
+        else {
+          abilitiesToDelete.push(stoneAbilty.id);
+        }
       }
-      else {
-        abilitiesToDelete.push(stoneAbilty.id);
-      }
-    }
 
-    if (abilitiesToDelete.length > 0) {
-      await deleteGetCount(Dbs.stoneAbility,{id: {inq: abilitiesToDelete}});
-    }
-
-    deletedStoneAbilityPropsCount += await deleteGetCount(Dbs.stoneAbilityProperty,{stoneId: {nin: abilitiesToKeep}});
-
-    let stoneAbilityProperties = await Dbs.stoneAbilityProperty.find({fields:{id:true, abilityId: true, type: true}});
-    let abilityPropertyMap : any = {};
-    let abilitiesPropertiesToDelete : any = [];
-    for (let stoneAbiltyProp of stoneAbilityProperties) {
-      if (abilityPropertyMap[`${stoneAbiltyProp.abilityId}_${stoneAbiltyProp.type}`] === undefined) {
-        abilityMap[`${stoneAbiltyProp.abilityId}_${stoneAbiltyProp.type}`] = true;
+      if (abilitiesToDelete.length > 0) {
+        deletedStoneAbilitiesCount += await deleteGetCount(Dbs.stoneAbility,{id: {inq: abilitiesToDelete}});
       }
-      else {
-        abilitiesPropertiesToDelete.push(stoneAbiltyProp.id);
+
+      deletedStoneAbilityPropsCount += await deleteGetCount(Dbs.stoneAbilityProperty,{abilityId: {nin: abilitiesToKeep}});
+
+      // check for duplicate entries of abilityProperties in the database
+      let stoneAbilityProperties = await Dbs.stoneAbilityProperty.find({fields:{id:true, abilityId: true, type: true}});
+      let abilityPropertyMap : any = {};
+      let abilitiesPropertiesToDelete : any = [];
+      for (let stoneAbiltyProp of stoneAbilityProperties) {
+        let description = `${stoneAbiltyProp.abilityId}_${stoneAbiltyProp.type}`;
+        if (abilityPropertyMap[description] === undefined) {
+          abilityPropertyMap[description] = true;
+        }
+        else {
+          abilitiesPropertiesToDelete.push(stoneAbiltyProp.id);
+        }
       }
-    }
-    if (abilitiesPropertiesToDelete.length > 0) {
-      await deleteGetCount(Dbs.stoneAbilityProperty,{id: {inq: abilitiesPropertiesToDelete}});
-    }
+      if (abilitiesPropertiesToDelete.length > 0) {
+        deletedStoneAbilityPropsCount += await deleteGetCount(Dbs.stoneAbilityProperty,{id: {inq: abilitiesPropertiesToDelete}});
+      }
 
     let deletedHubCount               = await deleteGetCount(Dbs.hub,{sphereId: {nin: spheresWithOwnerIds}});
-
     let existingHubIds                = await idArray(Dbs.hub.find({fields:{id:true}}))
     let deletedOrphanedHubTokenCount  = await deleteGetCount(Dbs.crownstoneToken,{userId: {nin: existingHubIds}, principalType:"Hub"});
     let deletedSphereAccessHubCount   = await deleteGetCount(Dbs.sphereAccess,{userId: {nin: existingHubIds}, role:AccessLevels.hub});
