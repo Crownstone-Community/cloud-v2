@@ -303,3 +303,4 @@ async function getTokensFromUsers(users: User[] | {id: string}[], excludeDeviceI
 
 
 export const NotificationHandler = new NotificationHandlerClass();
+
