@@ -2,6 +2,23 @@ import {Stone} from "../../../models/stone.model";
 import {StoneAbility} from "../../../models/stoneSubModels/stone-ability.model";
 
 export const SSEPacketGenerator = {
+
+  generateLocalizationTransformRequest(deviceId: string, uuid: string) {
+
+  },
+
+  generateLocalizationTransformStart(uuid: string) {
+
+  },
+
+  generateLocalizationTransformDeviceComplete(deviceId: string, uuid: string) {
+
+  },
+
+  generateLocalizationTransformComplete(uuid: string) {
+
+  },
+
   // generateMultiSwitchCrownstoneEvent(sphere: SphereData, stone: CrownstoneData[], switchStateMap) {
   //   let stoneData = [];
   //   for (let i = 0; i < stones.length; i++) {

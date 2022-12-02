@@ -28,6 +28,72 @@ export class Localization extends SphereItem {
     super();
   }
 
+  @post('/transform/request')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async startTransform(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('userDeviceType')   deviceType: string,    // this is the deviceId of DeviceInfo lib.
+    @param.path.string('targetUserId')     targetUserId: string,
+    @param.path.string('targetDeviceType') targetDeviceType: string,
+  ): Promise<string> {
+    // create a transform session which can time out after 30 minutes.
+
+    // flow:
+    // tell other user to open the app
+    // start the transform request
+    // wait for the other user to accept the request
+    // start the transform process.
+    // users gather data and post it
+
+
+    return "UUID";
+  }
+
+  @post('/transform/data')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async transformData(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('userDeviceType') deviceType: string,
+    @param.path.string('transformId')    transformId: string,
+    @requestBody({required: true}) measurementData: any[]
+  ): Promise<void> {
+    // this uploads the data for a user for the transform process.
+  }
+
+
+  @post('/transform/finalize')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async finalizeTransform(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('userDeviceType')   deviceType: string,
+    @requestBody({required: true}) measurementData: any[]
+  ): Promise<void> {
+    // finalize will start calculating the transform and send the data over the SSE
+  }
+
+
+
+  @get('/transform/result')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async getTransform(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('deviceA')   deviceTypeA: string,
+    @param.path.string('deviceB')   deviceTypeB: string,
+    @requestBody({required: true}) measurementData: any[]
+  ): Promise<void> {
+    // get the transform data
+  }
+
+
+
+
+
+
+
   @post('/spheres/{id}/fingerprint')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
