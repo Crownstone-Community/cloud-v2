@@ -3,7 +3,7 @@
 // import {inject} from '@loopback/context';
 import {inject} from "@loopback/context";
 import {SecurityBindings, securityId, UserProfile} from "@loopback/security";
-import {del, get, getModelSchemaRef, param, post, put, requestBody} from '@loopback/rest';
+import {del, get, HttpErrors, param, post, put, requestBody} from '@loopback/rest';
 import {authenticate} from "@loopback/authentication";
 import {UserProfileDescription} from "../security/authentication-strategies/access-token-strategy";
 import {SecurityTypes} from "../config";
@@ -15,7 +15,7 @@ import {Authorization} from "../security/authorization-strategies/authorization-
 import {Dbs} from "../modules/containers/RepoContainer";
 import {FingerprintV2} from "../models/fingerprint-v2.model";
 import {SphereAccessUtil} from "../util/SphereAccessUtil";
-
+import {TransformSessionManager} from "../modules/fingerprintTransform/TransformSessionManager";
 
 
 export class Localization extends SphereItem {
@@ -28,71 +28,111 @@ export class Localization extends SphereItem {
     super();
   }
 
-  @post('/transform/request')
+  @post('/sphere/{id}/transform')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async startTransform(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('userDeviceType')   deviceType: string,    // this is the deviceId of DeviceInfo lib.
-    @param.path.string('targetUserId')     targetUserId: string,
-    @param.path.string('targetDeviceType') targetDeviceType: string,
+    @param.path.string('id')   sphereId: string,
+    @param.query.string('userDeviceType')   deviceType: string,    // this is the deviceId of DeviceInfo lib.
+    @param.query.string('targetUserId')     targetUserId: string,
+    @param.query.string('targetDeviceType') targetDeviceType: string,
   ): Promise<string> {
-    // create a transform session which can time out after 30 minutes.
-
-    // flow:
-    // tell other user to open the app
-    // start the transform request
-    // wait for the other user to accept the request
-    // start the transform process.
-    // users gather data and post it
-
-
-    return "UUID";
+    try {
+      // create a transform session which can time out after 30 minutes.
+      let sessionId = await TransformSessionManager.createNewSession(sphereId, userProfile[securityId], deviceType, targetUserId, targetDeviceType);
+      return sessionId;
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
   }
 
-  @post('/transform/data')
+  @post('/sphere/{id}/transform/{transformId}/startCollection')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
-  async transformData(
+  async startCollection(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('userDeviceType') deviceType: string,
+    @param.path.string('id')   sphereId: string,
     @param.path.string('transformId')    transformId: string,
-    @requestBody({required: true}) measurementData: any[]
+  ): Promise<string> {
+    // create a transform session which can time out after 30 minutes.
+    let datasetId = TransformSessionManager.startDatasetCollection(transformId);
+    return datasetId;
+  }
+
+  @post('/sphere/{id}/transform/{transformId}/data/{collectionId}')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async addDataToCollection(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')    transformId: string,
+    @param.path.string('collectionId')   collectionId: string,
+    @requestBody({required: true}) measurementData: Record<string, rssi>
   ): Promise<void> {
     // this uploads the data for a user for the transform process.
+    try {
+      TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], measurementData);
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
+  }
+
+  @post('/sphere/{id}/transform/{transformId}/join')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async joinSession(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')    transformId: string,
+  ): Promise<void> {
+    // this uploads the data for a user for the transform process.
+    try {
+      TransformSessionManager.joinSession(transformId, userProfile[securityId]);
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
   }
 
 
-  @post('/transform/finalize')
+  @post('/sphere/{id}/transform/{transformId}/finalize')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async finalizeTransform(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('userDeviceType')   deviceType: string,
-    @requestBody({required: true}) measurementData: any[]
-  ): Promise<void> {
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')   transformId: string,
+  ): Promise<{sessionId: uuid, fromDevice: string, toDevice: string, transform: TransformSet}[]> {
     // finalize will start calculating the transform and send the data over the SSE
+    try {
+      return TransformSessionManager.generateTransformSets(transformId);
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
   }
 
 
 
-  @get('/transform/result')
+  @get('/sphere/{id}/transform/{transformId}/result')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async getTransform(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('deviceA')   deviceTypeA: string,
-    @param.path.string('deviceB')   deviceTypeB: string,
-    @requestBody({required: true}) measurementData: any[]
-  ): Promise<void> {
-    // get the transform data
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')   transformId: string
+  ): Promise<{sessionId: uuid, fromDevice: string, toDevice: string, transform: TransformSet}[]> {
+    // finalize will start calculating the transform and send the data over the SSE
+    try {
+      return TransformSessionManager.generateTransformSets(transformId);
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
   }
-
-
-
-
-
-
 
   @post('/spheres/{id}/fingerprint')
   @authenticate(SecurityTypes.accessToken)

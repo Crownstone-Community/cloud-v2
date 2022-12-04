@@ -1,5 +1,6 @@
 interface EventDataRequestOptions {
   userId?: string,
+  userIds?: string[],
   sphereId?: string,
   locationId?: string,
   stoneId?: string,
@@ -34,13 +35,17 @@ interface AccessModel {
 type SseEvent = SseSystemEvent | SseDataEvent
 type SseSystemEvent = SystemEvent | PingEvent
 type SseDataEvent = SwitchStateUpdateEvent     |
-  MultiSwitchCrownstoneEvent |
-  SphereTokensUpdatedEvent   |
-  PresenceSphereEvent        |
-  PresenceLocationEvent      |
-  DataChangeEvent            |
-  AbilityChangeEvent         |
-  InvitationChangeEvent
+  MultiSwitchCrownstoneEvent      |
+  SphereTokensUpdatedEvent        |
+  PresenceSphereEvent             |
+  PresenceLocationEvent           |
+  DataChangeEvent                 |
+  AbilityChangeEvent              |
+  InvitationChangeEvent           |
+  TransformEvent                  |
+  TransformCollectionEvent        |
+  TransformCollectionPartialEvent |
+  TransformResultEvent
 
 interface PingEvent {
   type:    "ping",
@@ -61,6 +66,44 @@ interface MultiSwitchCrownstoneEvent {
   sphere:      SphereData,
   switchData:  CrownstoneSwitchCommand[],
 }
+
+interface TransformEvent {
+  type:      "transform",
+  subType:   "sessionRequested" | "sessionReady",
+  sphere:     SphereData
+  sessionId:  string,
+  userA:      UserData,
+  userB:      UserData,
+  phoneTypeA: string,
+  phoneTypeB: string,
+}
+
+interface TransformCollectionEvent {
+  type:        "transform",
+  subType:     "collectionSessionReady" | "collectionCompleted",
+  sphere:       SphereData
+  sessionId:    string,
+  collectionId: string,
+}
+
+interface TransformCollectionPartialEvent {
+  type:        "transform",
+  subType:      "collectionPartiallyCompleted",
+  sphere:       SphereData
+  sessionId:    string,
+  collectionId: string,
+  user:         UserData,
+  phoneType:    string,
+}
+
+interface TransformResultEvent {
+  type:     "transform",
+  subType:  "sessionCompleted",
+  sphere:    SphereData
+  sessionId: string,
+  result:    TransformResult,
+}
+
 
 interface PresenceSphereEvent {
   type:     "presence",
@@ -153,6 +196,7 @@ type ArrayMap = { [key: string] : string[] }
 
 interface EventDataResult {
   user?: UserEventData,
+  users?: {[userId:string]: UserEventData},
   ability?: AbilityData,
   sphere?: SphereEventData,
   location?: LocationEventData,

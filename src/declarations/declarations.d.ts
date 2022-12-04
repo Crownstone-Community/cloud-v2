@@ -1,7 +1,8 @@
 interface map       { [key: string]: boolean }
 interface numberMap { [key: string]: number }
 interface stringMap { [key: string]: string }
-
+type uuid = string;
+type crownstoneId = string;
 
 type PromiseCallback = (any) => Promise<any>
 

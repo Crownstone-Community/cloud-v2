@@ -11,6 +11,12 @@ const SPHERE_FIELDS   = {id:true, name: true, uid: true};
 const LOCATION_FIELDS = {id:true, name: true};
 const ABILITY_FIELDS  = {type:true, enabled: true, syncedToCrownstone: true};
 
+interface EventDataMapOptions {
+  user?: User,
+  users?: User[],
+  sphere?: Sphere,
+}
+
 /**
  * This cache is used for the SSE events. It allows us to lookup some data for events and reuse that if it is queried soon after.
  * This is done when we have already obtained the item for a certain ID and it would be a waste of a request to the db to get it again.
@@ -95,11 +101,15 @@ export class EventConstructor {
         sphere = await Dbs.sphere.findById(sphereId, {fields: SPHERE_FIELDS});
         EventSphereCache.load(sphereId, sphere);
       }
-      return { id: sphereId, name: sphere.name, uid: sphere.uid }
+      return EventConstructor.mapSphereData(sphere);
     }
     catch (e) {
       throw {code: 401, message: "Not available" };
     }
+  }
+
+  static mapSphereData(sphere: Sphere) : SphereData {
+    return { id: sphere.id, name: sphere.name, uid: sphere.uid }
   }
 
   static async getLocationData(locationId: string) : Promise<LocationData> {
@@ -134,29 +144,33 @@ export class EventConstructor {
         user = await Dbs.user.findById(userId, {fields: USER_FIELDS});
         EventUserCache.load(userId, user);
       }
-      let userName;
-      if (!user.firstName) {
-        if (!user.lastName) {
-          userName = "Anonymous";
-        }
-        else {
-          userName = user.lastName;
-        }
-      }
-      else {
-        if (!user.lastName) {
-          userName = user.firstName;
-        }
-        else {
-          userName = user.firstName + ' ' + user.lastName;
-        }
-      }
-
-      return { id: userId, name: userName }
+      return EventConstructor.mapUserData(user);
     }
     catch (e) {
       throw {code: 401, message: "Not available" };
     }
+  }
+
+  static mapUserData(user:User) : UserData {
+    let userName;
+    if (!user.firstName) {
+      if (!user.lastName) {
+        userName = "Anonymous";
+      }
+      else {
+        userName = user.lastName;
+      }
+    }
+    else {
+      if (!user.lastName) {
+        userName = user.firstName;
+      }
+      else {
+        userName = user.firstName + ' ' + user.lastName;
+      }
+    }
+
+    return { id: user.id, name: userName }
   }
 
   static async getData(options: EventDataRequestOptions) : Promise<EventDataResult> {
@@ -164,6 +178,12 @@ export class EventConstructor {
 
     if (options.userId) {
       result.user = await EventConstructor.getUserData(options.userId);
+    }
+    if (options.userIds) {
+      result.users = [];
+      for (let userId of options.userIds) {
+        result.users[userId] = await EventConstructor.getUserData(userId);
+      }
     }
     if (options.stoneId) {
       result.stone = await EventConstructor.getStoneData(options.stoneId);
@@ -177,6 +197,28 @@ export class EventConstructor {
     if (options.abilityId) {
       result.ability = await EventConstructor.getAbilityData(options.abilityId);
     }
+
+    return result;
+  }
+
+
+
+  static mapData(options: EventDataMapOptions) : EventDataResult {
+    let result : EventDataResult = {};
+
+    if (options.user) {
+      result.user = EventConstructor.mapUserData(options.user);
+    }
+    if (options.users) {
+      result.users = [];
+      for (let user of options.users) {
+        result.users[user.id] = EventConstructor.mapUserData(user);
+      }
+    }
+    if (options.sphere) {
+      result.sphere = EventConstructor.mapSphereData(options.sphere)
+    }
+
 
     return result;
   }

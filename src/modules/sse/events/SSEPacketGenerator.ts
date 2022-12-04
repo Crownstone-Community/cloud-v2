@@ -3,20 +3,74 @@ import {StoneAbility} from "../../../models/stoneSubModels/stone-ability.model";
 
 export const SSEPacketGenerator = {
 
-  generateLocalizationTransformRequest(deviceId: string, uuid: string) {
-
+  generateTransformSessionRequestedEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, phoneTypeA: string, phoneTypeB: string) : SseDataEvent {
+    return {
+      type: "transform",
+      subType: "sessionRequested",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      userA: userData(userA),
+      userB: userData(userB),
+      phoneTypeA: phoneTypeA,
+      phoneTypeB: phoneTypeB,
+    }
   },
 
-  generateLocalizationTransformStart(uuid: string) {
 
+  generateTransformSessionReadyEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, phoneTypeA: string, phoneTypeB: string) : SseDataEvent  {
+    return {
+      type: "transform",
+      subType: "sessionReady",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      userA: userData(userA),
+      userB: userData(userB),
+      phoneTypeA: phoneTypeA,
+      phoneTypeB: phoneTypeB,
+    }
   },
 
-  generateLocalizationTransformDeviceComplete(deviceId: string, uuid: string) {
-
+  generateTransformDatacollectionStartedEvent(sphere: SphereData, sessionId: string, collectionId: string) : SseDataEvent  {
+    return {
+      type: "transform",
+      subType: "collectionSessionReady",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      collectionId: collectionId,
+    }
   },
 
-  generateLocalizationTransformComplete(uuid: string) {
+  generateTransformDatacollectionReceivedEvent(sphere: SphereData, sessionId: string, collectionId: string, user: UserData, phoneType: string) : SseDataEvent  {
+    return {
+      type: "transform",
+      subType: "collectionPartiallyCompleted",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      collectionId: collectionId,
+      user: userData(user),
+      phoneType: phoneType,
+    }
+  },
 
+
+  generateTransformDatacollectionFinishedEvent(sphere: SphereData, sessionId: string, collectionId: string) : SseDataEvent  {
+    return {
+      type: "transform",
+      subType: "collectionCompleted",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      collectionId: collectionId,
+    }
+  },
+
+  generateTransformSetFinishedEvent(sphere: SphereData, sessionId: string, result: TransformResult) : SseDataEvent  {
+    return {
+      type: "transform",
+      subType: "sessionCompleted",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+      result: result,
+    }
   },
 
   // generateMultiSwitchCrownstoneEvent(sphere: SphereData, stone: CrownstoneData[], switchStateMap) {
