@@ -42,10 +42,7 @@ type SseDataEvent = SwitchStateUpdateEvent     |
   DataChangeEvent                 |
   AbilityChangeEvent              |
   InvitationChangeEvent           |
-  TransformEvent                  |
-  TransformCollectionEvent        |
-  TransformCollectionPartialEvent |
-  TransformResultEvent
+  TransformEvents
 
 interface PingEvent {
   type:    "ping",
@@ -66,6 +63,8 @@ interface MultiSwitchCrownstoneEvent {
   sphere:      SphereData,
   switchData:  CrownstoneSwitchCommand[],
 }
+
+type TransformEvents = TransformEvent | TransformCollectionEvent | TransformCollectionPartialEvent | TransformResultEvent | TransformStoppedEvent;
 
 interface TransformEvent {
   type:      "transform",
@@ -102,6 +101,12 @@ interface TransformResultEvent {
   sphere:    SphereData
   sessionId: string,
   result:    TransformResult,
+}
+interface TransformStoppedEvent {
+  type:     "transform",
+  subType:  "sessionStopped",
+  sphere:    SphereData
+  sessionId: string,
 }
 
 

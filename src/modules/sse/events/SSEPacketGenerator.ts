@@ -16,6 +16,15 @@ export const SSEPacketGenerator = {
     }
   },
 
+  generateTransformSessionStoppedEvent(sphere: SphereData, sessionId: string) : SseDataEvent {
+    return {
+      type: "transform",
+      subType: "sessionStopped",
+      sphere: sphereData(sphere),
+      sessionId: sessionId,
+    }
+  },
+
 
   generateTransformSessionReadyEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, phoneTypeA: string, phoneTypeB: string) : SseDataEvent  {
     return {

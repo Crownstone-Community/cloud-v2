@@ -20,6 +20,15 @@ export class TransformEventHandler {
     SSEManager.emit(packet);
   }
 
+  sendTransformSessionStoppedEvent(sphere: Sphere, sessionId: string) {
+    let mappedData = EventConstructor.mapData({sphere});
+    let packet = SSEPacketGenerator.generateTransformSessionStoppedEvent(
+      mappedData.sphere,
+      sessionId,
+    );
+    SSEManager.emit(packet);
+  }
+
 
   sendTransformSessionReadyEvent(sphere: Sphere, sessionId: string, userA: User, userB: User, phoneTypeA: string, phoneTypeB: string) {
     let mappedData = EventConstructor.mapData({sphere, users:[userA, userB]});

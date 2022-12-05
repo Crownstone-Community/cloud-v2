@@ -48,6 +48,17 @@ export class Localization extends SphereItem {
     }
   }
 
+  @del('/sphere/{id}/transform/{transformId}')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async deleteTransform(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')   transformId: string,
+  ): Promise<void> {
+    TransformSessionManager.killSession(transformId);
+  }
+
   @post('/sphere/{id}/transform/{transformId}/startCollection')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())

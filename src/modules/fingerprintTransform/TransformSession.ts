@@ -105,6 +105,11 @@ export class TransformSession {
     clearInterval(this.inviteInterval);
     clearTimeout(this.cleanupTimeout);
     this.destructor();
+
+    EventHandler.transform.sendTransformSessionStoppedEvent(
+      this.sphere,
+      this.id,
+    );
   }
 
   startDatasetCollection() : uuid {

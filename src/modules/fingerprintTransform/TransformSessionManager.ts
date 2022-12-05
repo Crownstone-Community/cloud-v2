@@ -29,6 +29,12 @@ class TransformSessionManagerClass {
     return id;
   }
 
+  killSession(sessionUUID : uuid) {
+    if (this.activeSessions[sessionUUID]) {
+      this.activeSessions[sessionUUID].cleanup();
+    }
+  }
+
   joinSession(sessionUUID : uuid, userId: string) {
     if (this.activeSessions[sessionUUID]) {
       this.activeSessions[sessionUUID].joinSession(userId);
