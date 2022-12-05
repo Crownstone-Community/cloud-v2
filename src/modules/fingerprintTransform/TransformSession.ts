@@ -98,6 +98,9 @@ export class TransformSession {
         this.phoneType_B
       );
     }
+    else {
+      throw new Error("User is not invited to this session.");
+    }
   }
 
   cleanup() {
@@ -128,26 +131,30 @@ export class TransformSession {
 
     if (userId === this.userId_A && this.datasets[datasetUUID].setA === null) {
       this.datasets[datasetUUID].setA = dataset;
-      EventHandler.transform.sendTransformDatacollectionReceivedEvent(
-        this.sphere,
-        this.id,
-        datasetUUID,
-        this.userA,
-        this.phoneType_A
-      );
+      if (this.datasets[datasetUUID].setB === null) {
+        EventHandler.transform.sendTransformDatacollectionReceivedEvent(
+          this.sphere,
+          this.id,
+          datasetUUID,
+          this.userA,
+          this.phoneType_A
+        );
+      }
     }
     else if (userId === this.userId_A && this.datasets[datasetUUID].setA !== null) {
       throw new Error("Already received dataset from user A for this collection session.");
     }
     else if (userId === this.userId_B && this.datasets[datasetUUID].setB === null) {
       this.datasets[datasetUUID].setB = dataset;
-      EventHandler.transform.sendTransformDatacollectionReceivedEvent(
-        this.sphere,
-        this.id,
-        datasetUUID,
-        this.userB,
-        this.phoneType_B
-      );
+      if (this.datasets[datasetUUID].setA === null) {
+        EventHandler.transform.sendTransformDatacollectionReceivedEvent(
+          this.sphere,
+          this.id,
+          datasetUUID,
+          this.userB,
+          this.phoneType_B
+        );
+      }
     }
     else if (userId === this.userId_B && this.datasets[datasetUUID].setB !== null) {
       throw new Error("Already received dataset from user B for this collection session.");
@@ -159,6 +166,10 @@ export class TransformSession {
         this.id,
         datasetUUID,
       );
+
+      // TODO: check the quality of all collected datasets.
+
+
     }
   }
 
@@ -221,6 +232,47 @@ export class TransformSession {
 
     return transformSet;
   }
+}
+
+function checkDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, setB: MeasurementMap}}) {
+  let comparisonArray_AtoB : TransformArray = [];
+  let comparisonArray_BtoA : TransformArray = [];
+  for (let uuid in datasets) {
+    if (datasets[uuid].setA === null || datasets[uuid].setB === null) { continue; }
+
+    let rawMap_AtoB = TransformUtil.getRawMap_AtoB(datasets[uuid].setA, datasets[uuid].setB)
+    let rawMap_BtoA = TransformUtil.getRawMap_AtoB(datasets[uuid].setA, datasets[uuid].setB)
+    comparisonArray_AtoB = comparisonArray_AtoB.concat(rawMap_AtoB);
+    comparisonArray_BtoA = comparisonArray_BtoA.concat(rawMap_BtoA);
+  }
+
+  comparisonArray_AtoB.sort((a,b) => { return b[0] - a[0]; });
+  comparisonArray_BtoA.sort((a,b) => { return b[0] - a[0]; });
+  let coreBuckets       = [ -60, -70, -80 ];
+
+  let coreA = checkBucketFillFactor(coreBuckets, comparisonArray_AtoB);
+  let coreB = checkBucketFillFactor(coreBuckets, comparisonArray_BtoA);
 
 
+}
+
+function checkBucketFillFactor(buckets:number[], data: TransformArray) : { count: number, missingBuckets: number[] } {
+  let bucketedData = TransformUtil.fillBuckets(buckets, data);
+
+  // check if there are at least 4 buckets with at least 3 datapoints.
+  let quality : Record<string, number> = {}
+  for (let data of bucketedData) {
+    quality[data.x] = data.data.length;
+  }
+
+  // check how many buckets have less than 3 datapoints.
+  let count = 0;
+  let missingBuckets = [];
+  for (let bucket of buckets) {
+    if (!quality[bucket] || quality[bucket] < 3) {
+      count++;
+      missingBuckets.push(bucket);
+    }
+  }
+  return {count, missingBuckets};
 }

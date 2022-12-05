@@ -59,37 +59,6 @@ export class Localization extends SphereItem {
     TransformSessionManager.killSession(transformId);
   }
 
-  @post('/sphere/{id}/transform/{transformId}/startCollection')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async startCollection(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id')   sphereId: string,
-    @param.path.string('transformId')    transformId: string,
-  ): Promise<string> {
-    // create a transform session which can time out after 30 minutes.
-    let datasetId = TransformSessionManager.startDatasetCollection(transformId);
-    return datasetId;
-  }
-
-  @post('/sphere/{id}/transform/{transformId}/data/{collectionId}')
-  @authenticate(SecurityTypes.accessToken)
-  @authorize(Authorization.sphereMember())
-  async addDataToCollection(
-    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
-    @param.path.string('id')   sphereId: string,
-    @param.path.string('transformId')    transformId: string,
-    @param.path.string('collectionId')   collectionId: string,
-    @requestBody({required: true}) measurementData: Record<string, rssi>
-  ): Promise<void> {
-    // this uploads the data for a user for the transform process.
-    try {
-      TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], measurementData);
-    }
-    catch (err: any) {
-      throw new HttpErrors.BadRequest(err.message);
-    }
-  }
 
   @post('/sphere/{id}/transform/{transformId}/join')
   @authenticate(SecurityTypes.accessToken)
@@ -127,7 +96,6 @@ export class Localization extends SphereItem {
   }
 
 
-
   @get('/sphere/{id}/transform/{transformId}/result')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
@@ -144,6 +112,41 @@ export class Localization extends SphereItem {
       throw new HttpErrors.BadRequest(err.message);
     }
   }
+
+
+  @post('/sphere/{id}/transform/{transformId}/collection')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async startCollection(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')    transformId: string,
+  ): Promise<uuid> {
+    // create a transform session which can time out after 30 minutes.
+    let datasetId = TransformSessionManager.startDatasetCollection(transformId);
+    return datasetId;
+  }
+
+
+  @post('/sphere/{id}/transform/{transformId}/collection/{collectionId}/data')
+  @authenticate(SecurityTypes.accessToken)
+  @authorize(Authorization.sphereMember())
+  async addDataToCollection(
+    @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
+    @param.path.string('id')   sphereId: string,
+    @param.path.string('transformId')    transformId: string,
+    @param.path.string('collectionId')   collectionId: string,
+    @requestBody({required: true}) measurementData: MeasurementMap
+  ): Promise<void> {
+    // this uploads the data for a user for the transform process.
+    try {
+      TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], measurementData);
+    }
+    catch (err: any) {
+      throw new HttpErrors.BadRequest(err.message);
+    }
+  }
+
 
   @post('/spheres/{id}/fingerprint')
   @authenticate(SecurityTypes.accessToken)
