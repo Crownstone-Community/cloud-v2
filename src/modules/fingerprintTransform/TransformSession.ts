@@ -161,15 +161,13 @@ export class TransformSession {
     }
 
     if (this.datasets[datasetUUID].setA !== null && this.datasets[datasetUUID].setB !== null) {
+      let qualityResult = getDatasetQuality(this.datasets);
       EventHandler.transform.sendTransformDatacollectionFinishedEvent(
         this.sphere,
         this.id,
         datasetUUID,
+        qualityResult
       );
-
-      // TODO: check the quality of all collected datasets.
-
-
     }
   }
 
@@ -234,7 +232,7 @@ export class TransformSession {
   }
 }
 
-function checkDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, setB: MeasurementMap}}) {
+function getDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, setB: MeasurementMap}}) : {userA: Record<string, number>, userB: Record<string, number>} {
   let comparisonArray_AtoB : TransformArray = [];
   let comparisonArray_BtoA : TransformArray = [];
   for (let uuid in datasets) {
@@ -248,15 +246,15 @@ function checkDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, s
 
   comparisonArray_AtoB.sort((a,b) => { return b[0] - a[0]; });
   comparisonArray_BtoA.sort((a,b) => { return b[0] - a[0]; });
-  let coreBuckets       = [ -60, -70, -80 ];
+  let coreBuckets       = [ -50, -55, -60, -65, -70, -75, -80, -85, -90 ];
 
   let coreA = checkBucketFillFactor(coreBuckets, comparisonArray_AtoB);
   let coreB = checkBucketFillFactor(coreBuckets, comparisonArray_BtoA);
 
-
+  return {userA: coreA, userB: coreB};
 }
 
-function checkBucketFillFactor(buckets:number[], data: TransformArray) : { count: number, missingBuckets: number[] } {
+function checkBucketFillFactor(buckets:number[], data: TransformArray) : Record<string,number> {
   let bucketedData = TransformUtil.fillBuckets(buckets, data);
 
   // check if there are at least 4 buckets with at least 3 datapoints.
@@ -265,14 +263,10 @@ function checkBucketFillFactor(buckets:number[], data: TransformArray) : { count
     quality[data.x] = data.data.length;
   }
 
-  // check how many buckets have less than 3 datapoints.
-  let count = 0;
-  let missingBuckets = [];
   for (let bucket of buckets) {
-    if (!quality[bucket] || quality[bucket] < 3) {
-      count++;
-      missingBuckets.push(bucket);
+    if (!quality[bucket]) {
+      quality[bucket] = 0;
     }
   }
-  return {count, missingBuckets};
+  return quality;
 }

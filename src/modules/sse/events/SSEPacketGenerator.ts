@@ -62,13 +62,14 @@ export const SSEPacketGenerator = {
   },
 
 
-  generateTransformDatacollectionFinishedEvent(sphere: SphereData, sessionId: string, collectionId: string) : SseDataEvent  {
+  generateTransformDatacollectionFinishedEvent(sphere: SphereData, sessionId: string, collectionId: string, quality: {userA: Record<string,number>, userB: Record<string,number>}) : SseDataEvent  {
     return {
       type: "transform",
       subType: "collectionCompleted",
       sphere: sphereData(sphere),
       sessionId: sessionId,
       collectionId: collectionId,
+      quality: quality,
     }
   },
 

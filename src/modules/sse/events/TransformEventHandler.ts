@@ -68,12 +68,13 @@ export class TransformEventHandler {
   }
 
 
-  sendTransformDatacollectionFinishedEvent(sphere: Sphere, sessionId: string, collectionId: string) {
+  sendTransformDatacollectionFinishedEvent(sphere: Sphere, sessionId: string, collectionId: string, quality: {userA: Record<string,number>, userB: Record<string,number>}) {
     let mappedData = EventConstructor.mapData({sphere});
     let packet = SSEPacketGenerator.generateTransformDatacollectionFinishedEvent(
       mappedData.sphere,
       sessionId,
-      collectionId
+      collectionId,
+      quality
     );
     SSEManager.emit(packet);
   }
