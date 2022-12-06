@@ -73,8 +73,8 @@ interface TransformEvent {
   sessionId:  string,
   userA:      UserData,
   userB:      UserData,
-  phoneTypeA: string,
-  phoneTypeB: string,
+  deviceIdA: string,
+  deviceIdB: string,
 }
 
 interface TransformCollectionEvent {
@@ -101,7 +101,7 @@ interface TransformCollectionPartialEvent {
   sessionId:    string,
   collectionId: string,
   user:         UserData,
-  phoneType:    string,
+  deviceId:     string,
 }
 
 interface TransformResultEvent {

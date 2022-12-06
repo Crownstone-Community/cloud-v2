@@ -10,17 +10,17 @@ class TransformSessionManagerClass {
    * The sphereId is used for authenticated routing of sse events
    * @param sphereId
    * @param userId_A
-   * @param phoneType_A
+   * @param deviceId_A
    * @param userId_B
-   * @param phoneType_B
+   * @param deviceId_B
    */
-  async createNewSession(sphereId: string, userId_A: string, phoneType_A: string, userId_B: string, phoneType_B: string) : Promise<uuid> {
+  async createNewSession(sphereId: string, userId_A: string, deviceId_A: string, userId_B: string, deviceId_B: string) : Promise<uuid> {
     let id = Util.getUUID();
     let session = new TransformSession(
       id,
       sphereId,
       () => { delete this.activeSessions[id]; },
-      userId_A, phoneType_A, userId_B, phoneType_B
+      userId_A, deviceId_A, userId_B, deviceId_B
     );
 
     this.activeSessions[session.id] = session;

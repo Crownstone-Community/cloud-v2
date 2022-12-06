@@ -18,8 +18,8 @@ export class TransformSession {
 
   userId_A: string;
   userId_B: string;
-  phoneType_A: string;
-  phoneType_B: string;
+  deviceId_A: string;
+  deviceId_B: string;
 
   invitePending: boolean = false;
 
@@ -28,7 +28,7 @@ export class TransformSession {
   inviteInterval : NodeJS.Timeout;
   inviteTimeout  : NodeJS.Timeout;
 
-  constructor(id: uuid, sphereId: string, destructor: () => void, userId_A: string, phoneType_A: string, userId_B: string, phoneType_B: string) {
+  constructor(id: uuid, sphereId: string, destructor: () => void, userId_A: string, deviceId_A: string, userId_B: string, deviceId_B: string) {
     this.id = id;
     this.sphereId = sphereId;
     this.destructor = destructor;
@@ -39,8 +39,8 @@ export class TransformSession {
 
     this.userId_A = userId_A;
     this.userId_B = userId_B;
-    this.phoneType_A = phoneType_A;
-    this.phoneType_B = phoneType_B;
+    this.deviceId_A = deviceId_A;
+    this.deviceId_B = deviceId_B;
   }
 
   async init() : Promise<void> {
@@ -60,8 +60,8 @@ export class TransformSession {
           this.id,
           this.userA,
           this.userB,
-          this.phoneType_A,
-          this.phoneType_B
+          this.deviceId_A,
+          this.deviceId_B
         );
       }, 2000);
 
@@ -94,8 +94,8 @@ export class TransformSession {
         this.id,
         this.userA,
         this.userB,
-        this.phoneType_A,
-        this.phoneType_B
+        this.deviceId_A,
+        this.deviceId_B
       );
     }
     else {
@@ -137,7 +137,7 @@ export class TransformSession {
           this.id,
           datasetUUID,
           this.userA,
-          this.phoneType_A
+          this.deviceId_A
         );
       }
     }
@@ -152,7 +152,7 @@ export class TransformSession {
           this.id,
           datasetUUID,
           this.userB,
-          this.phoneType_B
+          this.deviceId_B
         );
       }
     }
@@ -175,8 +175,8 @@ export class TransformSession {
     let aToB = this._generateTransformSetDirection(true);
     let bToA = this._generateTransformSetDirection(false);
     let result = [
-      {sessionId: this.id, fromDevice: this.phoneType_A, toDevice: this.phoneType_B, transform: aToB},
-      {sessionId: this.id, fromDevice: this.phoneType_B, toDevice: this.phoneType_A, transform: bToA}
+      {sessionId: this.id, fromDevice: this.deviceId_A, toDevice: this.deviceId_B, transform: aToB},
+      {sessionId: this.id, fromDevice: this.deviceId_B, toDevice: this.deviceId_A, transform: bToA}
     ];
     EventHandler.transform.sendTransformSetFinishedEvent(
       this.sphere,

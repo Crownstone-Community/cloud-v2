@@ -3,7 +3,7 @@ import {StoneAbility} from "../../../models/stoneSubModels/stone-ability.model";
 
 export const SSEPacketGenerator = {
 
-  generateTransformSessionRequestedEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, phoneTypeA: string, phoneTypeB: string) : SseDataEvent {
+  generateTransformSessionRequestedEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, deviceIdA: string, deviceIdB: string) : SseDataEvent {
     return {
       type: "transform",
       subType: "sessionRequested",
@@ -11,8 +11,8 @@ export const SSEPacketGenerator = {
       sessionId: sessionId,
       userA: userData(userA),
       userB: userData(userB),
-      phoneTypeA: phoneTypeA,
-      phoneTypeB: phoneTypeB,
+      deviceIdA: deviceIdA,
+      deviceIdB: deviceIdB,
     }
   },
 
@@ -26,7 +26,7 @@ export const SSEPacketGenerator = {
   },
 
 
-  generateTransformSessionReadyEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, phoneTypeA: string, phoneTypeB: string) : SseDataEvent  {
+  generateTransformSessionReadyEvent(sphere: SphereData, sessionId: string, userA: UserData, userB: UserData, deviceIdA: string, deviceIdB: string) : SseDataEvent  {
     return {
       type: "transform",
       subType: "sessionReady",
@@ -34,8 +34,8 @@ export const SSEPacketGenerator = {
       sessionId: sessionId,
       userA: userData(userA),
       userB: userData(userB),
-      phoneTypeA: phoneTypeA,
-      phoneTypeB: phoneTypeB,
+      deviceIdA: deviceIdA,
+      deviceIdB: deviceIdB,
     }
   },
 
@@ -49,7 +49,7 @@ export const SSEPacketGenerator = {
     }
   },
 
-  generateTransformDatacollectionReceivedEvent(sphere: SphereData, sessionId: string, collectionId: string, user: UserData, phoneType: string) : SseDataEvent  {
+  generateTransformDatacollectionReceivedEvent(sphere: SphereData, sessionId: string, collectionId: string, user: UserData, deviceId: string) : SseDataEvent  {
     return {
       type: "transform",
       subType: "collectionPartiallyCompleted",
@@ -57,7 +57,7 @@ export const SSEPacketGenerator = {
       sessionId: sessionId,
       collectionId: collectionId,
       user: userData(user),
-      phoneType: phoneType,
+      deviceId: deviceId,
     }
   },
 
