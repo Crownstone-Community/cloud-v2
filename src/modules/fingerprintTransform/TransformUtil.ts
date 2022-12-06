@@ -1,6 +1,3 @@
-import {TransformSession} from "./TransformSession";
-
-
 export const TransformUtil = {
 
   transformDataset(dataset: number[], transformSet: TransformSet) : number[] {
@@ -202,6 +199,4 @@ export const TransformUtil = {
     }
     return null;
   },
-
-
 }

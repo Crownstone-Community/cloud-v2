@@ -18,6 +18,9 @@ export class FingerprintV2 extends AddTimestamps(BaseEntity) {
   @property({type: 'string', required: true})
   createdOnDeviceType: string;
 
+  @property({type: 'boolean', default: false})
+  exclusive: boolean;
+
   @property({type: 'array', itemType: 'string', required: true})
   crownstonesAtCreation: string[]; // array of maj_min as id representing the Crownstone.
 
