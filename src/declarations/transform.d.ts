@@ -14,4 +14,4 @@ interface AveragedBucketedData {
 }
 type TransformSet = AveragedBucketedData[];
 
-type TransformResult = {sessionId: uuid, fromDevice: string, toDevice: string, transform: TransformSet}[]
+type TransformResult = {sessionId: uuid, fromDevice: string, fromUser: userId, toDevice: string, toUser: userId, transform: TransformSet}[]

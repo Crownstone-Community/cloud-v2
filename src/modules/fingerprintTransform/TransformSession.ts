@@ -175,8 +175,8 @@ export class TransformSession {
     let aToB = this._generateTransformSetDirection(true);
     let bToA = this._generateTransformSetDirection(false);
     let result = [
-      {sessionId: this.id, fromDevice: this.deviceId_A, toDevice: this.deviceId_B, transform: aToB},
-      {sessionId: this.id, fromDevice: this.deviceId_B, toDevice: this.deviceId_A, transform: bToA}
+      {sessionId: this.id, fromUser: this.userA.id, fromDevice: this.deviceId_A, toUser: this.userB.id, toDevice: this.deviceId_B, transform: aToB},
+      {sessionId: this.id, fromUser: this.userB.id, fromDevice: this.deviceId_B, toUser: this.userA.id, toDevice: this.deviceId_A, transform: bToA}
     ];
     EventHandler.transform.sendTransformSetFinishedEvent(
       this.sphere,
