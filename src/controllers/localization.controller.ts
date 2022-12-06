@@ -34,9 +34,9 @@ export class Localization extends SphereItem {
   async startTransform(
     @inject(SecurityBindings.USER) userProfile : UserProfileDescription,
     @param.path.string('id')   sphereId: string,
-    @param.query.string('userDeviceType')   deviceType: string,    // this is the deviceId of DeviceInfo lib.
+    @param.query.string('userDeviceType')   deviceType: string,       // this is the deviceId of DeviceInfo lib.
     @param.query.string('targetUserId')     targetUserId: string,
-    @param.query.string('targetDeviceType') targetDeviceType: string,
+    @param.query.string('targetDeviceType') targetDeviceType: string, // this is the deviceId of DeviceInfo lib.
   ): Promise<string> {
     try {
       // create a transform session which can time out after 30 minutes.

@@ -7,15 +7,15 @@ import {EventConstructor} from "./EventConstructor";
 
 export class TransformEventHandler {
 
-  sendTransformSessionRequestedEvent(sphere: Sphere, sessionId: string, userA: User, userB: User, phoneTypeA: string, phoneTypeB: string) {
+  sendTransformSessionRequestedEvent(sphere: Sphere, sessionId: string, userA: User, userB: User, deviceIdA: string, deviceIdB: string) {
     let mappedData = EventConstructor.mapData({sphere, users:[userA, userB]});
     let packet = SSEPacketGenerator.generateTransformSessionRequestedEvent(
       mappedData.sphere,
       sessionId,
       mappedData.users[userA.id],
       mappedData.users[userB.id],
-      phoneTypeA,
-      phoneTypeB
+      deviceIdA,
+      deviceIdB
     );
     SSEManager.emit(packet);
   }
@@ -30,15 +30,15 @@ export class TransformEventHandler {
   }
 
 
-  sendTransformSessionReadyEvent(sphere: Sphere, sessionId: string, userA: User, userB: User, phoneTypeA: string, phoneTypeB: string) {
+  sendTransformSessionReadyEvent(sphere: Sphere, sessionId: string, userA: User, userB: User, deviceIdA: string, deviceIdB: string) {
     let mappedData = EventConstructor.mapData({sphere, users:[userA, userB]});
     let packet = SSEPacketGenerator.generateTransformSessionReadyEvent(
       mappedData.sphere,
       sessionId,
       mappedData.users[userA.id],
       mappedData.users[userB.id],
-      phoneTypeA,
-      phoneTypeB
+      deviceIdA,
+      deviceIdB
     );
     SSEManager.emit(packet);
   }
@@ -55,25 +55,26 @@ export class TransformEventHandler {
   }
 
 
-  sendTransformDatacollectionReceivedEvent(sphere: Sphere, sessionId: string, collectionId: string, user: User, phoneType: string) {
+  sendTransformDatacollectionReceivedEvent(sphere: Sphere, sessionId: string, collectionId: string, user: User, deviceId: string) {
     let mappedData = EventConstructor.mapData({sphere, user});
     let packet = SSEPacketGenerator.generateTransformDatacollectionReceivedEvent(
       mappedData.sphere,
       sessionId,
       collectionId,
       mappedData.user,
-      phoneType
+      deviceId
     );
     SSEManager.emit(packet);
   }
 
 
-  sendTransformDatacollectionFinishedEvent(sphere: Sphere, sessionId: string, collectionId: string) {
+  sendTransformDatacollectionFinishedEvent(sphere: Sphere, sessionId: string, collectionId: string, quality: {userA: Record<string,number>, userB: Record<string,number>}) {
     let mappedData = EventConstructor.mapData({sphere});
     let packet = SSEPacketGenerator.generateTransformDatacollectionFinishedEvent(
       mappedData.sphere,
       sessionId,
-      collectionId
+      collectionId,
+      quality
     );
     SSEManager.emit(packet);
   }

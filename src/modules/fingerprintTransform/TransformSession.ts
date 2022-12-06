@@ -18,8 +18,8 @@ export class TransformSession {
 
   userId_A: string;
   userId_B: string;
-  phoneType_A: string;
-  phoneType_B: string;
+  deviceId_A: string;
+  deviceId_B: string;
 
   invitePending: boolean = false;
 
@@ -28,7 +28,7 @@ export class TransformSession {
   inviteInterval : NodeJS.Timeout;
   inviteTimeout  : NodeJS.Timeout;
 
-  constructor(id: uuid, sphereId: string, destructor: () => void, userId_A: string, phoneType_A: string, userId_B: string, phoneType_B: string) {
+  constructor(id: uuid, sphereId: string, destructor: () => void, userId_A: string, deviceId_A: string, userId_B: string, deviceId_B: string) {
     this.id = id;
     this.sphereId = sphereId;
     this.destructor = destructor;
@@ -39,8 +39,8 @@ export class TransformSession {
 
     this.userId_A = userId_A;
     this.userId_B = userId_B;
-    this.phoneType_A = phoneType_A;
-    this.phoneType_B = phoneType_B;
+    this.deviceId_A = deviceId_A;
+    this.deviceId_B = deviceId_B;
   }
 
   async init() : Promise<void> {
@@ -60,8 +60,8 @@ export class TransformSession {
           this.id,
           this.userA,
           this.userB,
-          this.phoneType_A,
-          this.phoneType_B
+          this.deviceId_A,
+          this.deviceId_B
         );
       }, 2000);
 
@@ -94,8 +94,8 @@ export class TransformSession {
         this.id,
         this.userA,
         this.userB,
-        this.phoneType_A,
-        this.phoneType_B
+        this.deviceId_A,
+        this.deviceId_B
       );
     }
     else {
@@ -137,7 +137,7 @@ export class TransformSession {
           this.id,
           datasetUUID,
           this.userA,
-          this.phoneType_A
+          this.deviceId_A
         );
       }
     }
@@ -152,7 +152,7 @@ export class TransformSession {
           this.id,
           datasetUUID,
           this.userB,
-          this.phoneType_B
+          this.deviceId_B
         );
       }
     }
@@ -161,15 +161,13 @@ export class TransformSession {
     }
 
     if (this.datasets[datasetUUID].setA !== null && this.datasets[datasetUUID].setB !== null) {
+      let qualityResult = getDatasetQuality(this.datasets);
       EventHandler.transform.sendTransformDatacollectionFinishedEvent(
         this.sphere,
         this.id,
         datasetUUID,
+        qualityResult
       );
-
-      // TODO: check the quality of all collected datasets.
-
-
     }
   }
 
@@ -177,8 +175,8 @@ export class TransformSession {
     let aToB = this._generateTransformSetDirection(true);
     let bToA = this._generateTransformSetDirection(false);
     let result = [
-      {sessionId: this.id, fromDevice: this.phoneType_A, toDevice: this.phoneType_B, transform: aToB},
-      {sessionId: this.id, fromDevice: this.phoneType_B, toDevice: this.phoneType_A, transform: bToA}
+      {sessionId: this.id, fromUser: this.userA.id, fromDevice: this.deviceId_A, toUser: this.userB.id, toDevice: this.deviceId_B, transform: aToB},
+      {sessionId: this.id, fromUser: this.userB.id, fromDevice: this.deviceId_B, toUser: this.userA.id, toDevice: this.deviceId_A, transform: bToA}
     ];
     EventHandler.transform.sendTransformSetFinishedEvent(
       this.sphere,
@@ -234,7 +232,7 @@ export class TransformSession {
   }
 }
 
-function checkDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, setB: MeasurementMap}}) {
+function getDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, setB: MeasurementMap}}) : {userA: Record<string, number>, userB: Record<string, number>} {
   let comparisonArray_AtoB : TransformArray = [];
   let comparisonArray_BtoA : TransformArray = [];
   for (let uuid in datasets) {
@@ -248,15 +246,15 @@ function checkDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, s
 
   comparisonArray_AtoB.sort((a,b) => { return b[0] - a[0]; });
   comparisonArray_BtoA.sort((a,b) => { return b[0] - a[0]; });
-  let coreBuckets       = [ -60, -70, -80 ];
+  let coreBuckets       = [ -50, -55, -60, -65, -70, -75, -80, -85, -90 ];
 
   let coreA = checkBucketFillFactor(coreBuckets, comparisonArray_AtoB);
   let coreB = checkBucketFillFactor(coreBuckets, comparisonArray_BtoA);
 
-
+  return {userA: coreA, userB: coreB};
 }
 
-function checkBucketFillFactor(buckets:number[], data: TransformArray) : { count: number, missingBuckets: number[] } {
+function checkBucketFillFactor(buckets:number[], data: TransformArray) : Record<string,number> {
   let bucketedData = TransformUtil.fillBuckets(buckets, data);
 
   // check if there are at least 4 buckets with at least 3 datapoints.
@@ -265,14 +263,10 @@ function checkBucketFillFactor(buckets:number[], data: TransformArray) : { count
     quality[data.x] = data.data.length;
   }
 
-  // check how many buckets have less than 3 datapoints.
-  let count = 0;
-  let missingBuckets = [];
   for (let bucket of buckets) {
-    if (!quality[bucket] || quality[bucket] < 3) {
-      count++;
-      missingBuckets.push(bucket);
+    if (!quality[bucket]) {
+      quality[bucket] = 0;
     }
   }
-  return {count, missingBuckets};
+  return quality;
 }
