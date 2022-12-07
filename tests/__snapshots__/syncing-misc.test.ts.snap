@@ -422,3 +422,426 @@ Object {
   },
 }
 `;
+
+exports[`Sync FULL with scope 1`] = `
+Object {
+  "bootloaders": Object {
+    "data": Object {
+      "10102000100": null,
+      "10102000200": null,
+      "10102010000": null,
+      "10102010300": null,
+      "10103000100": null,
+      "10103000200": null,
+      "10103000300": null,
+      "10103000400": null,
+      "10103000500": null,
+      "10103010000": null,
+      "10104010000": null,
+      "10105000000": null,
+      "10106000000": null,
+      "10106000100": null,
+    },
+    "status": "VIEW",
+  },
+  "firmwares": Object {
+    "data": Object {
+      "10102000100": null,
+      "10102000200": null,
+      "10102010000": null,
+      "10102010300": null,
+      "10103000100": null,
+      "10103000200": null,
+      "10103000300": null,
+      "10103000400": null,
+      "10103000500": null,
+      "10103010000": null,
+      "10104010000": null,
+      "10105000000": null,
+      "10106000000": null,
+      "10106000100": null,
+    },
+    "status": "VIEW",
+  },
+  "keys": Object {
+    "data": Array [
+      Object {
+        "sphereId": "dbId:SphereRepository:1",
+        "sphereKeys": Array [
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:1",
+            "key": "key2005",
+            "keyType": "ADMIN_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:2",
+            "key": "key2006",
+            "keyType": "MEMBER_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:3",
+            "key": "key2007",
+            "keyType": "BASIC_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:4",
+            "key": "key2008",
+            "keyType": "LOCALIZATION_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:5",
+            "key": "key2009",
+            "keyType": "SERVICE_DATA_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:6",
+            "key": "key2010",
+            "keyType": "MESH_APPLICATION_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+          Object {
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "id": "dbId:SphereKeyRepository:7",
+            "key": "key2011",
+            "keyType": "MESH_NETWORK_KEY",
+            "sphereId": "dbId:SphereRepository:1",
+            "ttl": 0,
+            "updatedAt": "1970-01-01T00:00:00.000Z",
+          },
+        ],
+      },
+    ],
+    "status": "VIEW",
+  },
+  "spheres": Object {
+    "dbId:SphereRepository:1": Object {
+      "data": Object {
+        "data": Object {
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "id": "dbId:SphereRepository:1",
+          "name": "mySphere",
+          "timezone": "Europe/Amsterdam",
+          "uid": 212,
+          "updatedAt": "1970-01-01T00:00:00.000Z",
+          "uuid": "ibeaconUUID2003",
+        },
+        "status": "VIEW",
+      },
+      "hubs": Object {
+        "dbId:HubRepository:1": Object {
+          "data": Object {
+            "data": Object {
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "httpPort": "80",
+              "id": "dbId:HubRepository:1",
+              "localIPAddress": "10.0.0.123",
+              "name": "myHub",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+      },
+      "locations": Object {
+        "dbId:LocationRepository:1": Object {
+          "data": Object {
+            "data": Object {
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "id": "dbId:LocationRepository:1",
+              "name": "location",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+      },
+      "stones": Object {
+        "dbId:StoneRepository:1": Object {
+          "abilities": Object {
+            "dbId:StoneAbilityRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "enabled": false,
+                  "id": "dbId:StoneAbilityRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:1",
+                  "syncedToCrownstone": false,
+                  "type": "dimming",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+              "properties": Object {
+                "dbId:StoneAbilityPropertyRepository:1": Object {
+                  "data": Object {
+                    "data": Object {
+                      "abilityId": "dbId:StoneAbilityRepository:1",
+                      "createdAt": "1970-01-01T00:00:00.000Z",
+                      "id": "dbId:StoneAbilityPropertyRepository:1",
+                      "sphereId": "dbId:SphereRepository:1",
+                      "stoneId": "dbId:StoneRepository:1",
+                      "syncedToCrownstone": true,
+                      "type": "smoothDimming",
+                      "updatedAt": "1970-01-01T00:00:00.000Z",
+                      "value": "true",
+                    },
+                    "status": "VIEW",
+                  },
+                },
+              },
+            },
+          },
+          "behaviours": Object {
+            "dbId:StoneBehaviourRepository:1": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "data": true,
+                  "id": "dbId:StoneBehaviourRepository:1",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:1",
+                  "syncedToCrownstone": false,
+                  "type": "twilight",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+            },
+          },
+          "data": Object {
+            "data": Object {
+              "address": "RAN2016",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "id": "dbId:StoneRepository:1",
+              "locationId": "dbId:LocationRepository:1",
+              "major": 2017,
+              "minor": 2018,
+              "name": "stone1",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+        "dbId:StoneRepository:2": Object {
+          "abilities": Object {
+            "dbId:StoneAbilityRepository:2": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "enabled": false,
+                  "id": "dbId:StoneAbilityRepository:2",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:2",
+                  "syncedToCrownstone": false,
+                  "type": "dimming",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+              "properties": Object {
+                "dbId:StoneAbilityPropertyRepository:2": Object {
+                  "data": Object {
+                    "data": Object {
+                      "abilityId": "dbId:StoneAbilityRepository:2",
+                      "createdAt": "1970-01-01T00:00:00.000Z",
+                      "id": "dbId:StoneAbilityPropertyRepository:2",
+                      "sphereId": "dbId:SphereRepository:1",
+                      "stoneId": "dbId:StoneRepository:2",
+                      "syncedToCrownstone": true,
+                      "type": "smoothDimming",
+                      "updatedAt": "1970-01-01T00:00:00.000Z",
+                      "value": "true",
+                    },
+                    "status": "VIEW",
+                  },
+                },
+              },
+            },
+          },
+          "behaviours": Object {
+            "dbId:StoneBehaviourRepository:2": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "data": true,
+                  "id": "dbId:StoneBehaviourRepository:2",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:2",
+                  "syncedToCrownstone": false,
+                  "type": "twilight",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+            },
+          },
+          "data": Object {
+            "data": Object {
+              "address": "RAN2023",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "id": "dbId:StoneRepository:2",
+              "major": 2024,
+              "minor": 2025,
+              "name": "stone2",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+        "dbId:StoneRepository:3": Object {
+          "abilities": Object {
+            "dbId:StoneAbilityRepository:3": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "enabled": false,
+                  "id": "dbId:StoneAbilityRepository:3",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:3",
+                  "syncedToCrownstone": false,
+                  "type": "dimming",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+              "properties": Object {
+                "dbId:StoneAbilityPropertyRepository:3": Object {
+                  "data": Object {
+                    "data": Object {
+                      "abilityId": "dbId:StoneAbilityRepository:3",
+                      "createdAt": "1970-01-01T00:00:00.000Z",
+                      "id": "dbId:StoneAbilityPropertyRepository:3",
+                      "sphereId": "dbId:SphereRepository:1",
+                      "stoneId": "dbId:StoneRepository:3",
+                      "syncedToCrownstone": true,
+                      "type": "smoothDimming",
+                      "updatedAt": "1970-01-01T00:00:00.000Z",
+                      "value": "true",
+                    },
+                    "status": "VIEW",
+                  },
+                },
+              },
+            },
+          },
+          "behaviours": Object {
+            "dbId:StoneBehaviourRepository:3": Object {
+              "data": Object {
+                "data": Object {
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "data": true,
+                  "id": "dbId:StoneBehaviourRepository:3",
+                  "sphereId": "dbId:SphereRepository:1",
+                  "stoneId": "dbId:StoneRepository:3",
+                  "syncedToCrownstone": false,
+                  "type": "twilight",
+                  "updatedAt": "1970-01-01T00:00:00.000Z",
+                },
+                "status": "VIEW",
+              },
+            },
+          },
+          "data": Object {
+            "data": Object {
+              "address": "RAN2030",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "id": "dbId:StoneRepository:3",
+              "major": 2031,
+              "minor": 2032,
+              "name": "stone3",
+              "sphereId": "dbId:SphereRepository:1",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+      },
+      "users": Object {
+        "dbId:UserRepository:1": Object {
+          "data": Object {
+            "data": Object {
+              "accessLevel": "admin",
+              "email": "test@test.com",
+              "id": "dbId:UserRepository:1",
+              "invitePending": false,
+              "language": "en_us",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+        "dbId:UserRepository:2": Object {
+          "data": Object {
+            "data": Object {
+              "accessLevel": "member",
+              "email": "member@test.com",
+              "id": "dbId:UserRepository:2",
+              "invitePending": false,
+              "language": "en_us",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+        "dbId:UserRepository:3": Object {
+          "data": Object {
+            "data": Object {
+              "accessLevel": "guest",
+              "email": "guest@test.com",
+              "id": "dbId:UserRepository:3",
+              "invitePending": false,
+              "language": "en_us",
+              "updatedAt": "1970-01-01T00:00:00.000Z",
+            },
+            "status": "VIEW",
+          },
+        },
+      },
+    },
+  },
+  "user": Object {
+    "data": Object {
+      "accountCreationPending": false,
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "email": "test@test.com",
+      "emailVerified": false,
+      "id": "dbId:UserRepository:1",
+      "language": "en_us",
+      "new": true,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+      "uploadDeviceDetails": true,
+      "uploadLocation": true,
+      "uploadSwitchState": true,
+    },
+    "status": "VIEW",
+  },
+}
+`;

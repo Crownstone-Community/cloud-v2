@@ -49,6 +49,7 @@ export class TransformSession {
       this.userB = await Dbs.user.findById(this.userId_B);
       this.sphere = await Dbs.sphere.findById(this.sphereId);
 
+      this.invitePending = true;
       this.inviteInterval = setInterval(() => {
         if (this.invitePending === false) {
           this._stopInviting();
@@ -67,7 +68,7 @@ export class TransformSession {
 
       this.inviteTimeout = setTimeout(() => {
         this._stopInviting();
-      }, 600 * 1000); // 1 minute
+      }, 60 * 1000); // 1 minute
     }
     catch (err: any) {
       console.log("Failed to init transform session", err);
@@ -211,24 +212,7 @@ export class TransformSession {
   }
 
   _generateTransformSet(sets_From:MeasurementMap[], sets_To:MeasurementMap[]) : TransformSet {
-    let comparisonArray : TransformArray = [];
-    for (let i = 0; i < sets_From.length; i++) {
-      let rawMap = TransformUtil.getRawMap_AtoB(sets_From[i], sets_To[i])
-      comparisonArray = comparisonArray.concat(rawMap);
-    }
-    let normalizedMap = TransformUtil.getNormalizedMap(comparisonArray);
-    normalizedMap.sort((a,b) => { return b[0] - a[0]; });
-
-
-    let buckets            = TransformUtil.getBuckets();
-    let bucketedData       = TransformUtil.fillBuckets(buckets, normalizedMap);
-    let bucketedAverages   = TransformUtil.getAveragedBucketMap(bucketedData);
-    let interpolatedValues = TransformUtil.getInterpolatedValues(bucketedAverages);
-
-    let transformSet = [...bucketedAverages, ...interpolatedValues].filter((item) => { return item.data[0] !== null });
-    transformSet.sort((a,b) => { return b.x - a.x });
-
-    return transformSet;
+    return TransformUtil.getTransFormSet(sets_From, sets_To);
   }
 }
 

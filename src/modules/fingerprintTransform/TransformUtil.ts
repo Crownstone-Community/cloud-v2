@@ -28,6 +28,28 @@ export const TransformUtil = {
   },
 
 
+  getTransFormSet(sets_From:MeasurementMap[], sets_To:MeasurementMap[]) : TransformSet {
+    let comparisonArray : TransformArray = [];
+    for (let i = 0; i < sets_From.length; i++) {
+      let rawMap = TransformUtil.getRawMap_AtoB(sets_From[i], sets_To[i])
+      comparisonArray = comparisonArray.concat(rawMap);
+    }
+    let normalizedMap = TransformUtil.getNormalizedMap(comparisonArray);
+    normalizedMap.sort((a,b) => { return b[0] - a[0]; });
+
+
+    let buckets            = TransformUtil.getBuckets();
+    let bucketedData       = TransformUtil.fillBuckets(buckets, normalizedMap);
+    let bucketedAverages   = TransformUtil.getAveragedBucketMap(bucketedData);
+    let interpolatedValues = TransformUtil.getInterpolatedValues(bucketedAverages);
+
+    let transformSet = [...bucketedAverages, ...interpolatedValues].filter((item) => { return item.data[0] !== null });
+    transformSet.sort((a,b) => { return b.x - a.x });
+
+    return transformSet;
+  },
+
+
   getBucketIndexForValue(target: number, transformSet: TransformSet) : number {
     // find in which bucket the target is
     let currentBucketIndex = 0;
@@ -99,6 +121,9 @@ export const TransformUtil = {
 
   getAveragedBucketMap(bucketedData: BucketedData[]) : AveragedBucketedData[] {
     // average the data in the buckets
+
+    // Calculate average as iBeacon spec calibrates the rssi at one meter:
+    // Remove the top 10%, remove the bottom 20%, and average the remaining values
     let bucketedAverages : Record<string,TransformData> = {};
     for (let key in bucketedData) {
       let bucketStart = bucketedData[key].x;
@@ -107,13 +132,40 @@ export const TransformUtil = {
         bucketedAverages[bucketStart] = [null,null];
         continue;
       }
-      let keySum = 0
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) {
-        keySum += data[i][0];
-        sum += data[i][1];
+      let distances = data.map((d, i) => [d[0],d[1],Math.abs(d[0] - d[1]),i]);
+      if (distances.length >= 3) {
+        // sort by distance
+        distances.sort((a,b) => a[2] - b[2]);
+        let startIndex = Math.ceil(distances.length / 5)
+        let endIndex = Math.floor(distances.length - (distances.length / 10));
+        let sliced = distances.slice(startIndex, endIndex);
+        if (sliced.length > 0) {
+          // calculate average
+          let keySum = 0
+          let sum = 0;
+          for (let i = 0; i < sliced.length; i++) {
+            keySum += sliced[i][0];
+            sum += sliced[i][1];
+          }
+          bucketedAverages[bucketStart] = [keySum/sliced.length, sum / sliced.length];
+        }
+        else {
+          // get the median from the unsliced array
+          let medianIndex = Math.floor(distances.length / 2);
+          let median = distances[medianIndex];
+          bucketedAverages[bucketStart] = [median[0], median[1]];
+        }
       }
-      bucketedAverages[bucketStart] = [keySum/data.length, sum / data.length];
+      else {
+        let keySum = 0
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          keySum += data[i][0];
+          sum += data[i][1];
+        }
+        bucketedAverages[bucketStart] = [keySum/data.length, sum / data.length];
+      }
+
     }
 
     let result : AveragedBucketedData[] = [];
@@ -154,7 +206,7 @@ export const TransformUtil = {
   },
 
   getBuckets() : number[] {
-    let bucketSize = 5; // dB
+    let bucketSize = 7; // dB
     let buckets = [];
     let start = -10;
     for (let i = start; i >= -95; i -= bucketSize) {
@@ -166,7 +218,9 @@ export const TransformUtil = {
   getRawMap_AtoB(mapA: MeasurementMap, mapB: MeasurementMap) : TransformArray {
     let transformMap : [fromRssi:number, factor:number][] = [];
     for (let key in mapA) {
-      transformMap.push([mapA[key],mapB[key]]);
+      if (mapB[key]) {
+        transformMap.push([mapA[key], mapB[key]]);
+      }
     }
     transformMap.sort((a,b) => { return b[0] - a[0] });
     return transformMap;

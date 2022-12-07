@@ -28,7 +28,7 @@ export class Localization extends SphereItem {
     super();
   }
 
-  @post('/sphere/{id}/transform')
+  @post('/spheres/{id}/transform')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async startTransform(
@@ -48,7 +48,7 @@ export class Localization extends SphereItem {
     }
   }
 
-  @del('/sphere/{id}/transform/{transformId}')
+  @del('/spheres/{id}/transform/{transformId}')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async deleteTransform(
@@ -60,7 +60,7 @@ export class Localization extends SphereItem {
   }
 
 
-  @post('/sphere/{id}/transform/{transformId}/join')
+  @post('/spheres/{id}/transform/{transformId}/join')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async joinSession(
@@ -78,7 +78,7 @@ export class Localization extends SphereItem {
   }
 
 
-  @post('/sphere/{id}/transform/{transformId}/finalize')
+  @post('/spheres/{id}/transform/{transformId}/finalize')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async finalizeTransform(
@@ -96,7 +96,7 @@ export class Localization extends SphereItem {
   }
 
 
-  @get('/sphere/{id}/transform/{transformId}/result')
+  @get('/spheres/{id}/transform/{transformId}/result')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async getTransform(
@@ -114,7 +114,7 @@ export class Localization extends SphereItem {
   }
 
 
-  @post('/sphere/{id}/transform/{transformId}/collection')
+  @post('/spheres/{id}/transform/{transformId}/collection')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async startCollection(
@@ -128,7 +128,7 @@ export class Localization extends SphereItem {
   }
 
 
-  @post('/sphere/{id}/transform/{transformId}/collection/{collectionId}/data')
+  @post('/spheres/{id}/transform/{transformId}/collection/{collectionId}/data')
   @authenticate(SecurityTypes.accessToken)
   @authorize(Authorization.sphereMember())
   async addDataToCollection(
@@ -140,6 +140,7 @@ export class Localization extends SphereItem {
   ): Promise<void> {
     // this uploads the data for a user for the transform process.
     try {
+      console.log("Adding data to collection", transformId, collectionId, userProfile[securityId], measurementData);
       TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], measurementData);
     }
     catch (err: any) {

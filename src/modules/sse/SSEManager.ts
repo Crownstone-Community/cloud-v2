@@ -43,6 +43,7 @@ class SSEManagerClass {
   }
 
   emit(data: SseEvent) {
+    console.log("Emitting", data)
     this.io.sockets.in(EVENT_ROOM_NAME).emit(protocolTopics.event, data);
   }
 }
