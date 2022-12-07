@@ -223,7 +223,7 @@ function getDatasetQuality(datasets: {[uuid:string] : {setA: MeasurementMap, set
     if (datasets[uuid].setA === null || datasets[uuid].setB === null) { continue; }
 
     let rawMap_AtoB = TransformUtil.getRawMap_AtoB(datasets[uuid].setA, datasets[uuid].setB)
-    let rawMap_BtoA = TransformUtil.getRawMap_AtoB(datasets[uuid].setA, datasets[uuid].setB)
+    let rawMap_BtoA = TransformUtil.getRawMap_AtoB(datasets[uuid].setB, datasets[uuid].setA)
     comparisonArray_AtoB = comparisonArray_AtoB.concat(rawMap_AtoB);
     comparisonArray_BtoA = comparisonArray_BtoA.concat(rawMap_BtoA);
   }
