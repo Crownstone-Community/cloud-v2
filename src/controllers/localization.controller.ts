@@ -136,6 +136,7 @@ export class Localization extends SphereItem {
     @param.path.string('id')   sphereId: string,
     @param.path.string('transformId')    transformId: string,
     @param.path.string('collectionId')   collectionId: string,
+    @param.query.string('deviceId')      query: string,
     @requestBody({required: true}) measurementData: MeasurementMap
   ): Promise<void> {
     // this uploads the data for a user for the transform process.

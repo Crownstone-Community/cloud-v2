@@ -51,9 +51,9 @@ class TransformSessionManagerClass {
     throw new Error("Session not found");
   }
 
-  finishedCollectingDataset(sessionUUID : uuid, datasetUUID: uuid, userId: string, dataset: MeasurementMap) {
+  finishedCollectingDataset(sessionUUID : uuid, datasetUUID: uuid, userId: string, deviceId: string, dataset: MeasurementMap) {
     if (this.activeSessions[sessionUUID]) {
-      this.activeSessions[sessionUUID].finishedCollectingDataset(userId, datasetUUID, dataset);
+      this.activeSessions[sessionUUID].finishedCollectingDataset(userId, datasetUUID, deviceId, dataset);
     }
     else {
       throw new Error("Session not found");
