@@ -17,7 +17,7 @@ export class Device extends AddTimestamps(BaseEntity) {
   @property({type: 'string'})
   name: string;
 
-  @property({type: 'string', required: true})
+  @property({type: 'string'})
   address: string;
 
   @property({type: 'string'})
