@@ -127,10 +127,10 @@ export class TransformSession {
     return datasetId;
   }
 
-  finishedCollectingDataset(userId: string, datasetUUID: uuid, dataset: MeasurementMap) {
+  finishedCollectingDataset(userId: string, datasetUUID: uuid, deviceId: string, dataset: MeasurementMap) {
     if (this.datasets[datasetUUID] === undefined) { throw new Error("Dataset not found"); }
 
-    if (userId === this.userId_A && this.datasets[datasetUUID].setA === null) {
+    if (userId === this.userId_A && deviceId == this.deviceId_A && this.datasets[datasetUUID].setA === null) {
       this.datasets[datasetUUID].setA = dataset;
       if (this.datasets[datasetUUID].setB === null) {
         EventHandler.transform.sendTransformDatacollectionReceivedEvent(
@@ -142,10 +142,10 @@ export class TransformSession {
         );
       }
     }
-    else if (userId === this.userId_A && this.datasets[datasetUUID].setA !== null) {
+    else if (userId === this.userId_A && deviceId == this.deviceId_A && this.datasets[datasetUUID].setA !== null) {
       throw new Error("Already received dataset from user A for this collection session.");
     }
-    else if (userId === this.userId_B && this.datasets[datasetUUID].setB === null) {
+    else if (userId === this.userId_B && deviceId == this.deviceId_B && this.datasets[datasetUUID].setB === null) {
       this.datasets[datasetUUID].setB = dataset;
       if (this.datasets[datasetUUID].setA === null) {
         EventHandler.transform.sendTransformDatacollectionReceivedEvent(
@@ -157,7 +157,7 @@ export class TransformSession {
         );
       }
     }
-    else if (userId === this.userId_B && this.datasets[datasetUUID].setB !== null) {
+    else if (userId === this.userId_B && deviceId == this.deviceId_B && this.datasets[datasetUUID].setB !== null) {
       throw new Error("Already received dataset from user B for this collection session.");
     }
 

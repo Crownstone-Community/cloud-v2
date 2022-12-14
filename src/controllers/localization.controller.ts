@@ -136,12 +136,13 @@ export class Localization extends SphereItem {
     @param.path.string('id')   sphereId: string,
     @param.path.string('transformId')    transformId: string,
     @param.path.string('collectionId')   collectionId: string,
+    @param.query.string('deviceId')      deviceId: string,
     @requestBody({required: true}) measurementData: MeasurementMap
   ): Promise<void> {
     // this uploads the data for a user for the transform process.
     try {
       console.log("Adding data to collection", transformId, collectionId, userProfile[securityId], measurementData);
-      TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], measurementData);
+      TransformSessionManager.finishedCollectingDataset(transformId, collectionId, userProfile[securityId], deviceId, measurementData);
     }
     catch (err: any) {
       throw new HttpErrors.BadRequest(err.message);
