@@ -130,7 +130,7 @@ export class DataImporter {
       }
       let keyData = readData(spherePath, 'keys.json')
       await create(Dbs.sphereKeys,    keyData.sphereKeys);
-      await create(Dbs.location,      readData(spherePath, 'locations.json'));
+      await create(Dbs.location,      readData(spherePath, 'locations.json'), [], 'importCreate');
       await create(Dbs.scene,         readData(spherePath, 'scenes.json'));
       await create(Dbs.fingerprintV2, readData(spherePath, 'fingerprintsV2.json'));
 
@@ -147,7 +147,7 @@ export class DataImporter {
         let crownstoneName = crownstonesDir[j];
         let crownstoneData = readData(crownstonesPath, crownstoneName, false);
         if (crownstoneData) {
-          await create(Dbs.stone, crownstoneData, ['behaviours','abilities','switchStateHistory','energyData','energyDataProcessed','energyMetaData','keys']);
+          await create(Dbs.stone, crownstoneData, ['behaviours','abilities','switchStateHistory','energyData','energyDataProcessed','energyMetaData','keys'], 'importCreate');
           await create(Dbs.stoneBehaviour, crownstoneData.behaviours);
           await create(Dbs.stoneAbility,   crownstoneData.abilities, ['properties']);
           for (let ability of (crownstoneData.abilities ?? [])) {

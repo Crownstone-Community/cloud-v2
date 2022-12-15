@@ -98,6 +98,11 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
     return stone;
   }
 
+
+  async importCreate(entity: DataObject<Stone>, options?: Options): Promise<Stone> {
+    return await super.create(entity, options);
+  }
+
   async deleteById(id: any, options?: Options): Promise<void> {
     if (!id) { throw "StoneIdRequired" }
 
@@ -108,7 +113,6 @@ export class StoneRepository extends TimestampedCrudRepository<Stone,typeof Ston
 
     return super.deleteById(id, options);
   }
-
 }
 
 
@@ -127,7 +131,7 @@ function injectMajorMinor(stone: DataObject<Stone>) {
 }
 
 async function injectUID( stoneRepo: StoneRepository, stone: DataObject<Stone> ) {
-  if (!stone.uid) { return }
+  if (stone.uid !== undefined) { return }
 
   // To inject a UID, we look for the highest available one. The new one is one higher
   // If this is more than the allowed amount of Crownstones, we loop over all Crownstones in the Sphere to check for gaps

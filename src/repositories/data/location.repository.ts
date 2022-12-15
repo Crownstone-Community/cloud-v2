@@ -33,6 +33,10 @@ export class LocationRepository extends TimestampedCrudRepository<Location,typeo
     return super.create(entity, options);
   }
 
+  async importCreate(entity: DataObject<Location>, options?: Options): Promise<Location> {
+    return super.create(entity, options);
+  }
+
   async deleteById(id: any, options?: Options): Promise<void> {
     // cascade
     if (!id) { throw "locationId missing"; }
@@ -45,7 +49,7 @@ export class LocationRepository extends TimestampedCrudRepository<Location,typeo
 
 
 async function injectUID( locationRepo: LocationRepository, location: DataObject<Location> ) {
-  if (!location.uid) { return }
+  if (location.uid !== undefined) { return }
 
   // To inject a UID, we look for the highest available one. The new one is one higher
   // If this is more than the allowed amount of Crownstones, we loop over all Crownstones in the Sphere to check for gaps
