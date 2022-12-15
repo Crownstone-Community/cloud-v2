@@ -96,6 +96,7 @@ export class MyAuthorizationProvider implements Provider<Authorizer> {
 
 async function getAccessLevel(userId: string, itemId: string, authorizationModelName: AuthorizationModel) : Promise<string | null> {
   let item : any = null;
+
   try {
     switch (authorizationModelName) {
       case "Message":
@@ -110,6 +111,7 @@ async function getAccessLevel(userId: string, itemId: string, authorizationModel
       default:
         return null;
     }
+
 
     if (item && item?.sphereId) {
       let sphereId = item.sphereId;

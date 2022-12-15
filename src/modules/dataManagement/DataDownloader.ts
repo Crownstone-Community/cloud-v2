@@ -103,6 +103,14 @@ export class DataDownloader {
       // download the user data
       this.addJson(user,'user', [],['password', 'earlyAccessLevel']);
 
+      // add FW and BL data for possible imports.
+      let firmwares   = await Dbs.firmware.find();
+      let bootloaders = await Dbs.bootloader.find();
+
+      this.addJson(firmwares,'firmwares', [],[]);
+      this.addJson(bootloaders,'bootloaders', [],[]);
+
+
       // get the user profile picture
       await this.addFile(user.profilePicId, 'user profile picture');
 

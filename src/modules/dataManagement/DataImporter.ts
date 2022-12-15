@@ -54,6 +54,8 @@ export class DataImporter {
     //        devices.json
     //        users.json
     //        tokens.json
+    //        firmwares.json
+    //        bootloaders.json
     //        oauthTokens.json
     //        fingerprints.json
     //        sphereAccess.json
@@ -78,6 +80,12 @@ export class DataImporter {
     // this.dataExtractedPath / data / spheres / <sphere-name> / images / scenes
     //       <imageId>.jpg
     let dataPath = path.join(this.dataExtractedPath, 'data');
+
+    // insert all firmwares
+    await create(Dbs.firmware, readData(dataPath, 'firmwares.json'));
+    // insert all bootloaders
+    await create(Dbs.bootloader, readData(dataPath, 'bootloaders.json'));
+
 
     // insert all available crownstone access tokens.
     await create(Dbs.crownstoneToken, readData(dataPath, 'tokens.json'));
