@@ -99,7 +99,7 @@ export class DataImporter {
     // add users to the DB
     let userData = readData(dataPath, 'user.json', false);
     if (userData) {
-      await create(Dbs.user, userData);
+      await create(Dbs.user, userData, [], 'importCreate');
       if (userData.profilePicId) {
         await storeFile(path.join(dataPath, 'user profile picture'), userData.profilePicId);
       }
@@ -197,7 +197,7 @@ export class DataImporter {
 }
 
 
-async function create(db : DefaultCrudRepository<any, any>, itemData: any[] | any | undefined, deleteFieldsForInsertion: string[] = []) {
+async function create(db : DefaultCrudRepository<any, any>, itemData: any[] | any | undefined, deleteFieldsForInsertion: string[] = [], customCreateMethodString?: string) {
   if (!itemData) { return; }
 
   async function _create(item: any) {
@@ -211,7 +211,13 @@ async function create(db : DefaultCrudRepository<any, any>, itemData: any[] | an
     }
     catch (err) {
       try {
-        await db.create(itemCopy);
+        if (customCreateMethodString) {
+          // @ts-ignore
+          await db[customCreateMethodString](itemCopy);
+        }
+        else {
+          await db.create(itemCopy);
+        }
       }
       catch (err) {
         console.error("Error creating item", itemCopy, err);

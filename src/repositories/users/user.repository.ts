@@ -49,5 +49,9 @@ export class UserRepository extends TimestampedCrudRepository<User,typeof User.p
 
     return super.create(entity, options);
   }
+
+  async importCreate(entity: DataObject<User>, options?: Options): Promise<User> {
+    return super.create(entity, options);
+  }
 }
 
