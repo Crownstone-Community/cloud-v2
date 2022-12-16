@@ -12,7 +12,7 @@ export class DevicePreferences extends AddTimestamps(BaseEntity) {
   @property({type: 'string', required: true})
   property: string;
 
-  @property({required: true})
+  @property()
   value: any;
 
   @belongsTo(() => Device)

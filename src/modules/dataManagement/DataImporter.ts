@@ -235,7 +235,7 @@ async function create(db : DefaultCrudRepository<any, any>, itemData: any[] | an
 }
 
 
-function hash(text : string) : string {
+export function hash(text : string) : string {
   let shasum = crypto.createHash('sha1');
   shasum.update(String(text));
   let hashedPassword = shasum.digest('hex');
