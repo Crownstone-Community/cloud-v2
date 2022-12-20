@@ -17,13 +17,13 @@ const GUEST_ACCESS = {
   [constants.KEY_TYPES.SERVICE_DATA_KEY] : true,
 };
 
-export async function getEncryptionKeys(userId: string, sphereId?: string, stoneId?: string, userAccess?: SphereAccess[]) : Promise<UserKeySet> {
+export async function getEncryptionKeys(userId: string, requestForSphereId?: string, stoneId?: string, userAccess?: SphereAccess[]) : Promise<UserKeySet> {
   // if no access data is provided, get it here.
   if (!userAccess) {
     let queryArray : any[] = [{userId: userId}, {invitePending: {neq: true}}];
     // if a sphereId is provided, limit the search to this sphere
-    if (sphereId) {
-      queryArray.push({sphereId: sphereId})
+    if (requestForSphereId) {
+      queryArray.push({sphereId: requestForSphereId})
     }
     userAccess = await Dbs.sphereAccess.find({where: {and: queryArray}})
   }

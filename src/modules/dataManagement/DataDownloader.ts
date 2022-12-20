@@ -227,7 +227,7 @@ export class DataDownloader {
             delete stone.energyMetaData;
           }
 
-          this.addJson(stone, stone.name, ['spheres', sphere.name, 'crownstones'])
+          this.addJson(stone, stone.id + '_' + stone.name, ['spheres', sphere.name, 'crownstones'])
         }
 
         // get locations
@@ -246,7 +246,10 @@ export class DataDownloader {
         this.addJson(await find(Dbs.toon, {where:{sphereId: sphereId}}), 'toons', ['spheres', sphere.name]);
 
         // get sphere keys (you have access to)
-        this.addJson(await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]), 'keys', ['spheres', sphere.name]);
+        let keysForSphere = await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]])
+        if (keysForSphere.length === 1) {
+          this.addJson(keysForSphere[0], 'keys', ['spheres', sphere.name]);
+        }
 
         // get messages (sent by you)
         let messages               = await find(Dbs.message,               {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
@@ -326,6 +329,9 @@ export class DataDownloader {
       }
     }
 
+    let cleanRegex = /[^a-zA-Z0-9\s\-\.]/g;
+    let filenameCleaned = filename.replace(cleanRegex, '');
+
     function insertHiddenFields(dataObj: any) {
       let stringifiedData = JSON.stringify(dataObj);
 
@@ -363,7 +369,7 @@ export class DataDownloader {
       filePathArray.push(pathArray);
     }
 
-    filePathArray.push(`${filename}.json`);
+    filePathArray.push(`${filenameCleaned}.json`);
 
     let filePath = path.join.apply(this,filePathArray);
     this.zipFile.addFile(filePath, Buffer.from(stringifiedData, "utf8"))
