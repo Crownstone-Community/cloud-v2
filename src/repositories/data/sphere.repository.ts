@@ -134,7 +134,9 @@ export class SphereRepository extends TimestampedCrudRepository<Sphere,typeof Sp
     return super.deleteById(id, options);
   }
 
-
+  async importCreate(entity: DataObject<Sphere>, options?: Options): Promise<Sphere> {
+    return super.create(entity, options);
+  }
 }
 
 

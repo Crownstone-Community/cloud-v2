@@ -126,10 +126,10 @@ export class DataImporter {
       if (fs.statSync(spherePath).isFile()) { continue; }
       let sphereData = readData(spheresPath, sphereName + '.json')
       if (sphereData) {
-        await create(Dbs.sphere, sphereData);
+        await create(Dbs.sphere, sphereData, [], 'importCreate');
       }
       let keyData = readData(spherePath, 'keys.json')
-      await create(Dbs.sphereKeys,    keyData.sphereKeys);
+      await create(Dbs.sphereKeys,    keyData.sphereKeys, [], 'importCreate');
       await create(Dbs.location,      readData(spherePath, 'locations.json'), [], 'importCreate');
       await create(Dbs.scene,         readData(spherePath, 'scenes.json'));
       await create(Dbs.fingerprintV2, readData(spherePath, 'fingerprintsV2.json'));
@@ -157,7 +157,7 @@ export class DataImporter {
           await create(Dbs.stoneEnergy,          crownstoneData.energyData);
           await create(Dbs.stoneEnergyProcessed, crownstoneData.energyDataProcessed);
           await create(Dbs.stoneEnergyMetaData,  crownstoneData.energyMetaData);
-          await create(Dbs.stoneKeys,            crownstoneData.keys);
+          await create(Dbs.stoneKeys,            crownstoneData.keys, [], 'importCreate');
         }
       }
 

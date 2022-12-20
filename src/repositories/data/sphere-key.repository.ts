@@ -15,4 +15,8 @@ export class SphereKeyRepository extends TimestampedCrudRepository<SphereKeys,ty
     super(SphereKeys, datasource);
     this.sphere = this.createBelongsToAccessorFor('sphere', sphereRepoGetter);
   }
+
+  async importCreate(entity: DataObject<SphereKeys>, options?: Options): Promise<SphereKeys> {
+    return super.create(entity, options);
+  }
 }

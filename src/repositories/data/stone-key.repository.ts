@@ -23,4 +23,7 @@ export class StoneKeyRepository extends TimestampedCrudRepository<StoneKey,typeo
     this.stone  = this.createBelongsToAccessorFor('stone', stoneRepoGetter);
   }
 
+  async importCreate(entity: DataObject<StoneKey>, options?: Options): Promise<StoneKey> {
+    return super.create(entity, options);
+  }
 }
