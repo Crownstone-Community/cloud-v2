@@ -1,4 +1,4 @@
-import {BelongsToAccessor, Getter, juggler, repository} from '@loopback/repository';
+import {BelongsToAccessor, DataObject, Getter, juggler, Options, repository} from '@loopback/repository';
 import { inject } from '@loopback/core';
 import { TimestampedCrudRepository } from "../bases/timestamped-crud-repository";
 import {SphereRepository} from "./sphere.repository";
