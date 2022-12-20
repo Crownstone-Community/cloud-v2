@@ -282,6 +282,8 @@ export class DataDownloader {
   }
 
   async addFile(fileId?: string, pathArray: string | string[] = []) {
+    // this stringcast is required in case a fileId is a mongo ID object.
+    fileId = String(fileId);
     if (fileId) {
       try {
         let fileData = await GridFsUtil.downloadFileFromId(fileId);
@@ -330,6 +332,7 @@ export class DataDownloader {
     }
 
     let cleanRegex = /[^a-zA-Z0-9\s\-\.]/g;
+    console.log('filename',filename, typeof filename)
     let filenameCleaned = filename.replace(cleanRegex, '');
 
     function insertHiddenFields(dataObj: any) {

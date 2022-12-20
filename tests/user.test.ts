@@ -77,3 +77,13 @@ test("test usage of token.", async () => {
   await client.get(`/user/?access_token=1234`).expect(401);
 });
 
+test("Test the regex for the filenames",() => {
+  let filename = "test.dat"
+  let invalidFilename = "test\/24_15/=.dat2"
+  let cleanRegex = /[^a-zA-Z0-9\s\-\._]/g;
+  let filenameCleaned = filename.replace(cleanRegex, '');
+  let filenameCleaned2 = invalidFilename.replace(cleanRegex, '');
+
+  expect(filenameCleaned).toBe(filename)
+  expect(filenameCleaned2).toBe("test24_15.dat2")
+})
