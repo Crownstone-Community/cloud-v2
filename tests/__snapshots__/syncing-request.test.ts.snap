@@ -239,7 +239,7 @@ Object {
           "data": Object {
             "data": Object {
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "httpPort": "80",
+              "httpPort": 80,
               "id": "dbId:HubRepository:1",
               "localIPAddress": "10.0.0.123",
               "name": "myHub",
@@ -264,7 +264,7 @@ Object {
           "data": Object {
             "data": Object {
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "httpPort": "80",
+              "httpPort": 80,
               "id": "dbId:HubRepository:1",
               "localIPAddress": "10.0.0.123",
               "name": "myHub",
@@ -413,7 +413,7 @@ Object {
           "data": Object {
             "data": Object {
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "httpPort": "80",
+              "httpPort": 80,
               "id": "dbId:HubRepository:1",
               "localIPAddress": "10.0.0.123",
               "name": "myHub",
@@ -481,7 +481,7 @@ Object {
               "data": Object {
                 "data": Object {
                   "createdAt": "1970-01-01T00:00:00.000Z",
-                  "data": true,
+                  "data": "helloMock",
                   "id": "dbId:StoneBehaviourRepository:1",
                   "sphereId": "dbId:SphereRepository:1",
                   "stoneId": "dbId:StoneRepository:1",
@@ -550,7 +550,7 @@ Object {
               "data": Object {
                 "data": Object {
                   "createdAt": "1970-01-01T00:00:00.000Z",
-                  "data": true,
+                  "data": "helloMock",
                   "id": "dbId:StoneBehaviourRepository:2",
                   "sphereId": "dbId:SphereRepository:1",
                   "stoneId": "dbId:StoneRepository:2",
@@ -617,7 +617,7 @@ Object {
               "data": Object {
                 "data": Object {
                   "createdAt": "1970-01-01T00:00:00.000Z",
-                  "data": true,
+                  "data": "helloMock",
                   "id": "dbId:StoneBehaviourRepository:3",
                   "sphereId": "dbId:SphereRepository:1",
                   "stoneId": "dbId:StoneRepository:3",
@@ -916,7 +916,7 @@ Object {
               "data": Object {
                 "data": Object {
                   "createdAt": "1970-01-01T00:00:00.000Z",
-                  "data": true,
+                  "data": "helloMock",
                   "id": "dbId:StoneBehaviourRepository:2",
                   "sphereId": "dbId:SphereRepository:1",
                   "stoneId": "dbId:StoneRepository:2",
@@ -973,7 +973,7 @@ Object {
               "data": Object {
                 "data": Object {
                   "createdAt": "1970-01-01T00:00:00.000Z",
-                  "data": true,
+                  "data": "helloMock",
                   "id": "dbId:StoneBehaviourRepository:3",
                   "sphereId": "dbId:SphereRepository:1",
                   "stoneId": "dbId:StoneRepository:3",
@@ -1261,7 +1261,7 @@ Object {
           "data": Object {
             "data": Object {
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "httpPort": "80",
+              "httpPort": 80,
               "id": "dbId:HubRepository:1",
               "localIPAddress": "10.0.0.123",
               "name": "myHub",
