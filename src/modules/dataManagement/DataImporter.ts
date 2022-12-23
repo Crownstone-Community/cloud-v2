@@ -5,7 +5,6 @@ import fs from 'fs'
 import path from 'path'
 import {Dbs} from "../containers/RepoContainer";
 import {DefaultCrudRepository} from "@loopback/repository";
-import {Device} from "../../models/device.model";
 import {GridFsUtil} from "../../util/GridFsUtil";
 const AdmZip = require("adm-zip");
 
@@ -60,8 +59,8 @@ export class DataImporter {
     //        fingerprints.json
     //        sphereAccess.json
     // this.dataExtractedPath / data / spheres /
-    //        <sphere-name>.json
-    // this.dataExtractedPath / data / spheres / <sphere-name>
+    //        <sphere-id> + "_" + <sphere-name>.json
+    // this.dataExtractedPath / data / spheres / <sphere-id> + "_" + <sphere-name>
     //       fingerprintsV2.json
     //       hubs.json
     //       keys.json
@@ -73,11 +72,11 @@ export class DataImporter {
     //       messagesV2.json
     //       locations.json
     //       scenes.json
-    // this.dataExtractedPath / data / spheres / <sphere-name> / crownstones
-    //       <crownstone-name>.json
-    // this.dataExtractedPath / data / spheres / <sphere-name> / images / locations
+    // this.dataExtractedPath / data / spheres / <sphere-id> + "_" + <sphere-name> / crownstones
+    //       <crownstone-id> + "_" + <crownstone-name>.json
+    // this.dataExtractedPath / data / spheres / <sphere-id> + "_" + <sphere-name> / images / locations
     //       <imageId>.jpg
-    // this.dataExtractedPath / data / spheres / <sphere-name> / images / scenes
+    // this.dataExtractedPath / data / spheres / <sphere-id> + "_" + <sphere-name> / images / scenes
     //       <imageId>.jpg
     let dataPath = path.join(this.dataExtractedPath, 'data');
 
@@ -119,67 +118,72 @@ export class DataImporter {
 
 
     let spheresPath = path.join(dataPath, 'spheres');
-    let spheres = fs.readdirSync(spheresPath);
-    for (let i = 0; i < spheres.length; i++) {
-      let sphereName = spheres[i];
-      let spherePath = path.join(spheresPath, sphereName);
-      if (fs.statSync(spherePath).isFile()) { continue; }
-      let sphereData = readData(spheresPath, sphereName + '.json')
-      if (sphereData) {
-        await create(Dbs.sphere, sphereData, [], 'importCreate');
-      }
-      let keyData = readData(spherePath, 'keys.json')
-      await create(Dbs.sphereKeys,    keyData.sphereKeys, [], 'importCreate');
-      await create(Dbs.location,      readData(spherePath, 'locations.json'), [], 'importCreate');
-      await create(Dbs.scene,         readData(spherePath, 'scenes.json'));
-      await create(Dbs.fingerprintV2, readData(spherePath, 'fingerprintsV2.json'));
+    if (fs.existsSync(spheresPath)) {
+      let spheres = fs.readdirSync(spheresPath);
+      for (let i = 0; i < spheres.length; i++) {
+        let sphereName = spheres[i];
+        let spherePath = path.join(spheresPath, sphereName);
+        if (fs.statSync(spherePath).isFile()) { continue; }
+        let sphereData = readData(spheresPath, sphereName + '.json')
+        if (sphereData) {
+          await create(Dbs.sphere, sphereData, [], 'importCreate');
+        }
+        let keyData = readData(spherePath, 'keys.json')
+        await create(Dbs.sphereKeys,    keyData.sphereKeys, [], 'importCreate');
+        await create(Dbs.location,      readData(spherePath, 'locations.json'), [], 'importCreate');
+        await create(Dbs.scene,         readData(spherePath, 'scenes.json'));
+        await create(Dbs.fingerprintV2, readData(spherePath, 'fingerprintsV2.json'));
 
-      await create(Dbs.message,              readData(spherePath, 'messages.json'));
-      await create(Dbs.messageState,         readData(spherePath, 'messageState.json'));
-      await create(Dbs.messageDeletedByUser, readData(spherePath, 'messageDeletedByUser.json'));
-      await create(Dbs.messageReadByUser,    readData(spherePath, 'messageReadByUser.json'));
-      await create(Dbs.messageRecipientUser, readData(spherePath, 'messageRecipientUser.json'));
-      await create(Dbs.messageV2,            readData(spherePath, 'messagesV2.json'));
+        await create(Dbs.message,              readData(spherePath, 'messages.json'));
+        await create(Dbs.messageState,         readData(spherePath, 'messageState.json'));
+        await create(Dbs.messageDeletedByUser, readData(spherePath, 'messageDeletedByUser.json'));
+        await create(Dbs.messageReadByUser,    readData(spherePath, 'messageReadByUser.json'));
+        await create(Dbs.messageRecipientUser, readData(spherePath, 'messageRecipientUser.json'));
+        await create(Dbs.messageV2,            readData(spherePath, 'messagesV2.json'));
 
-      let crownstonesPath = path.join(spherePath, 'crownstones');
-      let crownstonesDir = fs.readdirSync(crownstonesPath);
-      for (let j = 0; j < crownstonesDir.length; j++) {
-        let crownstoneName = crownstonesDir[j];
-        let crownstoneData = readData(crownstonesPath, crownstoneName, false);
-        if (crownstoneData) {
-          await create(Dbs.stone, crownstoneData, ['behaviours','abilities','switchStateHistory','energyData','energyDataProcessed','energyMetaData','keys'], 'importCreate');
-          await create(Dbs.stoneBehaviour, crownstoneData.behaviours);
-          await create(Dbs.stoneAbility,   crownstoneData.abilities, ['properties']);
-          for (let ability of (crownstoneData.abilities ?? [])) {
-            await create(Dbs.stoneAbilityProperty, ability.properties);
+        let crownstonesPath = path.join(spherePath, 'crownstones');
+        // check if there is a crownstones folder in this sphere
+        if (fs.existsSync(crownstonesPath)) {
+          let crownstonesDir = fs.readdirSync(crownstonesPath);
+          for (let j = 0; j < crownstonesDir.length; j++) {
+            let crownstoneName = crownstonesDir[j];
+            let crownstoneData = readData(crownstonesPath, crownstoneName, false);
+            if (crownstoneData) {
+              await create(Dbs.stone, crownstoneData, ['behaviours', 'abilities', 'switchStateHistory', 'energyData', 'energyDataProcessed', 'energyMetaData', 'keys'], 'importCreate');
+              await create(Dbs.stoneBehaviour, crownstoneData.behaviours);
+              await create(Dbs.stoneAbility, crownstoneData.abilities, ['properties']);
+              for (let ability of (crownstoneData.abilities ?? [])) {
+                await create(Dbs.stoneAbilityProperty, ability.properties);
+              }
+              await create(Dbs.stoneSwitchState, crownstoneData.switchStateHistory);
+              await create(Dbs.stoneEnergy, crownstoneData.energyData);
+              await create(Dbs.stoneEnergyProcessed, crownstoneData.energyDataProcessed);
+              await create(Dbs.stoneEnergyMetaData, crownstoneData.energyMetaData);
+              await create(Dbs.stoneKeys, crownstoneData.keys, [], 'importCreate');
+            }
           }
-          await create(Dbs.stoneSwitchState,     crownstoneData.switchStateHistory);
-          await create(Dbs.stoneEnergy,          crownstoneData.energyData);
-          await create(Dbs.stoneEnergyProcessed, crownstoneData.energyDataProcessed);
-          await create(Dbs.stoneEnergyMetaData,  crownstoneData.energyMetaData);
-          await create(Dbs.stoneKeys,            crownstoneData.keys, [], 'importCreate');
         }
-      }
 
-      await create(Dbs.hub,           readData(spherePath, 'hubs.json'));
+        await create(Dbs.hub,           readData(spherePath, 'hubs.json'));
 
-      // iterate over the location images folder
-      let locationImagesPath = path.join(spherePath, 'images', 'locations');
-      if (fs.existsSync(locationImagesPath)) {
-        let locationImagesDir = fs.readdirSync(locationImagesPath);
-        for (let j = 0; j < locationImagesDir.length; j++) {
-          let imageId = locationImagesDir[j];
-          await storeFile(locationImagesPath, imageId.split('.')[0]);
+        // iterate over the location images folder
+        let locationImagesPath = path.join(spherePath, 'images', 'locations');
+        if (fs.existsSync(locationImagesPath)) {
+          let locationImagesDir = fs.readdirSync(locationImagesPath);
+          for (let j = 0; j < locationImagesDir.length; j++) {
+            let imageId = locationImagesDir[j];
+            await storeFile(locationImagesPath, imageId.split('.')[0]);
+          }
         }
-      }
 
-      // iterate over the scene images folder
-      let sceneImagesPath = path.join(spherePath, 'images', 'scenes');
-      if (fs.existsSync(sceneImagesPath)) {
-        let sceneImagesDir = fs.readdirSync(sceneImagesPath);
-        for (let j = 0; j < sceneImagesDir.length; j++) {
-          let imageId = sceneImagesDir[j];
-          await storeFile(sceneImagesPath, imageId.split('.')[0]);
+        // iterate over the scene images folder
+        let sceneImagesPath = path.join(spherePath, 'images', 'scenes');
+        if (fs.existsSync(sceneImagesPath)) {
+          let sceneImagesDir = fs.readdirSync(sceneImagesPath);
+          for (let j = 0; j < sceneImagesDir.length; j++) {
+            let imageId = sceneImagesDir[j];
+            await storeFile(sceneImagesPath, imageId.split('.')[0]);
+          }
         }
       }
     }

@@ -110,7 +110,6 @@ export class DataDownloader {
       this.addJson(firmwares,'firmwares', [],[]);
       this.addJson(bootloaders,'bootloaders', [],[]);
 
-
       // get the user profile picture
       await this.addFile(user.profilePicId, 'user profile picture');
 
@@ -162,21 +161,22 @@ export class DataDownloader {
         let roleInSphere = roles[i];
         let sphereId     = sphere.id;
 
-        this.addJson(sphere,sphere.name, 'spheres');
+        this.addJson(sphere, sphere.id + "_" + sphere.name, 'spheres');
+        let sphereFolder = sanitizeFilename(sphere.id + "_" + sphere.name);
 
         // download all fingerprints
         let fingerprintsV2 = await find(Dbs.fingerprintV2,{where: {sphereId: sphereId}});
-        this.addJson(fingerprintsV2,'fingerprintsV2', ['spheres', sphere.name]);
+        this.addJson(fingerprintsV2,'fingerprintsV2', ['spheres', sphereFolder]);
 
 
         // get scenes
         let scenes = await find(Dbs.scene,{where:{sphereId: sphereId}});
-        this.addJson(scenes, 'scenes', ['spheres', sphere.name]);
+        this.addJson(scenes, 'scenes', ['spheres', sphereFolder]);
 
         // get custom images
         for (let scene of scenes) {
           if (scene.customPictureId) {
-            await this.addFile(scene.customPictureId, ['spheres', sphere.name, 'images','scenes']);
+            await this.addFile(scene.customPictureId, ['spheres', sphereFolder, 'images','scenes']);
           }
         }
 
@@ -227,44 +227,44 @@ export class DataDownloader {
             delete stone.energyMetaData;
           }
 
-          this.addJson(stone, stone.id + '_' + stone.name, ['spheres', sphere.name, 'crownstones'])
+          this.addJson(stone, stone.id + '_' + stone.name, ['spheres', sphereFolder, 'crownstones'])
         }
 
         // get locations
         let locations = await find(Dbs.location, {where:{sphereId: sphereId}});
         for (let location of locations) {
           if (location.imageId) {
-            await this.addFile(location.imageId, ['spheres', sphere.name, 'images','locations']);
+            await this.addFile(location.imageId, ['spheres', sphereFolder, 'images','locations']);
           }
         }
-        this.addJson(locations, 'locations', ['spheres', sphere.name]);
+        this.addJson(locations, 'locations', ['spheres', sphereFolder]);
         // get hubs
         if (roleInSphere === 'admin') {
-          this.addJson(await find(Dbs.hub, {where: {sphereId: sphereId}}), 'hubs', ['spheres', sphere.name], ['token']);
+          this.addJson(await find(Dbs.hub, {where: {sphereId: sphereId}}), 'hubs', ['spheres', sphereFolder], ['token']);
         }
         // get toons
-        this.addJson(await find(Dbs.toon, {where:{sphereId: sphereId}}), 'toons', ['spheres', sphere.name]);
+        this.addJson(await find(Dbs.toon, {where:{sphereId: sphereId}}), 'toons', ['spheres', sphereFolder]);
 
         // get sphere keys (you have access to)
-        let keysForSphere = await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]])
+        let keysForSphere = await getEncryptionKeys(this.userId, sphereId, null, [spheresWithAccess[i]]);
         if (keysForSphere.length === 1) {
-          this.addJson(keysForSphere[0], 'keys', ['spheres', sphere.name]);
+          this.addJson(keysForSphere[0], 'keys', ['spheres', sphereFolder]);
         }
 
         // get messages (sent by you)
-        let messages               = await find(Dbs.message,               {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}});
-        let messageState           = await find(Dbs.messageState,          {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
-        let messageDeletedByUser   = await find(Dbs.messageDeletedByUser,  {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
-        let messageReadByUser      = await find(Dbs.messageReadByUser,     {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
-        let messageRecipientUser   = await find(Dbs.messageRecipientUser,  {where:{and: [{sphereId: sphereId},{userId: this.userId}]}});
-        let messagesV2             = await find(Dbs.messageV2,             {where:{and: [{sphereId: sphereId},{ownerId: this.userId}]}})
+        let messages               = await find(Dbs.message,               {where:{and: [{sphereId: sphereId}, {ownerId: this.userId }]}});
+        let messageState           = await find(Dbs.messageState,          {where:{and: [{sphereId: sphereId}, {userId:  this.userId }]}});
+        let messageDeletedByUser   = await find(Dbs.messageDeletedByUser,  {where:{and: [{sphereId: sphereId}, {userId:  this.userId }]}});
+        let messageReadByUser      = await find(Dbs.messageReadByUser,     {where:{and: [{sphereId: sphereId}, {userId:  this.userId }]}});
+        let messageRecipientUser   = await find(Dbs.messageRecipientUser,  {where:{and: [{sphereId: sphereId}, {userId:  this.userId }]}});
+        let messagesV2             = await find(Dbs.messageV2,             {where:{and: [{sphereId: sphereId}, {ownerId: this.userId }]}});
 
-        this.addJson({...messages},             'messages',             ['spheres', sphere.name]);
-        this.addJson({...messageState},         'messageState',         ['spheres', sphere.name]);
-        this.addJson({...messageDeletedByUser}, 'messageDeletedByUser', ['spheres', sphere.name]);
-        this.addJson({...messageReadByUser},    'messageReadByUser',    ['spheres', sphere.name]);
-        this.addJson({...messageRecipientUser}, 'messageRecipientUser', ['spheres', sphere.name]);
-        this.addJson({...messagesV2},           'messagesV2',           ['spheres', sphere.name]);
+        this.addJson({...messages},             'messages',             ['spheres', sphereFolder]);
+        this.addJson({...messageState},         'messageState',         ['spheres', sphereFolder]);
+        this.addJson({...messageDeletedByUser}, 'messageDeletedByUser', ['spheres', sphereFolder]);
+        this.addJson({...messageReadByUser},    'messageReadByUser',    ['spheres', sphereFolder]);
+        this.addJson({...messageRecipientUser}, 'messageRecipientUser', ['spheres', sphereFolder]);
+        this.addJson({...messagesV2},           'messagesV2',           ['spheres', sphereFolder]);
 
         await Util.wait(250);
       }
@@ -283,8 +283,8 @@ export class DataDownloader {
 
   async addFile(fileId?: string, pathArray: string | string[] = []) {
     // this stringcast is required in case a fileId is a mongo ID object.
-    fileId = String(fileId);
     if (fileId) {
+      fileId = String(fileId);
       try {
         let fileData = await GridFsUtil.downloadFileFromId(fileId);
 
@@ -331,9 +331,7 @@ export class DataDownloader {
       }
     }
 
-    let cleanRegex = /[^a-zA-Z0-9\s\-\.]/g;
-    console.log('filename',filename, typeof filename)
-    let filenameCleaned = filename.replace(cleanRegex, '');
+    let filenameCleaned = sanitizeFilename(filename);
 
     function insertHiddenFields(dataObj: any) {
       let stringifiedData = JSON.stringify(dataObj);
@@ -378,6 +376,12 @@ export class DataDownloader {
     this.zipFile.addFile(filePath, Buffer.from(stringifiedData, "utf8"))
   }
 
+}
+
+
+export function sanitizeFilename(filename: string) {
+  let cleanRegex = /[^a-zA-Z0-9\s\-\._]/g;
+  return filename.replace(cleanRegex, '');
 }
 
 
