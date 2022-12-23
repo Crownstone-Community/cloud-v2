@@ -116,7 +116,6 @@ export class DataImporter {
       await create(Dbs.fingerprintLinker, device.fingerprintLinks);
     }
 
-
     let spheresPath = path.join(dataPath, 'spheres');
     if (fs.existsSync(spheresPath)) {
       let spheres = fs.readdirSync(spheresPath);

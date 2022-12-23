@@ -7,6 +7,7 @@ import {clearTestDatabase, createApp, getRepositories} from "./helpers";
 import {createUser} from "./builders/createUserData";
 import {CloudUtil} from "../src/util/CloudUtil";
 import {login} from "./rest-helpers/rest.helpers";
+import {Dbs} from "../src/modules/containers/RepoContainer";
 
 let app    : CrownstoneCloud;
 let client : Client;
@@ -87,3 +88,36 @@ test("Test the regex for the filenames",() => {
   expect(filenameCleaned).toBe(filename)
   expect(filenameCleaned2).toBe("test24_15.dat2")
 })
+
+
+test("Test import behaviour", async () => {
+  let data = {
+    "updatedAt": "2020-08-04T07:53:24.965Z",
+    "createdAt": "2020-08-04T07:53:22.750Z",
+    "id": "5f2913f2836d290004ff4753",
+    "type": "TWILIGHT",
+    "data": "{\"action\":{\"type\":\"DIM_WHEN_TURNED_ON\",\"data\":80},\"time\":{\"type\":\"RANGE\",\"from\":{\"type\":\"SUNSET\",\"offsetMinutes\":0},\"to\":{\"type\":\"SUNRISE\",\"offsetMinutes\":0}}}",
+    "syncedToCrownstone": true,
+    "idOnCrownstone": 0,
+    "profileIndex": 0,
+    "deleted": false,
+    "activeDays": {
+      "Mon": true,
+      "Tue": true,
+      "Wed": true,
+      "Thu": true,
+      "Fri": true,
+      "Sat": true,
+      "Sun": true
+    },
+    "sphereId": "58de6bda62a2241400f10c67",
+    "stoneId": "5f291198836d290004ff46fd"
+  }
+
+  await Dbs.stoneBehaviour.create(data);
+  let behaviour = await Dbs.stoneBehaviour.find();
+
+  expect(behaviour[0].data).toBe(data.data)
+})
+
+

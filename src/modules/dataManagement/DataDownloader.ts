@@ -171,7 +171,12 @@ export class DataDownloader {
 
         // get scenes
         let scenes = await find(Dbs.scene,{where:{sphereId: sphereId}});
-        this.addJson(scenes, 'scenes', ['spheres', sphereFolder]);
+        this.addJson(scenes, 'scenes', ['spheres', sphereFolder], [], (data) => {
+          if (typeof data.data !== 'string') {
+            data.data = JSON.stringify(data.data);
+          }
+          return data;
+        });
 
         // get custom images
         for (let scene of scenes) {
@@ -317,7 +322,7 @@ export class DataDownloader {
     }
   }
 
-  async addJson(data: any, filename: string, pathArray: string | string[] = [], hiddenFields: string[] = []) {
+  async addJson(data: any, filename: string, pathArray: string | string[] = [], hiddenFields: string[] = [], postProcessor: (data: any) => any = null) {
     if (!data) {
       console.log("No data to store", filename);
       return;
@@ -333,6 +338,7 @@ export class DataDownloader {
 
     let filenameCleaned = sanitizeFilename(filename);
 
+    // some of these fields are removed by stringification from the loopback data object. we use this to add them back in.
     function insertHiddenFields(dataObj: any) {
       let stringifiedData = JSON.stringify(dataObj);
 
@@ -343,6 +349,12 @@ export class DataDownloader {
             dataObject[field] = dataObj[field];
           }
         }
+        stringifiedData = JSON.stringify(dataObject);
+      }
+
+      if (postProcessor) {
+        let dataObject = JSON.parse(stringifiedData);
+        dataObject = postProcessor(dataObject);
         stringifiedData = JSON.stringify(dataObject);
       }
 

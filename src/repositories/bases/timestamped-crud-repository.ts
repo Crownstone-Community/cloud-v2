@@ -54,7 +54,7 @@ export class TimestampedCrudRepository< E extends Entity & {createdAt?: Date; up
       }
     }
     __updateTimes(entity: DataObject<E>, options?: Options) {
-      entity.createdAt = CloudUtil.getDate();
+      entity.createdAt = entity.createdAt ?? CloudUtil.getDate();
       entity.updatedAt = entity.updatedAt ?? CloudUtil.getDate();
     }
 }

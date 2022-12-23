@@ -20,10 +20,10 @@ export class Hub extends AddTimestamps(BaseEntity) {
   @property({type: 'string'})
   localIPAddress: string;
 
-  @property({type: 'string'})
+  @property({type: 'number'})
   httpPort: number;
 
-  @property({type: 'string'})
+  @property({type: 'number'})
   httpsPort: number;
 
   @property({type: 'string'})
