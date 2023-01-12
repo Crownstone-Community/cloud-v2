@@ -47,6 +47,10 @@ export async function getEncryptionKeys(userId: string, requestForSphereId?: str
   for (let i = 0; i < sphereIds.length; i++) {
     let sphereId = sphereIds[i];
     let sphereAccess = access_map[sphereId][0]
+    if (!sphereKeys_map[sphereId]) {
+      console.log('No keys available for sphere ' + sphereId);
+      continue;
+    }
     let sphereResult : UserKeys = {
       sphereId: sphereId,
       sphereAuthorizationToken: sphereAccess.sphereAuthorizationToken,
@@ -67,10 +71,6 @@ export async function getEncryptionKeys(userId: string, requestForSphereId?: str
         break;
       case "guest":
       case "basic":
-        if (!sphereKeys_map[sphereId]) {
-            console.log('No keys available for sphere ' + sphereId + ' for user with only guest/basic access');
-            break;
-        }
         for (let j = 0; j < sphereKeys_map[sphereId].length; j++) {
           let sphereKey = sphereKeys_map[sphereId][j];
           if (GUEST_ACCESS[sphereKey.keyType]) {
